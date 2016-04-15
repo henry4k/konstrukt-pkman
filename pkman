@@ -1,0 +1,61 @@
+#!/usr/bin/env lua5.2
+local argparse = require 'argparse'
+
+local function Run( commands )
+    local parser = argparse()
+    parser:command_target('command')
+    for commandName, command in pairs(commands) do
+        local subparser = parser:command(commandName, command.description)
+        if command.setupParser then
+            command.setupParser(subparser)
+        end
+    end
+    local arguments = parser:parse()
+    commands[arguments.command].execute(arguments)
+end
+
+local commands = {}
+commands.list =
+{
+    description = 'Print packages.',
+
+    setupParser = function( parser )
+        parser:option('-i --installed', 'Only installed packages.')
+            :args(0)
+        --parser:option('-s --selected', 'Only selected packages.')
+    end,
+
+    execute = function( arguments )
+        local config = require 'config'
+        local packagedb = require 'packagedb'
+        local repoutils = require 'repoutils'
+
+        local db = {}
+        packagedb.gatherInstalledPackages(db, config.searchPaths)
+        if not arguments.installed then
+            for repoName, _ in pairs(config.repositories) do
+                packagedb.mergeDatabases(db, repoutils.loadRepoDatabase(repoName))
+            end
+        end
+
+        for packageName, versions in pairs(db) do
+            for versionString, package in pairs(versions) do
+                print(string.format('%s %s', packageName, versionString))
+            end
+        end
+    end
+}
+commands.sync =
+{
+    description = 'Synchronize package lists.',
+
+    execute = function()
+        local config = require 'config'
+        local repoutils = require 'repoutils'
+        for name, url in pairs(config.repositories) do
+            repoutils.updateRepo(name, url)
+        end
+    end
+}
+
+Run(commands)
