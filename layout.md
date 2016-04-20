@@ -1,6 +1,6 @@
 # Layout
 
-## Package Version
+## Package
 
 An actual installable package.
 
@@ -30,7 +30,7 @@ the DB stores the package versions `db[<package name>]`.
 
 ```
 {
-    <package name> =
+    <package name> = -- Package versions
     {
         <version string> = {<package>}
     }

@@ -15,7 +15,7 @@ local function CopyContext( ctx )
     return
     {
         db = ctx.db,
-        selectedPackageVersions = Misc.copyTable(ctx.selectedPackageVersions),
+        selectedPackages = Misc.copyTable(ctx.selectedPackages),
         openRequirements = Misc.copyTable(ctx.openRequirements)
     }
 end
@@ -24,30 +24,30 @@ local function SortRequirements( requirements )
     -- TODO
 end
 
-local function GetAvailableVersions( ctx, requirement )
-    local version = ctx.selectedPackageVersions[requirement.packageName]
-    if version then
-        -- we already selected a version so we can't pick a different
-        return {version}
+local function GetAvailablePackages( ctx, requirement )
+    local package = ctx.selectedPackages[requirement.packageName]
+    if package then
+        -- we already selected a package so we can't pick a different
+        return {package}
     else
-        -- we didn't select a version yet so all versions are possible
+        -- we didn't select a package yet so all packages are possible
         local packageVersions = ctx.db[requirement.packageName]
         if not packageVersions then
             error(string.format('Package %s not available.', requirement.packageName))
         end
-        local versions = {}
-        for _, version in pairs(packageVersions) do
-            table.insert(versions, version)
+        local packages = {}
+        for _, package in pairs(packageVersions) do
+            table.insert(packages, package)
         end
-        if #versions == 0 then
+        if #packages == 0 then
             error(string.format('Package %s is empty.', requirement.packageName)) -- This should not happen.
         end
-        return versions
+        return packages
     end
 end
 
-local function GetCompatibleVersions( ctx, requirement )
-    local available = GetAvailableVersions(ctx, requirement)
+local function GetCompatiblePackages( ctx, requirement )
+    local available = GetAvailablePackages(ctx, requirement)
     return Version.getMatchingPackages(available, requirement.versionRange)
 end
 
@@ -72,13 +72,13 @@ end
 local function ResolveRequirement( ctx )
     local requirement = table.remove(ctx.openRequirements)
     if requirement then
-        local compatibleVersions = GetCompatibleVersions(ctx, requirement)
+        local compatiblePackages = GetCompatiblePackages(ctx, requirement)
         local conflictResolution = nil
-        for _, version in ipairs(compatibleVersions) do
+        for _, package in ipairs(compatiblePackages) do
             if not conflictResolution then
                 local newCtx = CopyContext(ctx)
-                newCtx.selectedPackageVersions[requirement.packageName] = version
-                AddDependenciesAsRequirements(newCtx, version.dependencies)
+                newCtx.selectedPackages[requirement.packageName] = package
+                AddDependenciesAsRequirements(newCtx, package.dependencies)
                 conflictResolution = ResolveRequirement(newCtx)
             else
                 break
@@ -86,7 +86,7 @@ local function ResolveRequirement( ctx )
         end
         return conflictResolution
     else
-        return ctx.selectedPackageVersions
+        return ctx.selectedPackages
     end
 end
 
@@ -98,7 +98,7 @@ function Dependency.resolve( db, dependencies )
     local ctx =
     {
         db = db,
-        selectedPackageVersions = {},
+        selectedPackages = {},
         openRequirements = {}
     }
     AddDependenciesAsRequirements(ctx, dependencies)

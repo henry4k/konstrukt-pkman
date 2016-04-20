@@ -31,8 +31,7 @@ local function BuildDownloadUrl( baseUrl, packageName, version )
     return string.format('%s/%s.%s.zip', baseUrl, packageName, version)
 end
 
-function Repository.loadRepoDatabase( repoName )
-    local fileName = BuildRepoDatabaseFileName(repoName)
+function Repository.loadRepoDatabaseFromFile( fileName )
     local repoData = FS.readJsonFile(fileName)
     local baseUrl = assert(repoData.baseUrl)
     local db = assert(repoData.packages)
@@ -50,6 +49,11 @@ function Repository.loadRepoDatabase( repoName )
     end
 
     return db
+end
+
+function Repository.loadRepoDatabase( repoName )
+    local fileName = BuildRepoDatabaseFileName(repoName)
+    return Repository.loadRepoDatabaseFromFile(fileName)
 end
 
 
