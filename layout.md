@@ -1,6 +1,6 @@
 # Layout
 
-## Package
+## Package Version
 
 An actual installable package.
 
@@ -9,7 +9,10 @@ An actual installable package.
     -- Required fields:
     name = ... -- Usually not needed in serialized form.
     version = {...},
-    dependencies = {...}
+    dependencies =
+    {
+        <package name> = <version range>
+    }
 
     -- :
     selected = ... -- if the package has been marked for installation by the user

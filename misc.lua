@@ -1,4 +1,4 @@
-local misc = {}
+local Misc = {}
 
 local function DisjoinByDelimiterCoro( str, delimiterPattern )
     assert(not delimiterPattern:match('[()]'), 'Delimiter pattern may not have groups.')
@@ -16,11 +16,11 @@ local function DisjoinByDelimiterCoro( str, delimiterPattern )
     end
 end
 
-function misc.disjoinByDelimiter( str, delimiterPattern )
+function Misc.disjoinByDelimiter( str, delimiterPattern )
     return coroutine.wrap(function() DisjoinByDelimiterCoro(str, delimiterPattern) end)
 end
 
-function misc.tablesAreEqual( a, b )
+function Misc.tablesAreEqual( a, b )
     local seenKeys = {}
     for k, vA in pairs(a) do
         local vB = b[k]
@@ -32,7 +32,7 @@ function misc.tablesAreEqual( a, b )
         end
 
         if tA == 'table' then
-            if not misc.compareTablesRecursively(vA, vB) then
+            if not Misc.compareTablesRecursively(vA, vB) then
                 return false
             end
         else
@@ -53,5 +53,13 @@ function misc.tablesAreEqual( a, b )
     return true
 end
 
+function Misc.copyTable( t )
+    local r = {}
+    for k, v in pairs(t) do
+        r[k] = v
+    end
+    return r
+end
 
-return misc
+
+return Misc

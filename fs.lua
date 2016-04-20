@@ -3,36 +3,36 @@ local semver = require 'semver'
 
 
 
-local fsutils = {}
+local FS = {}
 
-fsutils.dirSep = '/'
+FS.dirSep = '/'
 
-function fsutils.path( ... )
-    return table.concat({...}, fsutils.dirSep)
+function FS.path( ... )
+    return table.concat({...}, FS.dirSep)
 end
 
-function fsutils.readFile( fileName )
+function FS.readFile( fileName )
     local file = assert(io.open(fileName, 'r'))
     local content = file:read('*a')
     file:close()
     return content
 end
 
-function fsutils.readJsonFile( fileName )
-    return cjson.decode(fsutils.readFile(fileName))
+function FS.readJsonFile( fileName )
+    return cjson.decode(FS.readFile(fileName))
 end
 
-function fsutils.parseFileName( fileName )
+function FS.parseFileName( fileName )
     local path, pathEnd = fileName:match('^(.*)[/\\]()')
     pathEnd = pathEnd or 1
-    local extensionStart, extension = fileName:match('()%.([^.]*)$')
+    local extensionStart, extension = fileName:match('()%.([^.]*)$', pathEnd)
     extensionStart = extensionStart or 0
     local baseName = fileName:sub(pathEnd, extensionStart-1)
     return {path=path, baseName=baseName, extension=extension}
 end
 
-function fsutils.parsePackageFileName( fileName )
-    local result, err = fsutils.parseFileName(fileName)
+function FS.parsePackageFileName( fileName )
+    local result, err = FS.parseFileName(fileName)
     if not result then
         return nil, err
     end
@@ -61,4 +61,4 @@ function fsutils.parsePackageFileName( fileName )
 end
 
 
-return fsutils
+return FS

@@ -1,11 +1,11 @@
 local lfs = require 'lfs'
 local fsutils = require 'fsutils'
-local packageutils = require 'packageutils'
+local Package = require 'package'
 
 
-local packagedb = {}
+local PackageDB = {}
 
-function packagedb.addPackage( db, package )
+function PackageDB.addPackage( db, package )
     assert(package.name,    'Package has no name.')
     assert(package.version, 'Package has no version.')
 
@@ -18,16 +18,16 @@ function packagedb.addPackage( db, package )
     local versionString = tostring(package.version)
     local destPackage = versions[versionString]
     if destPackage then
-        packageutils.mergePackages(destPackage, package)
+        Package.mergePackages(destPackage, package)
     else
         versions[versionString] = package
     end
 end
 
-function packagedb.mergeDatabases( destination, source )
+function PackageDB.mergeDatabases( destination, source )
     for packageName, versions in pairs(source) do
         for _, package in pairs(versions) do
-            packagedb.addPackage(destination, package)
+            PackageDB.addPackage(destination, package)
         end
     end
 end
@@ -46,7 +46,7 @@ local function IsLocalPackage( fileName, fileInfo )
     end
 end
 
-function packagedb.gatherInstalledPackages( db, searchPaths )
+function PackageDB.gatherInstalledPackages( db, searchPaths )
     local packages = {}
     for _, searchPath in ipairs(searchPaths) do
         for entry in lfs.dir(searchPath) do
@@ -56,18 +56,18 @@ function packagedb.gatherInstalledPackages( db, searchPaths )
                 local baseName = BuildPackageBaseName(fileInfo.package,
                                                       fileInfo.version)
                 if not packages[baseName] then
-                    packages[baseName] = packageutils.readLocalPackage(fileName)
+                    packages[baseName] = Package.readLocalPackage(fileName)
                 end
             end
         end
     end
 
     for _, package in pairs(packages) do
-        packagedb.addPackage(db, package)
+        PackageDB.addPackage(db, package)
     end
 end
 
-function packagedb.gatherSelectedPackageVersions()
+function PackageDB.gatherSelectedPackageVersions()
     local packageVersions = {}
     for entry in lfs.dir('selection') do
         local fileInfo = fsutils.parsePackageFileName(entry)
@@ -82,7 +82,7 @@ function packagedb.gatherSelectedPackageVersions()
 end
 
 
--- packagedb.getUnusedPackages( installedPackages, selectedPackages )
+-- PackageDB.getUnusedPackages( installedPackages, selectedPackages )
 
 
-return packagedb
+return PackageDB

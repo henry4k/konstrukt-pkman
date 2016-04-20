@@ -1,9 +1,9 @@
 local zip = require 'brimworks.zip'
 
 
-local ziputils = {}
+local Zip = {}
 
-function ziputils.readFile( zipFileName, entryName )
+function Zip.readFile( zipFileName, entryName )
     local zipFile, zipErr = zip.open(zipFileName)
     if not zipFile then
         return nil, zipErr
@@ -26,4 +26,4 @@ function ziputils.readFile( zipFileName, entryName )
 end
 
 
-return ziputils
+return Zip

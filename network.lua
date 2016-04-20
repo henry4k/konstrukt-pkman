@@ -2,7 +2,7 @@ local lfs = require 'lfs'
 local http = require 'socket.http'
 
 
-local network = {}
+local Network = {}
 
 local MonthNameIndexMap =
 {
@@ -62,7 +62,7 @@ local function FileProcessSink( file, totalBytes )
 end
 
 -- Also use this to update package lists
-function network.downloadFile( fileName, url )
+function Network.downloadFile( fileName, url )
     -- 1. obtain file modification timestamp
     local fileModificationTime = lfs.attributes(fileName, 'modification')
     -- 2. HEAD request to obtain url modification timestamp
@@ -82,4 +82,4 @@ function network.downloadFile( fileName, url )
 end
 
 
-return network
+return Network

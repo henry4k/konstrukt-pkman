@@ -2,7 +2,7 @@ local semver = require 'semver'
 local misc = require 'misc'
 
 
-local versionutils = {}
+local Version = {}
 
 local function ChangableByOne( n )
     return n > 0 and n < math.huge
@@ -79,7 +79,7 @@ local function TryParseComparator( expr )
     end
 end
 
-function versionutils.parseVersionRange( rangeExpr )
+function Version.parseVersionRange( rangeExpr )
     -- a.b.c - x.y.z
     -- a.b.c   =>  a.b.c - a.b.c
     -- a.b     =>  a.b.0 - a.b.INF
@@ -95,15 +95,15 @@ function versionutils.parseVersionRange( rangeExpr )
     return range
 end
 
-function versionutils.isVersionInVersionRange( version, range )
+function Version.isVersionInVersionRange( version, range )
     return version >= range.min and
            version <= range.max
 end
 
-function versionutils.getMatchingPackages( packages, range )
+function Version.getMatchingPackages( packages, range )
     local results = {}
     for _, package in pairs(packages) do
-        if versionutils.isVersionInVersionRange(package.version, range) then
+        if Version.isVersionInVersionRange(package.version, range) then
             table.insert(results, package)
         end
     end
@@ -127,7 +127,7 @@ local function Min( a, b )
 end
 
 --- Compute common subset of both ranges.
-function versionutils.mergeVersionRanges( a, b )
+function Version.mergeVersionRanges( a, b )
     local min = Max(a.min, b.min)
     local max = Min(a.max, b.max)
     if min < max then
@@ -138,4 +138,4 @@ function versionutils.mergeVersionRanges( a, b )
 end
 
 
-return versionutils
+return Version

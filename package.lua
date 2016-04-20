@@ -1,23 +1,23 @@
 local lfs = require 'lfs'
-local misc = require 'misc'
 local cjson = require 'cjson'
 local semver = require 'semver'
-local fsutils = require 'fsutils'
-local ziputils = require 'ziputils'
-local versionutils = require 'versionutils'
+local Misc = require 'Misc'
+local FS = require 'fs'
+local Zip = require 'zip'
+local Version = require 'version'
 
 
-local packageutils = {}
+local Package = {}
 
 local function ExtractPackageMetadata( fileName )
     local fileType = lfs.attributes(fileName, 'mode')
     if not fileType then
         error('File not found.')
     elseif fileType == 'directory' then
-        return assert(fsutils.readJsonFile(fsutils.path(fileName, 'meta.json')))
+        return assert(FS.readJsonFile(FS.path(fileName, 'meta.json')))
     else
         if fileName:match('%.zip$') then
-            return cjson.decode(assert(ziputils.readFile(fileName, 'meta.json')))
+            return cjson.decode(assert(Zip.readFile(fileName, 'meta.json')))
         else
             print('Not a package: '..fileName)
         end
@@ -34,11 +34,11 @@ local function PreprocessMetaData( metadata )
     for package, versionRange in pairs(metadata.dependencies) do
         assert(type(versionRange) == 'string')
         metadata.dependencies[package] =
-            versionutils.parseVersionRange(versionRange)
+            Version.parseVersionRange(versionRange)
     end
 end
 
-function packageutils.mergePackages( destination, source )
+function Package.mergePackages( destination, source )
     for key, sourceValue in pairs(source) do
         local destValue = destination[key]
         if destValue then
@@ -49,7 +49,7 @@ function packageutils.mergePackages( destination, source )
                                     key, destValueType, sourceValueType))
             end
             if destValueType == 'table' then
-                if not misc.tablesAreEqual(destValue, sourceValue) then
+                if not Misc.tablesAreEqual(destValue, sourceValue) then
                     error(string.format('Tables of property %s are not equal.', key))
                 end
             end
@@ -65,12 +65,12 @@ function LocalPackageMT.__index( package, key )
         package._metadataLoaded = true
         local metadata = ExtractPackageMetadata(package.localFileName)
         PreprocessMetaData(metadata)
-        packageutils.mergePackages(package, metadata)
+        Package.mergePackages(package, metadata)
     end
 end
 
-function packageutils.readLocalPackage( fileName )
-    local packageInfo = assert(fsutils.parsePackageFileName(fileName))
+function Package.readLocalPackage( fileName )
+    local packageInfo = assert(FS.parsePackageFileName(fileName))
     local package =
     {
         name = packageInfo.package,
@@ -82,4 +82,4 @@ function packageutils.readLocalPackage( fileName )
 end
 
 
-return packageutils
+return Package

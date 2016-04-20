@@ -1,19 +1,19 @@
 local lfs = require 'lfs'
 local semver = require 'semver'
-local network = require 'network'
-local fsutils = require 'fsutils'
-local versionutils = require 'versionutils'
+local Network = require 'network'
+local FS      = require 'fs'
+local Version = require 'version'
 
 
-local repoutils = {}
+local Repository = {}
 
 local function BuildRepoDatabaseFileName( repoName )
-    return fsutils.path('repositories', repoName..'.json')
+    return FS.path('repositories', repoName..'.json')
 end
 
-function repoutils.updateRepo( name, url )
+function Repository.updateRepo( name, url )
     local fileName = BuildRepoDatabaseFileName(name)
-    network.downloadFile(fileName, url)
+    Network.downloadFile(fileName, url)
 end
 
 local function PreprocessLoadedPackageEntry( package, packageName )
@@ -23,7 +23,7 @@ local function PreprocessLoadedPackageEntry( package, packageName )
         assert(type(dependency) == 'string')
         assert(type(versionRange) == 'string')
         package.dependencies[dependency] =
-            versionutils.parseVersionRange(versionRange)
+            Version.parseVersionRange(versionRange)
     end
 end
 
@@ -31,9 +31,9 @@ local function BuildDownloadUrl( baseUrl, packageName, version )
     return string.format('%s/%s.%s.zip', baseUrl, packageName, version)
 end
 
-function repoutils.loadRepoDatabase( repoName )
+function Repository.loadRepoDatabase( repoName )
     local fileName = BuildRepoDatabaseFileName(repoName)
-    local repoData = fsutils.readJsonFile(fileName)
+    local repoData = FS.readJsonFile(fileName)
     local baseUrl = assert(repoData.baseUrl)
     local db = assert(repoData.packages)
 
@@ -53,4 +53,4 @@ function repoutils.loadRepoDatabase( repoName )
 end
 
 
-return repoutils
+return Repository

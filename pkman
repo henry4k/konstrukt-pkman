@@ -28,13 +28,13 @@ commands.list =
     execute = function( arguments )
         local config = require 'config'
         local packagedb = require 'packagedb'
-        local repoutils = require 'repoutils'
+        local repository = require 'repository'
 
         local db = {}
         packagedb.gatherInstalledPackages(db, config.searchPaths)
         if not arguments.installed then
             for repoName, _ in pairs(config.repositories) do
-                packagedb.mergeDatabases(db, repoutils.loadRepoDatabase(repoName))
+                packagedb.mergeDatabases(db, repository.loadRepoDatabase(repoName))
             end
         end
 
@@ -51,9 +51,9 @@ commands.sync =
 
     execute = function()
         local config = require 'config'
-        local repoutils = require 'repoutils'
+        local repository = require 'repository'
         for name, url in pairs(config.repositories) do
-            repoutils.updateRepo(name, url)
+            repository.updateRepo(name, url)
         end
     end
 }
