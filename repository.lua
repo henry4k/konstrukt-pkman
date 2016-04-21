@@ -3,6 +3,7 @@ local semver = require 'semver'
 local Network = require 'network'
 local FS      = require 'fs'
 local Version = require 'version'
+local Package = require 'package'
 
 
 local Repository = {}
@@ -54,6 +55,14 @@ end
 function Repository.loadRepoDatabase( repoName )
     local fileName = BuildRepoDatabaseFileName(repoName)
     return Repository.loadRepoDatabaseFromFile(fileName)
+end
+
+function Repository.installPackage( package, installPath )
+    assert(package.downloadUrl, 'Package misses a download URL - maybe it\'s not available in a repository?')
+    local baseName = Package.buildBaseName(package.name, package.version)
+    local fileName = FS.path(installPath, baseName..'.zip')
+    Network.downloadFile(fileName, package.downloadUrl)
+    package.localFileName = fileName
 end
 
 
