@@ -1,5 +1,4 @@
 local semver = require 'semver'
-local misc = require 'misc'
 
 
 local Version = {}

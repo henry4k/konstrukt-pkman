@@ -40,7 +40,7 @@ local function PreprocessMetaData( metadata )
 end
 
 local LocalPackageMT = {}
-function LocalPackageMT.__index( package, key )
+function LocalPackageMT.__index( package, _ )
     if not package._metadataLoaded then
         package._metadataLoaded = true
         local metadata = ExtractPackageMetadata(package.localFileName)
@@ -61,7 +61,7 @@ function LocalPackage.readLocalPackage( fileName )
     return setmetatable(package, LocalPackageMT)
 end
 
-local function IsLocalPackage( fileName, fileInfo )
+local function IsLocalPackage( fileName )
     local mode = lfs.attributes(fileName, 'mode')
     if mode == 'directory' then
         local metaFileName = FS.path(fileName, 'meta.json')
@@ -77,7 +77,7 @@ function LocalPackage.gatherInstalledPackages( db, searchPaths )
         for entry in lfs.dir(searchPath) do
             local fileName = FS.path(searchPath, entry)
             local fileInfo = FS.parsePackageFileName(fileName)
-            if fileInfo and IsLocalPackage(fileName, fileInfo) then
+            if fileInfo and IsLocalPackage(fileName) then
                 local baseName = Package.buildBaseName(fileInfo.package,
                                                        fileInfo.version)
                 if not packages[baseName] then

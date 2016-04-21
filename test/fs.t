@@ -1,6 +1,6 @@
 #!/usr/bin/env lua
 -- vim: set filetype=lua:
-require 'test/common'
+require 'Test.More'
 local fs = require 'fs'
 
 plan(16)

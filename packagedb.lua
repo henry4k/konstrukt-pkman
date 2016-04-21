@@ -1,5 +1,3 @@
-local lfs = require 'lfs'
-local FS = require 'fs'
 local Package = require 'package'
 
 
@@ -25,7 +23,7 @@ function PackageDB.addPackage( db, package )
 end
 
 function PackageDB.mergeDatabases( destination, source )
-    for packageName, versions in pairs(source) do
+    for _, versions in pairs(source) do
         for _, package in pairs(versions) do
             PackageDB.addPackage(destination, package)
         end

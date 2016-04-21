@@ -39,6 +39,7 @@ local function ParseHttpDate( date )
 end
 
 local function GetResourceHeaders( url )
+    -- luacheck: ignore
     local response, statusCode, headers =
         assert(http.request{method='HEAD', url=url})
     return headers

@@ -1,4 +1,3 @@
-local lfs = require 'lfs'
 local semver = require 'semver'
 local Network = require 'network'
 local FS      = require 'fs'

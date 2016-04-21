@@ -1,4 +1,4 @@
-FakeRequire = {
+local FakeRequire = {
     originalRequire = require,
     fakedModules = {},
     whitelisted = {}
@@ -32,6 +32,8 @@ function FakeRequire._require( moduleName )
         error('Requiring non whitelisted module: '..moduleName, 2)
     end
 end
+
+-- luacheck: globals require
 
 function FakeRequire:install()
     require = self._require

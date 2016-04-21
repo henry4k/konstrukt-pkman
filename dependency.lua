@@ -25,10 +25,10 @@ local function SortRequirements( requirements )
 end
 
 local function GetAvailablePackages( ctx, requirement )
-    local package = ctx.selectedPackages[requirement.packageName]
-    if package then
+    local selectedPackage = ctx.selectedPackages[requirement.packageName]
+    if selectedPackage then
         -- we already selected a package so we can't pick a different
-        return {package}
+        return {selectedPackage}
     else
         -- we didn't select a package yet so all packages are possible
         local packageVersions = ctx.db[requirement.packageName]
