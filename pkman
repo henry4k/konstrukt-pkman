@@ -1,5 +1,6 @@
 #!/usr/bin/env lua5.2
 local argparse = require 'argparse'
+local pkman = require 'packagemanager/pkman'
 
 local function Run( commands )
     local parser = argparse()
@@ -19,29 +20,10 @@ commands.list =
 {
     description = 'Print packages.',
 
-    setupParser = function( parser )
-        parser:option('-i --installed', 'Only installed packages.')
-            :args(0)
-        --parser:option('-s --selected', 'Only selected packages.')
-    end,
-
     execute = function( arguments )
-        local config = require 'config'
-        local packagedb = require 'packagedb'
-        local repository = require 'repository'
-
-        local db = {}
-        packagedb.gatherInstalledPackages(db, config.searchPaths)
-        if not arguments.installed then
-            for repoName, _ in pairs(config.repositories) do
-                packagedb.mergeDatabases(db, repository.loadRepoDatabase(repoName))
-            end
-        end
-
-        for packageName, versions in pairs(db) do
-            for versionString, package in pairs(versions) do
-                print(string.format('%s %s', packageName, versionString))
-            end
+        local db = pkman.buildPackageDB{localPackages=true, remotePackages=true}
+        for package in pkman.iterPackages(db) do
+            print(string.format('%s %s', package.name, package.version))
         end
     end
 }

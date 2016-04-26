@@ -2,9 +2,9 @@
 -- vim: set filetype=lua:
 require 'Test.More'
 local semver = require 'semver'
-local Version = require 'version'
-local Repository = require 'repository'
-local Dependency = require 'dependency'
+local Version    = require 'packagemanager/version'
+local Repository = require 'packagemanager/repository'
+local Dependency = require 'packagemanager/dependency'
 
 
 local function testResolver( name, dbFileName, dependencies, expectedPackages )
