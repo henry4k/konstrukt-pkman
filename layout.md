@@ -15,8 +15,9 @@ An actual installable package.
     }
 
     -- :
-    selected = ... -- if the package has been marked for installation by the user
+    required = ... -- if the package has been marked for installation by the user
     localFileName = ... -- if the package is currently installed
+    downloadUrl = ... -- if the package can be downloaded
 }
 ```
 

@@ -22,21 +22,21 @@ commands.list =
 
     execute = function( arguments )
         local db = pkman.buildPackageDB{localPackages=true, remotePackages=true}
+        pkman.markUserRequirements(db)
         for package in pkman.iterPackages(db) do
-            print(string.format('%s %s', package.name, package.version))
+            local status = pkman.getPackageInstallationStatus(package)
+            print(string.format('%s %s %s', package.name, package.version, status))
         end
     end
 }
-commands.sync =
+commands.update =
 {
-    description = 'Synchronize package lists.',
+    description = 'Synchronize package lists, install stuff.',
 
     execute = function()
-        local config = require 'config'
-        local repository = require 'repository'
-        for name, url in pairs(config.repositories) do
-            repository.updateRepo(name, url)
-        end
+        pkman.updateRepos()
+        local db = pkman.buildPackageDB{localPackages=true, remotePackages=true}
+        pkman.installRequirements(db)
     end
 }
 
