@@ -11,9 +11,9 @@ local function BuildRepoDatabaseFileName( repoName )
     return FS.path('repositories', repoName..'.json')
 end
 
-function Repository.updateRepo( name, url )
+function Repository.updateRepo( name, url, downloadProgressFn )
     local fileName = BuildRepoDatabaseFileName(name)
-    Network.downloadFile(fileName, url)
+    Network.downloadFile(fileName, url, downloadProgressFn)
 end
 
 local function PreprocessLoadedPackageEntry( package, packageName )
@@ -56,11 +56,11 @@ function Repository.loadRepoDatabase( repoName )
     return Repository.loadRepoDatabaseFromFile(fileName)
 end
 
-function Repository.installPackage( package, installPath )
+function Repository.installPackage( package, installPath, downloadProgressFn)
     assert(package.downloadUrl, 'Package misses a download URL - maybe it\'s not available in a repository?')
     local baseName = Package.buildBaseName(package.name, package.version)
     local fileName = FS.path(installPath, baseName..'.zip')
-    Network.downloadFile(fileName, package.downloadUrl)
+    Network.downloadFile(fileName, package.downloadUrl, downloadProgressFn)
     package.localFileName = fileName
 end
 

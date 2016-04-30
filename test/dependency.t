@@ -42,3 +42,4 @@ end
 
 plan(2+3)
 testResolver('simple', 'test/simple.json', {A='1'}, {A='1', B='2', C='2'})
+testResolver('cyclic', 'test/cyclic.json', {A='1'}, {A='1', B='2', C='2'})

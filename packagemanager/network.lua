@@ -45,17 +45,15 @@ local function GetResourceHeaders( url )
     return headers
 end
 
-local function FileProcessSink( file, totalBytes )
+local function FileProcessSink( file, fileName, url, totalBytes, progressFn )
+    progressFn(fileName, url, totalBytes, 0)
     local bytesWritten = 0
-    io.stdout:write('0%')
     return function( chunk )
         if chunk then
             bytesWritten = bytesWritten + #chunk
-            local fraction = bytesWritten / totalBytes
-            io.stdout:write(string.format('\r%d%%', fraction*100))
+            progressFn(fileName, url, totalBytes, bytesWritten)
             return file:write(chunk)
         else
-            io.stdout:write('\n')
             file:close()
             return 1
         end
@@ -63,7 +61,7 @@ local function FileProcessSink( file, totalBytes )
 end
 
 -- Also use this to update package lists
-function Network.downloadFile( fileName, url )
+function Network.downloadFile( fileName, url, progressFn )
     -- 1. obtain file modification timestamp
     local fileModificationTime = lfs.attributes(fileName, 'modification')
     -- 2. HEAD request to obtain url modification timestamp
@@ -73,12 +71,13 @@ function Network.downloadFile( fileName, url )
     -- 3. download url to file (downloadFile)
     if not fileModificationTime or
        resourceModificationTime > fileModificationTime then
-        print(string.format('Downloading %s from %s ...', fileName, url))
         local file = assert(io.open(fileName, 'w'))
-        local sink = FileProcessSink(file, resourceHeaders['content-length'])
+        local sink = FileProcessSink(file,
+                                     fileName,
+                                     url,
+                                     tonumber(resourceHeaders['content-length']),
+                                     progressFn)
         assert(http.request{url=url, sink=sink})
-    else
-        print(string.format('%s is up to date.', fileName))
     end
 end
 

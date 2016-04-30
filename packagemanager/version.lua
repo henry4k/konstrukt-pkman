@@ -87,6 +87,8 @@ local function TryParseComparator( expr )
     end
 end
 
+local RangeMT
+
 function Version.parseVersionRange( rangeExpr )
     -- a.b.c - x.y.z
     -- a.b.c   =>  a.b.c - a.b.c
@@ -101,31 +103,62 @@ function Version.parseVersionRange( rangeExpr )
                   TryParseSingle(rangeExpr) or
                   TryParseRange(rangeExpr) or
                   TryParseComparator(rangeExpr)
-    return assert(range, 'Malformatted range expression.')
+    assert(range, 'Malformatted range expression.')
+    return setmetatable(range, RangeMT)
 end
 
---[[
-local function TryComposeAny( range )
-    if range.min == MinimumVersion and
-       range.max == MaximumVersion then
-       return '*'
-   end
-end
-
-local function TryComposeSingle( range )
-    if range.min == range.max then
-
+local function TryComposeAny( min, max )
+    if #min == 0 and #max == 0 then
+        return '*'
     end
 end
 
-function Version.composeVersionRange( range )
-    local expr = TryComposeAny(range) or
-                 TryComposeSinge(range) or
-                 TryComposeRange(range) or
-                 TryComposeComparator(range)
-    return assert(expr, 'Malformatted range table.')
+local function TryComposeSingle( min, max )
+    for i = 1, 3 do
+        if min[i] ~= max[i] then
+            return
+        end
+    end
+    return table.concat(min, '.')
 end
-]]
+
+local function TryComposeRange( min, max )
+    return string.format('%s - %s',
+                         table.concat(min, '.'),
+                         table.concat(max, '.'))
+end
+
+local function ComposeVersionRange( range )
+    local min = {range.min.major,
+                 range.min.minor,
+                 range.min.patch}
+    for i = 3, 1, -1 do
+        if min[i] == 0 then
+            min[i] = nil
+        else
+            break
+        end
+    end
+
+    local max = {range.max.major,
+                 range.max.minor,
+                 range.max.patch}
+    for i = 3, 1, -1 do
+        if max[i] == math.huge then
+            max[i] = nil
+        else
+            break
+        end
+    end
+
+    local rangeExpr = TryComposeAny(min, max) or
+                      TryComposeSingle(min, max) or
+                      TryComposeRange(min, max)
+    assert(rangeExpr, 'Malformatted range.')
+    return rangeExpr
+end
+
+RangeMT = { __tostring = ComposeVersionRange }
 
 function Version.isVersionInVersionRange( version, range )
     return version >= range.min and

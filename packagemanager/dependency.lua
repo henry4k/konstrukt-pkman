@@ -16,7 +16,8 @@ local function CopyContext( ctx )
     {
         db = ctx.db,
         selectedPackages = Misc.copyTable(ctx.selectedPackages),
-        openRequirements = Misc.copyTable(ctx.openRequirements)
+        openRequirements = Misc.copyTable(ctx.openRequirements),
+        closedRequirements = Misc.copyTable(ctx.closedRequirements)
     }
 end
 
@@ -33,7 +34,7 @@ local function GetAvailablePackages( ctx, requirement )
         -- we didn't select a package yet so all packages are possible
         local packageVersions = ctx.db[requirement.packageName]
         if not packageVersions then
-            error(string.format('Package %s not available.', requirement.packageName))
+            error(string.format('No package statisfies requirement: %s %s', requirement.packageName, requirement.versionRange))
         end
         local packages = {}
         for _, package in pairs(packageVersions) do
@@ -51,6 +52,19 @@ local function GetCompatiblePackages( ctx, requirement )
     return Version.getMatchingPackages(available, requirement.versionRange)
 end
 
+local function RequirementsAreEqual( a, b )
+    return a.packageName == b.packageName and
+           a.versionRange == b.versionRange
+end
+
+local function IsRequirementClosed( requirement, ctx )
+    for _, closedRequirement in ipairs(ctx.closedRequirements) do
+        if RequirementsAreEqual(closedRequirement, requirement) then
+            return true
+        end
+    end
+end
+
 ---
 -- @param dependencies
 -- <package name> = <version range>
@@ -61,7 +75,9 @@ local function AddDependenciesAsRequirements( ctx, dependencies )
             packageName = packageName,
             versionRange = versionRange
         }
-        table.insert(ctx.openRequirements, requirement)
+        if not IsRequirementClosed(requirement, ctx) then
+            table.insert(ctx.openRequirements, requirement)
+        end
     end
     SortRequirements(ctx.openRequirements)
 end
@@ -72,6 +88,7 @@ end
 local function ResolveRequirement( ctx )
     local requirement = table.remove(ctx.openRequirements)
     if requirement then
+        table.insert(ctx.closedRequirements, requirement)
         local compatiblePackages = GetCompatiblePackages(ctx, requirement)
         local conflictResolution = nil
         for _, package in ipairs(compatiblePackages) do
@@ -94,12 +111,19 @@ end
 --
 -- @param dependencies
 -- <package name> = <version range>
+--
+-- @return
+-- The first return value is a table, which contains all packages needed to
+-- statisfy the dependencies.
+-- If dependency resolution fails, the first return value is `nil` and a table
+-- describing the problem is the second return value.
 function Dependency.resolve( db, dependencies )
     local ctx =
     {
         db = db,
-        selectedPackages = {},
-        openRequirements = {}
+        selectedPackages   = {},
+        openRequirements   = {},
+        closedRequirements = {}
     }
     AddDependenciesAsRequirements(ctx, dependencies)
     return assert(ResolveRequirement(ctx), '???')

@@ -35,9 +35,39 @@ function pkman.iterPackages( db )
     return coroutine.wrap(function() PackageIteratorCoro(db) end)
 end
 
+local Kibibyte = math.pow(2, 10)
+local Mebibyte = math.pow(2, 20)
+local function GetByteProgress( bytesWritten, totalBytes )
+    local unit = Mebibyte
+    local unitName = 'MiB'
+    if totalBytes < unit then
+        unit = Kibibyte
+        unitName = 'KiB'
+        if totalBytes < unit then
+            unit = 1
+            unitName = 'bytes'
+        end
+    end
+    local max = string.format('%d', totalBytes/unit)
+    return string.format('% '..#max..'d/%d %s', bytesWritten/unit, max, unitName)
+end
+
+local function PrintDownloadProgress( fileName, url, totalBytes, bytesWritten )
+    local fraction = bytesWritten / totalBytes
+    if fraction ~= 0 then
+        io.stdout:write('\r')
+    end
+    io.stdout:write('Downloading ', fileName, ' from ', url, ': ')
+    io.stdout:write(string.format('% 3d%% ', fraction*100))
+    io.stdout:write(GetByteProgress(bytesWritten, totalBytes))
+    if fraction == 1 then
+        io.stdout:write('\n')
+    end
+end
+
 function pkman.updateRepos()
     for name, url in pairs(Config.repositories) do
-        Repository.updateRepo(name, url)
+        Repository.updateRepo(name, url, PrintDownloadProgress)
     end
 end
 
@@ -89,7 +119,7 @@ function pkman.installRequirements( db )
     end
 
     for _, package in pairs(outstandingPackages) do
-        Repository.installPackage(package, Config.installPath)
+        Repository.installPackage(package, Config.installPath, PrintDownloadProgress)
     end
 end
 

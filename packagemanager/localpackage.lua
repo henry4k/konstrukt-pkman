@@ -20,7 +20,7 @@ local function ExtractPackageMetadata( fileName )
         if fileName:match('%.zip$') then
             return cjson.decode(assert(Zip.readFile(fileName, 'meta.json')))
         else
-            print('Not a package: '..fileName)
+            error('Not a package: '..fileName)
         end
     end
 end
