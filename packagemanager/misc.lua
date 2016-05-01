@@ -12,7 +12,7 @@ function Misc.tablesAreEqual( a, b )
         end
 
         if tA == 'table' then
-            if not Misc.compareTablesRecursively(vA, vB) then
+            if not Misc.tablesAreEqual(vA, vB) then
                 return false
             end
         else

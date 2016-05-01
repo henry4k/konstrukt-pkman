@@ -1,4 +1,10 @@
 #!/usr/bin/env lua5.2
+-- Setup a proper search path, if possible:
+local here = arg[0]:match('^(.+)/')
+if here then
+    package.path = string.format('%s%s?.lua;%s', here, package.config:sub(1,1), package.path)
+end
+
 local argparse = require 'argparse'
 local pkman = require 'packagemanager/pkman'
 local Repository = require 'packagemanager/repository'

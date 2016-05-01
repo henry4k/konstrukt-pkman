@@ -37,37 +37,73 @@ end
 
 local Kibibyte = math.pow(2, 10)
 local Mebibyte = math.pow(2, 20)
-local function GetByteProgress( bytesWritten, totalBytes )
-    local unit = Mebibyte
-    local unitName = 'MiB'
-    if totalBytes < unit then
-        unit = Kibibyte
-        unitName = 'KiB'
-        if totalBytes < unit then
-            unit = 1
-            unitName = 'bytes'
-        end
+local function GetByteUnit( reference )
+    if reference >= Mebibyte then
+        return 'MiB', Mebibyte
+    elseif reference >= Kibibyte then
+        return 'KiB', Kibibyte
+    else
+        return 'bytes', 1
     end
-    local max = string.format('%d', totalBytes/unit)
-    return string.format('% '..#max..'d/%d %s', bytesWritten/unit, max, unitName)
 end
 
-local function PrintDownloadProgress( fileName, url, totalBytes, bytesWritten )
-    local fraction = bytesWritten / totalBytes
-    if fraction ~= 0 then
-        io.stdout:write('\r')
-    end
-    io.stdout:write('Downloading ', fileName, ' from ', url, ': ')
-    io.stdout:write(string.format('% 3d%% ', fraction*100))
-    io.stdout:write(GetByteProgress(bytesWritten, totalBytes))
-    if fraction == 1 then
-        io.stdout:write('\n')
-    end
+local DownloadEventHandlerMT =
+{
+    __index =
+    {
+        write = function( self )
+            local bytesWritten = self.bytesWritten
+            io.stdout:write(self.lineStart,
+                            string.format(self.format,
+                                          (bytesWritten/self.totalBytes)*100,
+                                          bytesWritten/self.unit))
+        end,
+
+        onDownloadBegin = function( self, fileName, url, totalBytes )
+            self.lineStart = string.format('Downloading %s from %s: ', fileName, url)
+            self.totalBytes = totalBytes
+
+            local unitName, unit = GetByteUnit(totalBytes)
+            self.unit = unit
+
+            local totalBytesStr = string.format('%d', totalBytes/unit)
+            self.format = '% 3d%% % '..#totalBytesStr..'d/'..totalBytesStr..' '..unitName
+
+            local onePercent = totalBytes / 100
+            self.minimumChange = math.min(onePercent, unit)
+
+            self.lastPrintedBytes = 0
+            self.bytesWritten = 0
+
+            self:write()
+        end,
+
+        onDownloadProgress = function( self, bytesWritten )
+            self.bytesWritten = bytesWritten
+            local delta = bytesWritten-self.lastPrintedBytes
+            if delta >= self.minimumChange then
+                io.stdout:write('\r')
+                self:write()
+                io.stdout:flush()
+                self.lastPrintedBytes = bytesWritten
+            end
+        end,
+
+        onDownloadEnd = function( self )
+            io.stdout:write('\r')
+            self:write()
+            io.stdout:write('\n')
+        end
+    }
+}
+local function CreateDownloadEventHandler()
+    return setmetatable({}, DownloadEventHandlerMT)
 end
 
 function pkman.updateRepos()
     for name, url in pairs(Config.repositories) do
-        Repository.updateRepo(name, url, PrintDownloadProgress)
+        local eventHandler = CreateDownloadEventHandler()
+        Repository.updateIndex(name, url, eventHandler)
     end
 end
 
@@ -113,13 +149,16 @@ function pkman.installRequirements( index )
         end
     end
 
-    print('Packages that need to be downloaded:')
-    for _, package in pairs(outstandingPackages) do
-        print(string.format('%s %s', package.name, package.version))
-    end
+    if next(outstandingPackages) then
+        print('Packages that need to be downloaded:')
+        for _, package in pairs(outstandingPackages) do
+            print(string.format('%s %s', package.name, package.version))
+        end
 
-    for _, package in pairs(outstandingPackages) do
-        Repository.installPackage(package, Config.installPath, PrintDownloadProgress)
+        for _, package in pairs(outstandingPackages) do
+            local eventHandler = CreateDownloadEventHandler()
+            Repository.installPackage(package, Config.installPath, eventHandler)
+        end
     end
 end
 

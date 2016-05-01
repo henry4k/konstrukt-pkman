@@ -11,9 +11,9 @@ local function BuildRepoIndexFileName( repoName )
     return FS.path('repositories', repoName..'.json')
 end
 
-function Repository.updateIndex( name, url, downloadProgressFn )
+function Repository.updateIndex( name, url, downloadEventHandler )
     local fileName = BuildRepoIndexFileName(name)
-    Network.downloadFile(fileName, url, downloadProgressFn)
+    Network.downloadFile(fileName, url, downloadEventHandler)
 end
 
 local function PreprocessLoadedPackageEntry( package, packageName )
@@ -89,11 +89,11 @@ function Repository.saveIndexToFile( index, fileName, baseUrl )
     FS.writeJsonFile(fileName, repoData)
 end
 
-function Repository.installPackage( package, installPath, downloadProgressFn )
+function Repository.installPackage( package, installPath, downloadEventHandler )
     assert(package.downloadUrl, 'Package misses a download URL - maybe it\'s not available in a repository?')
     local baseName = Package.buildBaseName(package.name, package.version)
     local fileName = FS.path(installPath, baseName..'.zip')
-    Network.downloadFile(fileName, package.downloadUrl, downloadProgressFn)
+    Network.downloadFile(fileName, package.downloadUrl, downloadEventHandler)
     package.localFileName = fileName
 end
 

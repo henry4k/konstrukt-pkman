@@ -42,16 +42,18 @@ local function GetResourceHeaders( url )
     -- luacheck: ignore
     local response, statusCode, headers =
         assert(http.request{method='HEAD', url=url})
+    if statusCode < 200 or statusCode >= 300 then
+        error(string.format('%s is not available: %d', url, statusCode))
+    end
     return headers
 end
 
-local function FileProcessSink( file, fileName, url, totalBytes, progressFn )
-    progressFn(fileName, url, totalBytes, 0)
+local function FileProcessSink( file, eventHandler )
     local bytesWritten = 0
     return function( chunk )
         if chunk then
             bytesWritten = bytesWritten + #chunk
-            progressFn(fileName, url, totalBytes, bytesWritten)
+            eventHandler:onDownloadProgress(bytesWritten)
             return file:write(chunk)
         else
             file:close()
@@ -61,23 +63,27 @@ local function FileProcessSink( file, fileName, url, totalBytes, progressFn )
 end
 
 -- Also use this to update package lists
-function Network.downloadFile( fileName, url, progressFn )
+function Network.downloadFile( fileName, url, eventHandler )
     -- 1. obtain file modification timestamp
     local fileModificationTime = lfs.attributes(fileName, 'modification')
     -- 2. HEAD request to obtain url modification timestamp
     local resourceHeaders = GetResourceHeaders(url)
-    local resourceModificationTime =
-        ParseHttpDate(resourceHeaders['last-modified'])
+    local resourceModificationTime
+    if resourceHeaders['last-modified'] then
+        resourceModificationTime =
+            ParseHttpDate(resourceHeaders['last-modified'])
+    end
     -- 3. download url to file (downloadFile)
     if not fileModificationTime or
+       not resourceModificationTime or
        resourceModificationTime > fileModificationTime then
         local file = assert(io.open(fileName, 'w'))
-        local sink = FileProcessSink(file,
-                                     fileName,
+        local sink = FileProcessSink(file, eventHandler)
+        eventHandler:onDownloadBegin(fileName,
                                      url,
-                                     tonumber(resourceHeaders['content-length']),
-                                     progressFn)
+                                     tonumber(resourceHeaders['content-length']))
         assert(http.request{url=url, sink=sink})
+        eventHandler:onDownloadEnd()
     end
 end
 

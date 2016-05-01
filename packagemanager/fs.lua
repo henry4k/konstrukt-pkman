@@ -5,7 +5,11 @@ local semver = require 'semver'
 
 local FS = {}
 
-FS.dirSep = '/'
+FS.dirSep = package.config:sub(1,1)
+if not FS.dirSep:match('[/\\]') then
+    FS.dirSep = '/'
+    io.stderr:write('Failed to get directory separator.  Assuming "/"')
+end
 
 function FS.path( ... )
     return table.concat({...}, FS.dirSep)
