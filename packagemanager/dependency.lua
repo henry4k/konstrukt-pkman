@@ -14,7 +14,7 @@ local Dependency = {}
 local function CopyContext( ctx )
     return
     {
-        db = ctx.db,
+        index = ctx.index,
         selectedPackages = Misc.copyTable(ctx.selectedPackages),
         openRequirements = Misc.copyTable(ctx.openRequirements),
         closedRequirements = Misc.copyTable(ctx.closedRequirements)
@@ -32,7 +32,7 @@ local function GetAvailablePackages( ctx, requirement )
         return {selectedPackage}
     else
         -- we didn't select a package yet so all packages are possible
-        local packageVersions = ctx.db[requirement.packageName]
+        local packageVersions = ctx.index[requirement.packageName]
         if not packageVersions then
             error(string.format('No package statisfies requirement: %s %s', requirement.packageName, requirement.versionRange))
         end
@@ -117,10 +117,10 @@ end
 -- statisfy the dependencies.
 -- If dependency resolution fails, the first return value is `nil` and a table
 -- describing the problem is the second return value.
-function Dependency.resolve( db, dependencies )
+function Dependency.resolve( index, dependencies )
     local ctx =
     {
-        db = db,
+        index = index,
         selectedPackages   = {},
         openRequirements   = {},
         closedRequirements = {}

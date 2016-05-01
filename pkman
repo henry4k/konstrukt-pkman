@@ -1,6 +1,7 @@
 #!/usr/bin/env lua5.2
 local argparse = require 'argparse'
 local pkman = require 'packagemanager/pkman'
+local Repository = require 'packagemanager/repository'
 
 local function Run( commands )
     local parser = argparse()
@@ -20,10 +21,10 @@ commands.list =
 {
     description = 'Print packages.',
 
-    execute = function( arguments )
-        local db = pkman.buildPackageDB{localPackages=true, remotePackages=true}
-        pkman.markUserRequirements(db)
-        for package in pkman.iterPackages(db) do
+    execute = function()
+        local index = pkman.buildPackageIndex{localPackages=true, remotePackages=true}
+        pkman.markUserRequirements(index)
+        for package in pkman.iterPackages(index) do
             local status = pkman.getPackageInstallationStatus(package)
             print(string.format('%s %s %s', package.name, package.version, status))
         end
@@ -35,8 +36,24 @@ commands.update =
 
     execute = function()
         pkman.updateRepos()
-        local db = pkman.buildPackageDB{localPackages=true, remotePackages=true}
-        pkman.installRequirements(db)
+        local index = pkman.buildPackageIndex{localPackages=true, remotePackages=true}
+        pkman.installRequirements(index)
+    end
+}
+commands.index =
+{
+    description = 'Generate a package index.  Needed for repositories.',
+
+    setupParser = function( parser )
+        parser:argument('file', 'Index location', 'index.json')
+            :args(1)
+        parser:argument('baseUrl', '')
+            :args(1)
+    end,
+
+    execute = function( arguments )
+        local index = pkman.buildPackageIndex{localPackages=true}
+        Repository.saveIndexToFile(index, arguments.file, arguments.baseUrl)
     end
 }
 

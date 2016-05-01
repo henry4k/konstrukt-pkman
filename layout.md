@@ -24,10 +24,10 @@ An actual installable package.
 
 
 
-## Package DB
+## Package index
 
 Stores packages.  Since packages can be available in multiple versions,
-the DB stores the package versions `db[<package name>]`.
+the index stores the package versions `index[<package name>]`.
 
 ```
 {

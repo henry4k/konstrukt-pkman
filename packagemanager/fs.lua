@@ -22,6 +22,16 @@ function FS.readJsonFile( fileName )
     return cjson.decode(FS.readFile(fileName))
 end
 
+function FS.writeFile( fileName, content )
+    local file = assert(io.open(fileName, 'w'))
+    file:write(content)
+    file:close()
+end
+
+function FS.writeJsonFile( fileName, value )
+    return FS.writeFile(fileName, cjson.encode(value))
+end
+
 function FS.parseFileName( fileName )
     local path, pathEnd = fileName:match('^(.*)[/\\]()')
     pathEnd = pathEnd or 1

@@ -4,7 +4,7 @@ local semver = require 'semver'
 local FS        = require 'packagemanager/fs'
 local Zip       = require 'packagemanager/zip'
 local Version   = require 'packagemanager/version'
-local PackageDB = require 'packagemanager/packagedb'
+local PackageIndex = require 'packagemanager/packageindex'
 local Package   = require 'packagemanager/package'
 
 
@@ -40,12 +40,13 @@ local function PreprocessMetaData( metadata )
 end
 
 local LocalPackageMT = {}
-function LocalPackageMT.__index( package, _ )
+function LocalPackageMT.__index( package, key )
     if not package._metadataLoaded then
         package._metadataLoaded = true
         local metadata = ExtractPackageMetadata(package.localFileName)
         PreprocessMetaData(metadata)
         Package.mergePackages(package, metadata)
+        return package[key]
     end
 end
 
@@ -54,7 +55,7 @@ function LocalPackage.readLocalPackage( fileName )
     local package =
     {
         name = packageInfo.package,
-        version = packageInfo.version or semver(0),
+        version = packageInfo.version,
         localFileName = fileName,
         _metadataLoaded = false
     }
@@ -71,7 +72,7 @@ local function IsLocalPackage( fileName )
     end
 end
 
-function LocalPackage.gatherInstalledPackages( db, searchPaths )
+function LocalPackage.gatherInstalledPackages( index, searchPaths )
     local packages = {}
     for _, searchPath in ipairs(searchPaths) do
         for entry in lfs.dir(searchPath) do
@@ -88,16 +89,16 @@ function LocalPackage.gatherInstalledPackages( db, searchPaths )
     end
 
     for _, package in pairs(packages) do
-        PackageDB.addPackage(db, package)
+        PackageIndex.addPackage(index, package)
     end
 end
 
-function LocalPackage.remove( db, package )
-    assert(db[package.name], 'Package does not exist in DB.')
-    assert(db[package.name][tostring(package.version)], 'Package version does not exist in DB.')
+function LocalPackage.remove( index, package )
+    assert(index[package.name], 'Package does not exist in index.')
+    assert(index[package.name][tostring(package.version)], 'Package version does not exist in index.')
     assert(package.localFileName, 'File name missing - maybe package is not an installed package?')
     assert(os.remove(package.localFileName))
-    PackageDB.removePackage(package)
+    PackageIndex.removePackage(package)
 end
 
 

@@ -7,8 +7,8 @@ local Repository = require 'packagemanager/repository'
 local Dependency = require 'packagemanager/dependency'
 
 
-local function testResolver( name, dbFileName, dependencies, expectedPackages )
-    local db = Repository.loadRepoDatabaseFromFile(dbFileName)
+local function testResolver( name, indexFileName, dependencies, expectedPackages )
+    local index = Repository.loadIndexFromFile(indexFileName)
 
     -- Refine arguments:
     for packageName, versionRangeStr in pairs(dependencies) do
@@ -19,7 +19,7 @@ local function testResolver( name, dbFileName, dependencies, expectedPackages )
     end
 
     local packages
-    lives_ok(function() packages = Dependency.resolve(db, dependencies) end, {}, name..': resolve')
+    lives_ok(function() packages = Dependency.resolve(index, dependencies) end, {}, name..': resolve')
 
     -- Check for expected packages:
     for packageName, version in pairs(expectedPackages) do
@@ -40,6 +40,6 @@ local function testResolver( name, dbFileName, dependencies, expectedPackages )
 end
 
 
-plan(2+3)
+plan(16)
 testResolver('simple', 'test/simple.json', {A='1'}, {A='1', B='2', C='2'})
 testResolver('cyclic', 'test/cyclic.json', {A='1'}, {A='1', B='2', C='2'})

@@ -104,9 +104,11 @@ function Version.parseVersionRange( rangeExpr )
                   TryParseRange(rangeExpr) or
                   TryParseComparator(rangeExpr)
     assert(range, 'Malformatted range expression.')
+    range.expression = rangeExpr
     return setmetatable(range, RangeMT)
 end
 
+--[[
 local function TryComposeAny( min, max )
     if #min == 0 and #max == 0 then
         return '*'
@@ -159,6 +161,8 @@ local function ComposeVersionRange( range )
 end
 
 RangeMT = { __tostring = ComposeVersionRange }
+]]
+RangeMT = { __tostring = function( range ) return range.expression end }
 
 function Version.isVersionInVersionRange( version, range )
     return version >= range.min and
@@ -173,33 +177,6 @@ function Version.getMatchingPackages( packages, range )
         end
     end
     return results
-end
-
-local function Max( a, b )
-    if a > b then
-        return a
-    else
-        return b
-    end
-end
-
-local function Min( a, b )
-    if a < b then
-        return a
-    else
-        return b
-    end
-end
-
---- Compute common subset of both ranges.
-function Version.mergeVersionRanges( a, b )
-    local min = Max(a.min, b.min)
-    local max = Min(a.max, b.max)
-    if min < max then
-        return { min = min, max = max }
-    else
-        return nil, 'Empty range.'
-    end
 end
 
 

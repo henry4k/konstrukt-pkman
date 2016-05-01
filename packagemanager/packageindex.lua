@@ -1,16 +1,16 @@
 local Package = require 'packagemanager/package'
 
 
-local PackageDB = {}
+local PackageIndex = {}
 
-function PackageDB.addPackage( db, package )
+function PackageIndex.addPackage( index, package )
     assert(package.name,    'Package has no name.')
     assert(package.version, 'Package has no version.')
 
-    local versions = db[package.name]
+    local versions = index[package.name]
     if not versions then
         versions = {}
-        db[package.name] = versions
+        index[package.name] = versions
     end
 
     local versionString = tostring(package.version)
@@ -22,22 +22,22 @@ function PackageDB.addPackage( db, package )
     end
 end
 
-function PackageDB.mergeDatabases( destination, source )
+function PackageIndex.mergeIndices( destination, source )
     for _, versions in pairs(source) do
         for _, package in pairs(versions) do
-            PackageDB.addPackage(destination, package)
+            PackageIndex.addPackage(destination, package)
         end
     end
 end
 
-function PackageDB.removePackage( db, package )
+function PackageIndex.removePackage( index, package )
     local versionStr = tostring(package.version)
-    local versions = db[package.name]
-    assert(versions, 'Package does not exist in DB.')
-    assert(versions[versionStr], 'Package version does not exist in DB.')
-    assert(versions[versionStr] == package, 'Package differs from DB.')
+    local versions = index[package.name]
+    assert(versions, 'Package does not exist in index.')
+    assert(versions[versionStr], 'Package version does not exist in index.')
+    assert(versions[versionStr] == package, 'Package differs from index.')
     versions[versionStr] = nil
 end
 
 
-return PackageDB
+return PackageIndex
