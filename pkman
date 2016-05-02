@@ -8,6 +8,7 @@ end
 local argparse = require 'argparse'
 local pkman = require 'packagemanager/pkman'
 local Repository = require 'packagemanager/repository'
+local PackageIndex = require 'packagemanager/packageindex'
 
 local function Run( commands )
     local parser = argparse()
@@ -30,7 +31,7 @@ commands.list =
     execute = function()
         local index = pkman.buildPackageIndex{localPackages=true, remotePackages=true}
         pkman.markUserRequirements(index)
-        for package in pkman.iterPackages(index) do
+        for package in PackageIndex.packages(index) do
             local status = pkman.getPackageInstallationStatus(package)
             print(string.format('%s %s %s', package.name, package.version, status))
         end

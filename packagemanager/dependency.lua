@@ -1,5 +1,6 @@
 local Misc    = require 'packagemanager/misc'
 local Version = require 'packagemanager/version'
+local PackageIndex = require 'packagemanager/packageindex'
 
 
 -- Requirement:
@@ -32,7 +33,9 @@ local function GetAvailablePackages( ctx, requirement )
         return {selectedPackage}
     else
         -- we didn't select a package yet so all packages are possible
-        local packageVersions = ctx.index[requirement.packageName]
+        local packageVersions =
+            PackageIndex.gatherPackages(ctx.index,
+                                        { name = requirement.packageName })
         if not packageVersions then
             error(string.format('No package statisfies requirement: %s %s', requirement.packageName, requirement.versionRange))
         end

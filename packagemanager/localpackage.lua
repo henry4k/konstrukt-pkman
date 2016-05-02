@@ -94,8 +94,6 @@ function LocalPackage.gatherInstalledPackages( index, searchPaths )
 end
 
 function LocalPackage.remove( index, package )
-    assert(index[package.name], 'Package does not exist in index.')
-    assert(index[package.name][tostring(package.version)], 'Package version does not exist in index.')
     assert(package.localFileName, 'File name missing - maybe package is not an installed package?')
     assert(os.remove(package.localFileName))
     PackageIndex.removePackage(package)

@@ -1,8 +1,9 @@
 local semver = require 'semver'
-local Network = require 'packagemanager/network'
-local FS      = require 'packagemanager/fs'
-local Version = require 'packagemanager/version'
-local Package = require 'packagemanager/package'
+local Network      = require 'packagemanager/network'
+local FS           = require 'packagemanager/fs'
+local Version      = require 'packagemanager/version'
+local Package      = require 'packagemanager/package'
+local PackageIndex = require 'packagemanager/packageindex'
 
 
 local Repository = {}
@@ -31,29 +32,24 @@ local function BuildPackageDownloadUrl( baseUrl, packageName, version )
     return string.format('%s/%s.%s.zip', baseUrl, packageName, version)
 end
 
-function Repository.loadIndexFromFile( fileName )
+function Repository.loadIndexFromFile( index, fileName )
     local repoData = FS.readJsonFile(fileName)
     local baseUrl = assert(repoData.baseUrl)
-    local index = assert(repoData.packages)
 
-    for packageName, versions in pairs(index) do
-        local reformattedVersions = {}
+    for packageName, versions in pairs(repoData.packages) do
         for _, package in ipairs(versions) do
             assert(package.version)
-            reformattedVersions[package.version] = package
             PreprocessLoadedPackageEntry(package, packageName)
             package.downloadUrl =
                 BuildPackageDownloadUrl(baseUrl, packageName, package.version)
+            PackageIndex.addPackage(index, package)
         end
-        index[packageName] = reformattedVersions
     end
-
-    return index
 end
 
-function Repository.loadIndex( repoName )
+function Repository.loadIndex( index, repoName )
     local fileName = BuildRepoIndexFileName(repoName)
-    return Repository.loadIndexFromFile(fileName)
+    return Repository.loadIndexFromFile(index, fileName)
 end
 
 local function AddPackageToRepoData( repoData, package )
@@ -81,10 +77,8 @@ function Repository.saveIndexToFile( index, fileName, baseUrl )
         baseUrl = baseUrl,
         packages = {}
     }
-    for _, versions in pairs(index) do
-        for _, package in pairs(versions) do
-            AddPackageToRepoData(repoData, package)
-        end
+    for package in PackageIndex.packages(index) do
+        AddPackageToRepoData(repoData, package)
     end
     FS.writeJsonFile(fileName, repoData)
 end

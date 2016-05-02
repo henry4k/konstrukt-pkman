@@ -10,29 +10,16 @@ local Version      = require 'packagemanager/version'
 local pkman = {}
 
 function pkman.buildPackageIndex( options )
-    local index = {}
+    local index = PackageIndex.create()
     if options.localPackages then
         LocalPackage.gatherInstalledPackages(index, Config.searchPaths)
     end
     if options.remotePackages then
         for repoName, _ in pairs(Config.repositories) do
-            local repoIndex = Repository.loadIndex(repoName)
-            PackageIndex.mergeIndices(index, repoIndex)
+            Repository.loadIndex(index, repoName)
         end
     end
     return index
-end
-
-local function PackageIteratorCoro( index )
-    for _, versions in pairs(index) do
-        for _, version in pairs(versions) do
-            coroutine.yield(version)
-        end
-    end
-end
-
-function pkman.iterPackages( index )
-    return coroutine.wrap(function() PackageIteratorCoro(index) end)
 end
 
 local Kibibyte = math.pow(2, 10)
@@ -175,7 +162,7 @@ function pkman.getPackageInstallationStatus( package )
 end
 
 function pkman.removeObsoletePackages( index )
-    for package in pkman.iterPackages(index) do
+    for package in PackageIndex.packages(index) do
         if not package.required and package.localFileName then
             print(string.format('%s %s', package.name, package.version))
             LocalPackage.remove(index, package)

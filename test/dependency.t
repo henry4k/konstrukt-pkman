@@ -5,10 +5,12 @@ local semver = require 'semver'
 local Version    = require 'packagemanager/version'
 local Repository = require 'packagemanager/repository'
 local Dependency = require 'packagemanager/dependency'
+local PackageIndex = require 'packagemanager/packageindex'
 
 
 local function testResolver( name, indexFileName, dependencies, expectedPackages )
-    local index = Repository.loadIndexFromFile(indexFileName)
+    local index = PackageIndex.create()
+    Repository.loadIndexFromFile(index, indexFileName)
 
     -- Refine arguments:
     for packageName, versionRangeStr in pairs(dependencies) do
