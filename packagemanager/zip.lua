@@ -1,4 +1,5 @@
 local zip = require 'brimworks.zip'
+local FS = require 'packagemanager/fs'
 
 
 local Zip = {}
@@ -9,7 +10,7 @@ function Zip.readFile( zipFileName, entryName )
         return nil, zipErr
     end
 
-    local fileStat, fileErr= zipFile:stat(entryName)
+    local fileStat, fileErr = zipFile:stat(entryName)
     if not fileStat then
         zipFile:close()
         return nil, fileErr
@@ -23,6 +24,51 @@ function Zip.readFile( zipFileName, entryName )
     file:close()
     zipFile:close()
     return content
+end
+
+local function IsDirectory( name )
+    return name:sub(-1) == FS.dirSep
+end
+
+local function ExtractDirectory( stat, destination )
+    assert(stat.size == 0, 'Size of a directory entry should be zero.')
+    local dirName = stat.name:sub(1, -2) -- remove directory separator at the end
+    assert(FS.makeDirectoryPath(destination, dirName))
+end
+
+local function ExtractFile( stat, destination, zipFile, i )
+    local entryDirName = FS.dirname(stat.name)
+    if entryDirName then
+        assert(FS.makeDirectoryPath(destination, entryDirName))
+    end
+
+    local destFileName = FS.path(destination, stat.name)
+    local sourceFile = assert(zipFile:open(i))
+    local destFile = assert(io.open(destFileName, 'w'))
+    while true do
+        local chunk = sourceFile:read(1024)
+        if chunk and #chunk > 0 then
+            destFile:write(chunk)
+        else
+            break
+        end
+    end
+    sourceFile:close()
+    destFile:close()
+end
+
+function Zip.unpack( zipFileName, destination )
+    local zipFile = assert(zip.open(zipFileName))
+    for i = 1, zipFile:get_num_files() do
+        local stat = assert(zipFile:stat(i))
+        stat.name = stat.name:gsub('[/\\]', FS.dirSep) -- normalize directory separators
+        if IsDirectory(stat.name) then
+            ExtractDirectory(stat, destination)
+        else
+            ExtractFile(stat, destination, zipFile, i)
+        end
+    end
+    zipFile:close()
 end
 
 

@@ -1,3 +1,4 @@
+local lfs = require 'lfs'
 local cjson = require 'cjson'
 local semver = require 'semver'
 
@@ -13,6 +14,10 @@ end
 
 function FS.path( ... )
     return table.concat({...}, FS.dirSep)
+end
+
+function FS.dirname( filePath )
+    return filePath:match('^(.+)[/\\]')
 end
 
 function FS.readFile( fileName )
@@ -72,6 +77,40 @@ function FS.parsePackageFileName( fileName )
     end
 
     return result
+end
+
+function FS.recursiveDelete( filePath )
+    if lfs.symlinkattributes(filePath, 'mode') == 'directory' then
+        for entry in lfs.dir(filePath) do
+            if entry ~= '.' and
+               entry ~= '..' then
+                FS.recursiveDelete(FS.path(filePath, entry))
+            end
+        end
+    end
+    return os.remove(filePath)
+end
+
+local function MakeDirIfNotExists( path )
+    local mode = lfs.attributes(path, 'mode')
+    if not mode then
+        return lfs.mkdir(path)
+    elseif mode ~= 'directory' then
+        return false, 'File exists'
+    else
+        return true
+    end
+end
+
+function FS.makeDirectoryPath( base, path )
+    for seperatorPos in path:gmatch('()[/\\]') do
+        local subPath = path:sub(1, seperatorPos-1)
+        local success, errMsg = MakeDirIfNotExists(FS.path(base, subPath))
+        if not success then
+            return false, errMsg
+        end
+    end
+    return MakeDirIfNotExists(FS.path(base, path))
 end
 
 
