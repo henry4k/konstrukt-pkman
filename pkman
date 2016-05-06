@@ -1,67 +1,8 @@
 #!/usr/bin/env lua5.2
 -- Setup a proper search path, if possible:
-local here = arg[0]:match('^(.+)/')
+local here = arg[0]:match('^(.+)[/\\]')
+local dirsep = package.config:sub(1,1) or '/'
 if here then
-    package.path = string.format('%s%s?.lua;%s', here, package.config:sub(1,1), package.path)
+    package.path = string.format('%s%s?.lua;%s', here, dirsep, package.path)
 end
-
-local argparse = require 'argparse'
-local pkman = require 'packagemanager/pkman'
-local Repository = require 'packagemanager/repository'
-local PackageIndex = require 'packagemanager/packageindex'
-
-local function Run( commands )
-    local parser = argparse()
-    parser:command_target('command')
-    for commandName, command in pairs(commands) do
-        local subparser = parser:command(commandName, command.description)
-        if command.setupParser then
-            command.setupParser(subparser)
-        end
-    end
-    local arguments = parser:parse()
-    commands[arguments.command].execute(arguments)
-end
-
-local commands = {}
-commands.list =
-{
-    description = 'Print packages.',
-
-    execute = function()
-        local index = pkman.buildPackageIndex{localPackages=true, remotePackages=true}
-        pkman.markUserRequirements(index)
-        for package in PackageIndex.packages(index) do
-            local status = pkman.getPackageInstallationStatus(package)
-            print(string.format('%s %s %s', package.name, package.version, status))
-        end
-    end
-}
-commands.update =
-{
-    description = 'Synchronize package lists, install stuff.',
-
-    execute = function()
-        pkman.updateRepos()
-        local index = pkman.buildPackageIndex{localPackages=true, remotePackages=true}
-        pkman.installRequirements(index)
-    end
-}
-commands.index =
-{
-    description = 'Generate a package index.  Needed for repositories.',
-
-    setupParser = function( parser )
-        parser:argument('file', 'Index location', 'index.json')
-            :args(1)
-        parser:argument('baseUrl', '')
-            :args(1)
-    end,
-
-    execute = function( arguments )
-        local index = pkman.buildPackageIndex{localPackages=true}
-        Repository.saveIndexToFile(index, arguments.file, arguments.baseUrl)
-    end
-}
-
-Run(commands)
+return dofile(here..dirsep..'packagemanager-cli/main.lua')
