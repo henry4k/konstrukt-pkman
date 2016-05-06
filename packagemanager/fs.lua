@@ -3,7 +3,6 @@ local cjson = require 'cjson'
 local semver = require 'semver'
 
 
-
 local FS = {}
 
 FS.dirSep = package.config:sub(1,1)

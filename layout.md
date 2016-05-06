@@ -8,7 +8,8 @@ An actual installable package.
 {
     -- Required fields:
     name = ... -- Usually not needed in serialized form.
-    version = {...},
+    type = ... -- regular, scenario, packagemanager, engine, native
+    version = {...}
     dependencies =
     {
         <package name> = <version range>

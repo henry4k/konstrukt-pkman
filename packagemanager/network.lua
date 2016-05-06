@@ -1,5 +1,6 @@
 local lfs = require 'lfs'
 local http = require 'socket.http'
+local Zip = require 'packagemanager/zip'
 
 
 local Network = {}
@@ -62,7 +63,6 @@ local function FileProcessSink( file, eventHandler )
     end
 end
 
--- Also use this to update package lists
 function Network.downloadFile( fileName, url, eventHandler )
     -- 1. obtain file modification timestamp
     local fileModificationTime = lfs.attributes(fileName, 'modification')
@@ -73,18 +73,25 @@ function Network.downloadFile( fileName, url, eventHandler )
         resourceModificationTime =
             ParseHttpDate(resourceHeaders['last-modified'])
     end
-    -- 3. download url to file (downloadFile)
+    -- 3. download url to file
     if not fileModificationTime or
        not resourceModificationTime or
        resourceModificationTime > fileModificationTime then
         local file = assert(io.open(fileName, 'w'))
         local sink = FileProcessSink(file, eventHandler)
-        eventHandler:onDownloadBegin(fileName,
-                                     url,
-                                     tonumber(resourceHeaders['content-length']))
+        local size = tonumber(resourceHeaders['content-length'])
+        eventHandler:onDownloadBegin(fileName, url, size)
         assert(http.request{url=url, sink=sink})
         eventHandler:onDownloadEnd()
     end
+end
+
+function Network.downloadAndUnpackZipFile( directory, url, eventHandler )
+    local tmpFileName = directory..'.zip.tmp'
+    Network.downloadFile(tmpFileName, url, eventHandler)
+    assert(lfs.mkdir(directory))
+    Zip.unpack(tmpFileName, directory)
+    assert(os.remove(tmpFileName))
 end
 
 

@@ -39,6 +39,7 @@ function Repository.loadIndexFromFile( index, fileName )
     for packageName, versions in pairs(repoData.packages) do
         for _, package in ipairs(versions) do
             assert(package.version)
+            assert(package.type)
             PreprocessLoadedPackageEntry(package, packageName)
             package.downloadUrl =
                 BuildPackageDownloadUrl(baseUrl, packageName, package.version)
@@ -60,6 +61,7 @@ local function AddPackageToRepoData( repoData, package )
     end
 
     local preparedPackage = {}
+    preparedPackage.type = package.type
     preparedPackage.version = tostring(package.version)
     if package.dependencies then
         local preparedDependencies = {}
@@ -85,9 +87,24 @@ end
 
 function Repository.installPackage( package, installPath, downloadEventHandler )
     assert(package.downloadUrl, 'Package misses a download URL - maybe it\'s not available in a repository?')
+
     local baseName = Package.buildBaseName(package.name, package.version)
-    local fileName = FS.path(installPath, baseName..'.zip')
-    Network.downloadFile(fileName, package.downloadUrl, downloadEventHandler)
+    local fileName
+
+    if package.type ~= 'regular' and
+       package.type ~= 'scenario' then
+        fileName = FS.path(installPath, baseName)
+        Network.downloadAndUnpackZipFile(fileName,
+                                         package.downloadUrl,
+                                         downloadEventHandler)
+        -- TODO?
+    else
+        fileName = FS.path(installPath, baseName..'.zip')
+        Network.downloadFile(fileName,
+                             package.downloadUrl,
+                             downloadEventHandler)
+    end
+
     package.localFileName = fileName
 end
 

@@ -95,7 +95,7 @@ end
 
 function LocalPackage.remove( index, package )
     assert(package.localFileName, 'File name missing - maybe package is not an installed package?')
-    assert(os.remove(package.localFileName))
+    assert(FS.recursiveDelete(package.localFileName))
     PackageIndex.removePackage(package)
 end
 
