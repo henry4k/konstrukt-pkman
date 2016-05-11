@@ -139,7 +139,7 @@ function utils.installRequirements( index )
     if next(outstandingPackages) then
         print('Packages that need to be downloaded:')
         for _, package in pairs(outstandingPackages) do
-            print(string.format('%s %s', package.name, package.version))
+            print(string.format('%s %s', package.name, tostring(package.version)))
         end
 
         for _, package in pairs(outstandingPackages) do

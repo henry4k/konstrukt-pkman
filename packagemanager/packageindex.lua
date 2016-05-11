@@ -1,4 +1,5 @@
 local Package = require 'packagemanager/package'
+local Misc = require 'packagemanager/misc'
 
 
 local PackageIndex = {}
@@ -7,22 +8,43 @@ function PackageIndex.create()
     return {}
 end
 
+local function AddPackageAlternative( index,
+                                      providedName,
+                                      providedVersion,
+                                      package )
+    local alternatives = Misc.createTableHierachy(index,
+                                                  providedName,
+                                                  tostring(providedVersion))
+    local destPackage = alternatives[package.name]
+    if destPackage then
+        Package.mergePackages(destPackage, package)
+    else
+        alternatives[package.name] = package
+    end
+end
+
+local function RemovePackageAlternative( index,
+                                         providedName,
+                                         providedVersion,
+                                         package )
+    local alternatives = Misc.traverseTableHierachy(index,
+                                                    providedName,
+                                                    tostring(providedVersion))
+    assert(alternatives, 'Package does not exist in index.')
+    assert(alternatives[package.name], 'Package alternative does not exist in index.')
+    assert(alternatives[package.name] == package, 'Package differs from index.')
+    alternatives[package.name] = nil
+end
+
 function PackageIndex.addPackage( index, package )
     assert(package.name,    'Package has no name.')
     assert(package.version, 'Package has no version.')
 
-    local versions = index[package.name]
-    if not versions then
-        versions = {}
-        index[package.name] = versions
-    end
-
-    local versionString = tostring(package.version)
-    local destPackage = versions[versionString]
-    if destPackage then
-        Package.mergePackages(destPackage, package)
-    else
-        versions[versionString] = package
+    AddPackageAlternative(index, package.name, package.version, package)
+    if package.provides then
+        for providedName, providedVersion in pairs(package.provides) do
+            AddPackageAlternative(index, providedName, providedVersion, package)
+        end
     end
 end
 
@@ -35,12 +57,12 @@ function PackageIndex.mergeIndices( destination, source )
 end
 
 function PackageIndex.removePackage( index, package )
-    local versionStr = tostring(package.version)
-    local versions = index[package.name]
-    assert(versions, 'Package does not exist in index.')
-    assert(versions[versionStr], 'Package version does not exist in index.')
-    assert(versions[versionStr] == package, 'Package differs from index.')
-    versions[versionStr] = nil
+    RemovePackageAlternative(index, package.name, package.version, package)
+    if package.provides then
+        for providedName, providedVersion in pairs(package.provides) do
+            RemovePackageAlternative(index, providedName, providedVersion, package)
+        end
+    end
 end
 
 local function PropertyMatchesComparator( property, comparator )
@@ -68,18 +90,22 @@ local function IndexQueryCoro( index, comparators )
         -- Optimized search:
         local versions = index[comparators.name]
         if versions then
-            for _, package in pairs(versions) do
-                if PackageMatchesComparators(package, comparators) then
-                    coroutine.yield(package)
+            for _, alternatives in pairs(versions) do
+                for _, package in pairs(alternatives) do
+                    if PackageMatchesComparators(package, comparators) then
+                        coroutine.yield(package)
+                    end
                 end
             end
         end
     else
         -- Generic search:
         for packageName, versions in pairs(index) do
-            for _, package in pairs(versions) do
-                if PackageMatchesComparators(package, comparators) then
-                    coroutine.yield(package)
+            for _, alternatives in pairs(versions) do
+                for _, package in pairs(alternatives) do
+                    if PackageMatchesComparators(package, comparators) then
+                        coroutine.yield(package)
+                    end
                 end
             end
         end

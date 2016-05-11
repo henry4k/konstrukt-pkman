@@ -20,16 +20,25 @@ end
 local function PreprocessLoadedPackageEntry( package, packageName )
     package.name = packageName
     package.version = semver(assert(package.version))
-    for dependency, versionRange in pairs(assert(package.dependencies)) do
-        assert(type(dependency) == 'string')
-        assert(type(versionRange) == 'string')
-        package.dependencies[dependency] =
-            Version.parseVersionRange(versionRange)
+    if package.dependencies then
+        for dependency, versionRange in pairs(assert(package.dependencies)) do
+            assert(type(dependency) == 'string')
+            assert(type(versionRange) == 'string')
+            package.dependencies[dependency] =
+                Version.parseVersionRange(versionRange)
+        end
+    end
+    if package.provides then
+        for name, version in pairs(assert(package.provides)) do
+            assert(type(name) == 'string')
+            assert(type(version) == 'string')
+            package.provides[name] = semver(version)
+        end
     end
 end
 
 local function BuildPackageDownloadUrl( baseUrl, packageName, version )
-    return string.format('%s/%s.%s.zip', baseUrl, packageName, version)
+    return string.format('%s/%s.%s.zip', baseUrl, packageName, tostring(version))
 end
 
 function Repository.loadIndexFromFile( index, fileName )
@@ -63,6 +72,7 @@ local function AddPackageToRepoData( repoData, package )
     local preparedPackage = {}
     preparedPackage.type = package.type
     preparedPackage.version = tostring(package.version)
+
     if package.dependencies then
         local preparedDependencies = {}
         for packageName, versionRange in pairs(package.dependencies) do
@@ -70,6 +80,15 @@ local function AddPackageToRepoData( repoData, package )
         end
         preparedPackage.dependencies = preparedDependencies
     end
+
+    if package.provides then
+        local preparedProvides = {}
+        for name, version in pairs(package.provides) do
+            preparedProvides[name] = tostring(version)
+        end
+        preparedPackage.provides = preparedProvides
+    end
+
     table.insert(versions, preparedPackage)
 end
 

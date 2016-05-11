@@ -45,5 +45,25 @@ function Misc.trim( s )
     return s:match('^%s*(.*)%s*$')
 end
 
+function Misc.createTableHierachy( t, ... )
+    for _, key in ipairs({...}) do
+        if not t[key] then
+            t[key] = {}
+        end
+        t = t[key]
+    end
+    return t
+end
+
+function Misc.traverseTableHierachy( t, ... )
+    for _, key in ipairs({...}) do
+        if not t[key] then
+            return nil
+        end
+        t = t[key]
+    end
+    return t
+end
+
 
 return Misc

@@ -26,7 +26,7 @@ commands.list =
         utils.markUserRequirements(index)
         for package in PackageIndex.packages(index) do
             local status = utils.getPackageInstallationStatus(package)
-            print(string.format('%s %s %s', package.name, package.version, status))
+            print(string.format('%s %s %s', package.name, tostring(package.version), status))
         end
     end
 }

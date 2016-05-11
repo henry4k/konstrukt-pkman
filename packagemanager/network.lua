@@ -77,7 +77,7 @@ function Network.downloadFile( fileName, url, eventHandler )
     if not fileModificationTime or
        not resourceModificationTime or
        resourceModificationTime > fileModificationTime then
-        local file = assert(io.open(fileName, 'w'))
+        local file = assert(io.open(fileName, 'wb'))
         local sink = FileProcessSink(file, eventHandler)
         local size = tonumber(resourceHeaders['content-length'])
         eventHandler:onDownloadBegin(fileName, url, size)

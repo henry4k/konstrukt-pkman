@@ -25,7 +25,7 @@ function Package.mergePackages( destination, source )
 end
 
 function Package.buildBaseName( name, version )
-    return string.format('%s.%s', name, version)
+    return string.format('%s.%s', name, tostring(version))
 end
 
 
