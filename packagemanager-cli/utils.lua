@@ -144,7 +144,8 @@ function utils.installRequirements( index )
 
         for _, package in pairs(outstandingPackages) do
             local eventHandler = CreateDownloadEventHandler()
-            Repository.installPackage(package, Config.installPath, eventHandler)
+            local installPath = assert(Config.searchPaths[1])
+            Repository.installPackage(package, installPath, eventHandler)
         end
     end
 end

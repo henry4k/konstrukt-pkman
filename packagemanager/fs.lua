@@ -15,8 +15,20 @@ function FS.path( ... )
     return table.concat({...}, FS.dirSep)
 end
 
-function FS.dirname( filePath )
-    return filePath:match('^(.+)[/\\]')
+function FS.dirName( filePath )
+    return filePath:match('^(.+)[/\\]') or '.'
+end
+
+function FS.baseName( filePath )
+    return filePath:match('([^/\\]+)$')
+end
+
+function FS.extension( filePath )
+    return filePath:match('%.([^./\\]+)$')
+end
+
+function FS.stripExtension( filePath )
+    return filePath:match('(.+)%.[^./\\]*$') or filePath
 end
 
 function FS.readFile( fileName )

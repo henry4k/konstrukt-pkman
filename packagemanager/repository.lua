@@ -1,4 +1,5 @@
 local semver = require 'semver'
+local LocalPackage = require 'packagemanager/localpackage'
 local Network      = require 'packagemanager/network'
 local FS           = require 'packagemanager/fs'
 local Version      = require 'packagemanager/version'
@@ -110,21 +111,22 @@ function Repository.installPackage( package, installPath, downloadEventHandler )
     local baseName = Package.buildBaseName(package.name, package.version)
     local fileName
 
-    if package.type ~= 'regular' and
-       package.type ~= 'scenario' then
-        fileName = FS.path(installPath, baseName)
-        Network.downloadAndUnpackZipFile(fileName,
-                                         package.downloadUrl,
-                                         downloadEventHandler)
-        -- TODO?
-    else
+    if package.type == 'regular' or
+       package.type == 'scenario' then
         fileName = FS.path(installPath, baseName..'.zip')
         Network.downloadFile(fileName,
                              package.downloadUrl,
                              downloadEventHandler)
+    else
+        fileName = FS.path(installPath, baseName)
+        Network.downloadAndUnpackZipFile(fileName,
+                                         package.downloadUrl,
+                                         downloadEventHandler)
     end
 
     package.localFileName = fileName
+    Package.mergePackages(package, LocalPackage.readLocalPackage(fileName))
+    LocalPackage.setup(package)
 end
 
 

@@ -65,5 +65,11 @@ function Misc.traverseTableHierachy( t, ... )
     return t
 end
 
+if package.config:sub(1,1) == '\\' then
+    Misc.os = 'windows'
+else
+    Misc.os = 'unix'
+end
+
 
 return Misc

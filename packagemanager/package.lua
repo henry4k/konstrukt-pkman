@@ -22,6 +22,14 @@ function Package.mergePackages( destination, source )
             destination[key] = sourceValue
         end
     end
+
+    local destMt = getmetatable(destination)
+    local sourceMt = getmetatable(source)
+    if destMt and sourceMt then
+        assert(destMt ~= sourceMt, 'Cannot merge metatables.')
+    elseif sourceMt then
+        setmetatable(destination, sourceMt)
+    end
 end
 
 function Package.buildBaseName( name, version )

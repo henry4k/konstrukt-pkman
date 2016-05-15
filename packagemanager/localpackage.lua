@@ -1,6 +1,7 @@
 local lfs = require 'lfs'
 local cjson = require 'cjson'
 local semver = require 'semver'
+local Misc      = require 'packagemanager/misc'
 local FS        = require 'packagemanager/fs'
 local Zip       = require 'packagemanager/zip'
 local Version   = require 'packagemanager/version'
@@ -93,8 +94,67 @@ function LocalPackage.gatherInstalledPackages( index, searchPaths )
     end
 end
 
+local function GetLauncherFileName( configFileName, executableFileName )
+    local configDir = FS.dirName(configFileName)
+    local executableBaseName = FS.stripExtension(FS.baseName(executableFileName))
+    if Misc.os == 'windows' then
+        return FS.path(configDir, executableBaseName..'.bat')
+    else
+        return FS.path(configDir, executableBaseName)
+    end
+end
+
+local UnixLauncherTemplate = [[
+#!/bin/sh
+HERE="$(dirname "$0")"
+"$HERE/%s" --config "$HERE/%s" $@
+]]
+
+local WindowsLauncherTemplate = [[
+@echo off
+set HERE=%%~dp0
+"%%HERE%%%s" --config "%%HERE%%%s" %%*
+]]
+
+local function CreateLauncher( configFileName, executableFileName )
+    local launcherFileName = GetLauncherFileName(configFileName, executableFileName)
+    local configDir = FS.dirName(configFileName)
+    local launcherFile = assert(io.open(launcherFileName, 'w'))
+    if Misc.os == 'windows' then
+        launcherFile:write(string.format(WindowsLauncherTemplate,
+                                         executableFileName,
+                                         configDir))
+        launcherFile:close()
+    else
+        launcherFile:write(string.format(UnixLauncherTemplate,
+                                         executableFileName,
+                                         configDir))
+        launcherFile:close()
+        os.execute(string.format('chmod +x "%s"', launcherFileName))
+    end
+end
+
+function LocalPackage.setup( package )
+    if package.type == 'packagemanager' then
+        for _, executable in ipairs(package.executables or {}) do
+            local fileName = FS.path(package.localFileName, executable)
+            CreateLauncher('config.json', fileName)
+        end
+    end
+end
+
+function LocalPackage.teardown( package )
+    if package.type == 'packagemanager' then
+        for _, executable in ipairs(package.executables or {}) do
+            local fileName = FS.path(package.localFileName, executable)
+            os.remove(GetLauncherFileName('config.json', fileName))
+        end
+    end
+end
+
 function LocalPackage.remove( index, package )
     assert(package.localFileName, 'File name missing - maybe package is not an installed package?')
+    LocalPackage.teardown(package)
     assert(FS.recursiveDelete(package.localFileName))
     PackageIndex.removePackage(package)
 end

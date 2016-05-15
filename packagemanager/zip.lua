@@ -1,4 +1,7 @@
+local lfs = require 'lfs'
 local zip = require 'brimworks.zip'
+local bit32 = require 'bit32'
+local Misc = require 'packagemanager/misc'
 local FS = require 'packagemanager/fs'
 
 
@@ -37,7 +40,7 @@ local function ExtractDirectory( stat, destination )
 end
 
 local function ExtractFile( stat, destination, zipFile, i )
-    local entryDirName = FS.dirname(stat.name)
+    local entryDirName = FS.dirName(stat.name)
     if entryDirName then
         assert(FS.makeDirectoryPath(destination, entryDirName))
     end
@@ -55,6 +58,15 @@ local function ExtractFile( stat, destination, zipFile, i )
     end
     sourceFile:close()
     destFile:close()
+
+    if Misc.os == 'unix' then
+        -- Test if executable bit is set for the user:
+        local attributes = zipFile:get_external_attributes(i)
+        if bit32.btest(attributes, 2^22) then
+            os.execute(string.format('chmod +x "%s"', destFileName))
+            print(string.format('chmod +x "%s"', destFileName))
+        end
+    end
 end
 
 function Zip.unpack( zipFileName, destination )
