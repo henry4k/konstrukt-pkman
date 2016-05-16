@@ -1,10 +1,12 @@
 local argparse = require 'argparse'
 local utils = require 'packagemanager-cli/utils'
+local Config = require 'packagemanager/config'
 local Repository = require 'packagemanager/repository'
 local PackageIndex = require 'packagemanager/packageindex'
 
 local function Run( commands )
     local parser = argparse()
+    parser:option('-c --config', 'Configuration file', 'config.json')
     parser:command_target('command')
     for commandName, command in pairs(commands) do
         local subparser = parser:command(commandName, command.description)
@@ -13,6 +15,7 @@ local function Run( commands )
         end
     end
     local arguments = parser:parse()
+    Config.load(arguments.config)
     commands[arguments.command].execute(arguments)
 end
 
@@ -45,9 +48,9 @@ commands.index =
     description = 'Generate a package index.  Needed for repositories.',
 
     setupParser = function( parser )
-        parser:argument('file', 'Index location', 'index.json')
-            :args(1)
         parser:argument('baseUrl', '')
+            :args(1)
+        parser:argument('file', 'Index location', 'index.json')
             :args(1)
     end,
 

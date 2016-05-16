@@ -64,7 +64,6 @@ local function ExtractFile( stat, destination, zipFile, i )
         local attributes = zipFile:get_external_attributes(i)
         if bit32.btest(attributes, 2^22) then
             os.execute(string.format('chmod +x "%s"', destFileName))
-            print(string.format('chmod +x "%s"', destFileName))
         end
     end
 end

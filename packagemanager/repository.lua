@@ -4,13 +4,14 @@ local Network      = require 'packagemanager/network'
 local FS           = require 'packagemanager/fs'
 local Version      = require 'packagemanager/version'
 local Package      = require 'packagemanager/package'
+local Config       = require 'packagemanager/config'
 local PackageIndex = require 'packagemanager/packageindex'
 
 
 local Repository = {}
 
 local function BuildRepoIndexFileName( repoName )
-    return FS.path('repositories', repoName..'.json')
+    return FS.path(Config.repositoryCacheDir, repoName..'.json')
 end
 
 function Repository.updateIndex( name, url, downloadEventHandler )

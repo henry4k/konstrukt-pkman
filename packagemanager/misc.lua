@@ -71,5 +71,15 @@ else
     Misc.os = 'unix'
 end
 
+function Misc.getCurrentDirectory()
+    local dir
+    if Misc.os == 'windows' then
+        dir = os.getenv('CD')
+    else
+        dir = os.getenv('PWD')
+    end
+    return assert(dir)
+end
+
 
 return Misc

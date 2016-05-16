@@ -94,19 +94,8 @@ function utils.updateRepos()
     end
 end
 
-local function PostprocessRequirementGroup( requirementGroup )
-    requirementGroup = Misc.copyTable(requirementGroup)
-    -- Parse version ranges:
-    for packageName, versionRangeStr in pairs(requirementGroup) do
-        local versionRange = Version.parseVersionRange(versionRangeStr)
-        requirementGroup[packageName] = versionRange
-    end
-    return requirementGroup
-end
-
 function utils.markUserRequirements( index )
     for i, requirementGroup in ipairs(Config.requirements) do
-        requirementGroup = PostprocessRequirementGroup(requirementGroup)
         local success, result = pcall(Dependency.resolve, index, requirementGroup)
         if success then
             for _, package in pairs(result) do
@@ -122,7 +111,6 @@ function utils.installRequirements( index )
     local outstandingPackages = {}
 
     for i, requirementGroup in ipairs(Config.requirements) do
-        requirementGroup = PostprocessRequirementGroup(requirementGroup)
         local success, result = pcall(Dependency.resolve, index, requirementGroup)
         if success then
             for _, package in pairs(result) do

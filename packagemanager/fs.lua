@@ -1,6 +1,7 @@
 local lfs = require 'lfs'
 local cjson = require 'cjson'
 local semver = require 'semver'
+local Misc = require 'packagemanager/misc'
 
 
 local FS = {}
@@ -12,7 +13,29 @@ if not FS.dirSep:match('[/\\]') then
 end
 
 function FS.path( ... )
-    return table.concat({...}, FS.dirSep)
+    local elements = {...}
+    for i = 2, #elements do
+        assert(FS.isRelativePath(elements[i]))
+    end
+    return table.concat(elements, FS.dirSep)
+end
+
+function FS.isAbsolutePath( filePath )
+    return filePath:match('^/') or filePath:match('^.:\\')
+end
+
+function FS.isRelativePath( filePath )
+    return not FS.isAbsolutePath(filePath)
+end
+
+function FS.makeAbsolutePath( filePath, baseDir )
+    if FS.isRelativePath(filePath) then
+        baseDir = baseDir or Misc.getCurrentDirectory()
+        assert(FS.isAbsolutePath(baseDir))
+        return FS.path(baseDir, filePath)
+    else
+        return filePath
+    end
 end
 
 function FS.dirName( filePath )
