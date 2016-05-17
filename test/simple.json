@@ -5,6 +5,7 @@
         "A":
         [
             {
+                "type" : "regular",
                 "version": "1",
                 "dependencies":
                 {
@@ -16,6 +17,7 @@
         "B":
         [
             {
+                "type" : "regular",
                 "version": "1",
                 "dependencies":
                 {
@@ -23,6 +25,7 @@
                 }
             },
             {
+                "type" : "regular",
                 "version": "2",
                 "dependencies":
                 {
@@ -33,12 +36,14 @@
         "C":
         [
             {
+                "type" : "regular",
                 "version": "1",
                 "dependencies":
                 {
                 }
             },
             {
+                "type" : "regular",
                 "version": "2",
                 "dependencies":
                 {

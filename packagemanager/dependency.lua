@@ -1,6 +1,6 @@
 local Misc    = require 'packagemanager/misc'
 local Version = require 'packagemanager/version'
-local PackageIndex = require 'packagemanager/packageindex'
+local PackageDB = require 'packagemanager/packagedb'
 
 
 -- Requirement:
@@ -15,7 +15,7 @@ local Dependency = {}
 local function CopyContext( ctx )
     return
     {
-        index = ctx.index,
+        db = ctx.db,
         selectedPackages = Misc.copyTable(ctx.selectedPackages),
         openRequirements = Misc.copyTable(ctx.openRequirements),
         closedRequirements = Misc.copyTable(ctx.closedRequirements)
@@ -34,7 +34,7 @@ local function GetAvailablePackages( ctx, requirement )
     else
         -- we didn't select a package yet so all packages are possible
         local packageVersions =
-            PackageIndex.gatherPackages(ctx.index,
+            PackageDB.gatherPackages(ctx.db,
                                         { name = requirement.packageName })
         if not packageVersions then
             error(string.format('No package statisfies requirement: %s %s', requirement.packageName, requirement.versionRange))
@@ -120,10 +120,10 @@ end
 -- statisfy the dependencies.
 -- If dependency resolution fails, the first return value is `nil` and a table
 -- describing the problem is the second return value.
-function Dependency.resolve( index, dependencies )
+function Dependency.resolve( db, dependencies )
     local ctx =
     {
-        index = index,
+        db = db,
         selectedPackages   = {},
         openRequirements   = {},
         closedRequirements = {}

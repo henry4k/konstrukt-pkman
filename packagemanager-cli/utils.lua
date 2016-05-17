@@ -2,24 +2,24 @@ local Misc         = require 'packagemanager/misc'
 local Config       = require 'packagemanager/config'
 local LocalPackage = require 'packagemanager/localpackage'
 local Repository   = require 'packagemanager/repository'
-local PackageIndex    = require 'packagemanager/packageindex'
+local PackageDB    = require 'packagemanager/packagedb'
 local Dependency   = require 'packagemanager/dependency'
 local Version      = require 'packagemanager/version'
 
 
 local utils = {}
 
-function utils.buildPackageIndex( options )
-    local index = PackageIndex.create()
+function utils.buildPackageDB( options )
+    local db = PackageDB.create()
     if options.localPackages then
-        LocalPackage.gatherInstalledPackages(index, Config.searchPaths)
+        LocalPackage.gatherInstalledPackages(db, Config.searchPaths)
     end
     if options.remotePackages then
         for repoName, _ in pairs(Config.repositories) do
-            Repository.loadIndex(index, repoName)
+            Repository.loadIndex(db, repoName)
         end
     end
-    return index
+    return db
 end
 
 local Kibibyte = math.pow(2, 10)
@@ -94,9 +94,9 @@ function utils.updateRepos()
     end
 end
 
-function utils.markUserRequirements( index )
+function utils.markUserRequirements( db )
     for i, requirementGroup in ipairs(Config.requirements) do
-        local success, result = pcall(Dependency.resolve, index, requirementGroup)
+        local success, result = pcall(Dependency.resolve, db, requirementGroup)
         if success then
             for _, package in pairs(result) do
                 package.required = true
@@ -107,11 +107,11 @@ function utils.markUserRequirements( index )
     end
 end
 
-function utils.installRequirements( index )
+function utils.installRequirements( db )
     local outstandingPackages = {}
 
     for i, requirementGroup in ipairs(Config.requirements) do
-        local success, result = pcall(Dependency.resolve, index, requirementGroup)
+        local success, result = pcall(Dependency.resolve, db, requirementGroup)
         if success then
             for _, package in pairs(result) do
                 if not package.localFileName then
@@ -150,11 +150,11 @@ function utils.getPackageInstallationStatus( package )
     end
 end
 
-function utils.removeObsoletePackages( index )
-    for package in PackageIndex.packages(index) do
+function utils.removeObsoletePackages( db )
+    for package in PackageDB.packages(db) do
         if not package.required and package.localFileName then
             print(string.format('%s %s', package.name, package.version))
-            LocalPackage.remove(index, package)
+            LocalPackage.remove(db, package)
         end
     end
 end

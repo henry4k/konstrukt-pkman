@@ -5,7 +5,7 @@ local Misc      = require 'packagemanager/misc'
 local FS        = require 'packagemanager/fs'
 local Zip       = require 'packagemanager/zip'
 local Version   = require 'packagemanager/version'
-local PackageIndex = require 'packagemanager/packageindex'
+local PackageDB = require 'packagemanager/packagedb'
 local Config    = require 'packagemanager/config'
 local Package   = require 'packagemanager/package'
 
@@ -74,7 +74,7 @@ local function IsLocalPackage( fileName )
     end
 end
 
-function LocalPackage.gatherInstalledPackages( index, searchPaths )
+function LocalPackage.gatherInstalledPackages( db, searchPaths )
     local packages = {}
     for _, searchPath in ipairs(searchPaths) do
         for entry in lfs.dir(searchPath) do
@@ -91,7 +91,7 @@ function LocalPackage.gatherInstalledPackages( index, searchPaths )
     end
 
     for _, package in pairs(packages) do
-        PackageIndex.addPackage(index, package)
+        PackageDB.addPackage(db, package)
     end
 end
 
@@ -149,11 +149,11 @@ function LocalPackage.teardown( package )
     end
 end
 
-function LocalPackage.remove( index, package )
+function LocalPackage.remove( db, package )
     assert(package.localFileName, 'File name missing - maybe package is not an installed package?')
     LocalPackage.teardown(package)
     assert(FS.recursiveDelete(package.localFileName))
-    PackageIndex.removePackage(package)
+    PackageDB.removePackage(db, package)
 end
 
 

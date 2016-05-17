@@ -5,7 +5,7 @@ local FS           = require 'packagemanager/fs'
 local Version      = require 'packagemanager/version'
 local Package      = require 'packagemanager/package'
 local Config       = require 'packagemanager/config'
-local PackageIndex = require 'packagemanager/packageindex'
+local PackageDB    = require 'packagemanager/packagedb'
 
 
 local Repository = {}
@@ -43,7 +43,7 @@ local function BuildPackageDownloadUrl( baseUrl, packageName, version )
     return string.format('%s/%s.%s.zip', baseUrl, packageName, tostring(version))
 end
 
-function Repository.loadIndexFromFile( index, fileName )
+function Repository.loadIndexFromFile( db, fileName )
     local repoData = FS.readJsonFile(fileName)
     local baseUrl = assert(repoData.baseUrl)
 
@@ -54,14 +54,14 @@ function Repository.loadIndexFromFile( index, fileName )
             PreprocessLoadedPackageEntry(package, packageName)
             package.downloadUrl =
                 BuildPackageDownloadUrl(baseUrl, packageName, package.version)
-            PackageIndex.addPackage(index, package)
+            PackageDB.addPackage(db, package)
         end
     end
 end
 
-function Repository.loadIndex( index, repoName )
+function Repository.loadIndex( db, repoName )
     local fileName = BuildRepoIndexFileName(repoName)
-    return Repository.loadIndexFromFile(index, fileName)
+    return Repository.loadIndexFromFile(db, fileName)
 end
 
 local function AddPackageToRepoData( repoData, package )
@@ -94,13 +94,13 @@ local function AddPackageToRepoData( repoData, package )
     table.insert(versions, preparedPackage)
 end
 
-function Repository.saveIndexToFile( index, fileName, baseUrl )
+function Repository.saveIndexToFile( db, fileName, baseUrl )
     local repoData =
     {
         baseUrl = baseUrl,
         packages = {}
     }
-    for package in PackageIndex.packages(index) do
+    for package in PackageDB.packages(db) do
         AddPackageToRepoData(repoData, package)
     end
     FS.writeJsonFile(fileName, repoData)

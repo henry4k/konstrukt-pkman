@@ -2,17 +2,17 @@ local Package = require 'packagemanager/package'
 local Misc = require 'packagemanager/misc'
 
 
-local PackageIndex = {}
+local PackageDB = {}
 
-function PackageIndex.create()
+function PackageDB.create()
     return {}
 end
 
-local function AddPackageAlternative( index,
+local function AddPackageAlternative( db,
                                       providedName,
                                       providedVersion,
                                       package )
-    local alternatives = Misc.createTableHierachy(index,
+    local alternatives = Misc.createTableHierachy(db,
                                                   providedName,
                                                   tostring(providedVersion))
     local destPackage = alternatives[package.name]
@@ -23,44 +23,44 @@ local function AddPackageAlternative( index,
     end
 end
 
-local function RemovePackageAlternative( index,
+local function RemovePackageAlternative( db,
                                          providedName,
                                          providedVersion,
                                          package )
-    local alternatives = Misc.traverseTableHierachy(index,
+    local alternatives = Misc.traverseTableHierachy(db,
                                                     providedName,
                                                     tostring(providedVersion))
-    assert(alternatives, 'Package does not exist in index.')
-    assert(alternatives[package.name], 'Package alternative does not exist in index.')
-    assert(alternatives[package.name] == package, 'Package differs from index.')
+    assert(alternatives, 'Package does not exist in db.')
+    assert(alternatives[package.name], 'Package alternative does not exist in db.')
+    assert(alternatives[package.name] == package, 'Package differs from db.')
     alternatives[package.name] = nil
 end
 
-function PackageIndex.addPackage( index, package )
+function PackageDB.addPackage( db, package )
     assert(package.name,    'Package has no name.')
     assert(package.version, 'Package has no version.')
 
-    AddPackageAlternative(index, package.name, package.version, package)
+    AddPackageAlternative(db, package.name, package.version, package)
     if package.provides then
         for providedName, providedVersion in pairs(package.provides) do
-            AddPackageAlternative(index, providedName, providedVersion, package)
+            AddPackageAlternative(db, providedName, providedVersion, package)
         end
     end
 end
 
-function PackageIndex.mergeIndices( destination, source )
+function PackageDB.mergeIndices( destination, source )
     for _, versions in pairs(source) do
         for _, package in pairs(versions) do
-            PackageIndex.addPackage(destination, package)
+            PackageDB.addPackage(destination, package)
         end
     end
 end
 
-function PackageIndex.removePackage( index, package )
-    RemovePackageAlternative(index, package.name, package.version, package)
+function PackageDB.removePackage( db, package )
+    RemovePackageAlternative(db, package.name, package.version, package)
     if package.provides then
         for providedName, providedVersion in pairs(package.provides) do
-            RemovePackageAlternative(index, providedName, providedVersion, package)
+            RemovePackageAlternative(db, providedName, providedVersion, package)
         end
     end
 end
@@ -83,12 +83,12 @@ local function PackageMatchesComparators( package, comparators )
     return true
 end
 
-local function IndexQueryCoro( index, comparators )
+local function DBQueryCoro( db, comparators )
     comparators = comparators or {}
 
     if type(comparators.name) == 'string' then
         -- Optimized search:
-        local versions = index[comparators.name]
+        local versions = db[comparators.name]
         if versions then
             for _, alternatives in pairs(versions) do
                 for _, package in pairs(alternatives) do
@@ -100,7 +100,7 @@ local function IndexQueryCoro( index, comparators )
         end
     else
         -- Generic search:
-        for packageName, versions in pairs(index) do
+        for packageName, versions in pairs(db) do
             for _, alternatives in pairs(versions) do
                 for _, package in pairs(alternatives) do
                     if PackageMatchesComparators(package, comparators) then
@@ -112,17 +112,17 @@ local function IndexQueryCoro( index, comparators )
     end
 end
 
-function PackageIndex.packages( index, comparators )
-    return coroutine.wrap(function() IndexQueryCoro(index, comparators) end)
+function PackageDB.packages( db, comparators )
+    return coroutine.wrap(function() DBQueryCoro(db, comparators) end)
 end
 
-function PackageIndex.gatherPackages( index, comparators )
+function PackageDB.gatherPackages( db, comparators )
     local result = {}
-    for package in PackageIndex.packages(index, comparators) do
+    for package in PackageDB.packages(db, comparators) do
         table.insert(result, package)
     end
     return result
 end
 
 
-return PackageIndex
+return PackageDB

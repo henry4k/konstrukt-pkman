@@ -2,7 +2,7 @@ local argparse = require 'argparse'
 local utils = require 'packagemanager-cli/utils'
 local Config = require 'packagemanager/config'
 local Repository = require 'packagemanager/repository'
-local PackageIndex = require 'packagemanager/packageindex'
+local PackageDB = require 'packagemanager/packagedb'
 
 local function Run( commands )
     local parser = argparse()
@@ -25,9 +25,9 @@ commands.list =
     description = 'Print packages.',
 
     execute = function()
-        local index = utils.buildPackageIndex{localPackages=true, remotePackages=true}
-        utils.markUserRequirements(index)
-        for package in PackageIndex.packages(index) do
+        local db = utils.buildPackageDB{localPackages=true, remotePackages=true}
+        utils.markUserRequirements(db)
+        for package in PackageDB.packages(db) do
             local status = utils.getPackageInstallationStatus(package)
             print(string.format('%s %s %s', package.name, tostring(package.version), status))
         end
@@ -39,8 +39,8 @@ commands.update =
 
     execute = function()
         utils.updateRepos()
-        local index = utils.buildPackageIndex{localPackages=true, remotePackages=true}
-        utils.installRequirements(index)
+        local db = utils.buildPackageDB{localPackages=true, remotePackages=true}
+        utils.installRequirements(db)
     end
 }
 commands.index =
@@ -55,8 +55,8 @@ commands.index =
     end,
 
     execute = function( arguments )
-        local index = utils.buildPackageIndex{localPackages=true}
-        Repository.saveIndexToFile(index, arguments.file, arguments.baseUrl)
+        local db = utils.buildPackageDB{localPackages=true}
+        Repository.saveIndexToFile(db, arguments.file, arguments.baseUrl)
     end
 }
 

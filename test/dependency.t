@@ -5,12 +5,12 @@ local semver = require 'semver'
 local Version    = require 'packagemanager/version'
 local Repository = require 'packagemanager/repository'
 local Dependency = require 'packagemanager/dependency'
-local PackageIndex = require 'packagemanager/packageindex'
+local PackageDB = require 'packagemanager/packagedb'
 
 
 local function testResolver( name, indexFileName, dependencies, expectedPackages )
-    local index = PackageIndex.create()
-    Repository.loadIndexFromFile(index, indexFileName)
+    local db = PackageDB.create()
+    Repository.loadIndexFromFile(db, indexFileName)
 
     -- Refine arguments:
     for packageName, versionRangeStr in pairs(dependencies) do
@@ -21,7 +21,7 @@ local function testResolver( name, indexFileName, dependencies, expectedPackages
     end
 
     local packages
-    lives_ok(function() packages = Dependency.resolve(index, dependencies) end, {}, name..': resolve')
+    lives_ok(function() packages = Dependency.resolve(db, dependencies) end, {}, name..': resolve')
 
     -- Check for expected packages:
     for packageName, version in pairs(expectedPackages) do
