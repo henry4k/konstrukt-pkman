@@ -114,7 +114,7 @@ function utils.installRequirements( db )
         local success, result = pcall(Dependency.resolve, db, requirementGroup)
         if success then
             for _, package in pairs(result) do
-                if not package.localFileName then
+                if not package.localFileName and not package.virtual then
                     local key = package.name..tostring(package.version)
                     outstandingPackages[key] = package
                 end
