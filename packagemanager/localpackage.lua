@@ -39,6 +39,14 @@ local function PreprocessMetaData( metadata )
         metadata.dependencies[package] =
             Version.parseVersionRange(versionRange)
     end
+
+    if metadata.provides then
+        for name, version in pairs(metadata.provides) do
+            assert(type(name) == 'string')
+            assert(type(version) == 'string')
+            metadata.provides[name] = semver(version)
+        end
+    end
 end
 
 local LocalPackageMT = {}

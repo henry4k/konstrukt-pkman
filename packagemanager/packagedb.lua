@@ -1,5 +1,6 @@
 local Package = require 'packagemanager/package'
 local Misc = require 'packagemanager/misc'
+local Version = require 'packagemanager/version'
 
 
 local PackageDB = {}
@@ -8,19 +9,11 @@ function PackageDB.create()
     return {}
 end
 
-local function AddPackageAlternative( db,
-                                      providedName,
-                                      providedVersion,
-                                      package )
-    local alternatives = Misc.createTableHierachy(db,
-                                                  providedName,
-                                                  tostring(providedVersion))
-    local destPackage = alternatives[package.name]
-    if destPackage then
-        Package.mergePackages(destPackage, package)
-    else
-        alternatives[package.name] = package
+local function GetPackageKey( package, db )
+    if package.virtual then
+        package = package.provider
     end
+    return string.format('%s.%s', package.name, package.version)
 end
 
 local function RemovePackageAlternative( db,
@@ -36,14 +29,36 @@ local function RemovePackageAlternative( db,
     alternatives[package.name] = nil
 end
 
+local function CreateVirtualPackage( name, version, providingPackage )
+    local versionRange = Version.versionToVersionRange(providingPackage.version)
+    return { name = name,
+             version = version,
+             virtual = true,
+             dependencies = { [providingPackage.name] = versionRange },
+             provider = providingPackage }
+end
+
 function PackageDB.addPackage( db, package )
     assert(package.name,    'Package has no name.')
     assert(package.version, 'Package has no version.')
 
-    AddPackageAlternative(db, package.name, package.version, package)
+    local alternatives = Misc.createTableHierachy(db,
+                                                  package.name,
+                                                  tostring(package.version))
+    local key = GetPackageKey(package, db)
+    local destPackage = alternatives[key]
+    if destPackage then
+        Package.mergePackages(destPackage, package)
+    else
+        alternatives[key] = package
+    end
+
     if package.provides then
         for providedName, providedVersion in pairs(package.provides) do
-            AddPackageAlternative(db, providedName, providedVersion, package)
+            local virtualPackage = CreateVirtualPackage(providedName,
+                                                        providedVersion,
+                                                        package)
+            PackageDB.addPackage(db, virtualPackage)
         end
     end
 end
@@ -57,10 +72,18 @@ function PackageDB.mergeIndices( destination, source )
 end
 
 function PackageDB.removePackage( db, package )
-    RemovePackageAlternative(db, package.name, package.version, package)
+    local alternatives = Misc.traverseTableHierachy(db,
+                                                    package.name,
+                                                    tostring(package.version))
+    assert(alternatives, 'Package does not exist in db.')
+    local key = GetPackageKey(package, db)
+    assert(alternatives[key], 'Package alternative does not exist in db.')
+    assert(alternatives[key] == package, 'Package differs from db.')
+    alternatives[key] = nil
+
     if package.provides then
-        for providedName, providedVersion in pairs(package.provides) do
-            RemovePackageAlternative(db, providedName, providedVersion, package)
+        for providedPackage in PackageDB.packages(db, {provider = package}) do
+            PackageDB.removePackage(db, providedPackage)
         end
     end
 end

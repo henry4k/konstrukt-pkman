@@ -34,8 +34,7 @@ local function GetAvailablePackages( ctx, requirement )
     else
         -- we didn't select a package yet so all packages are possible
         local packageVersions =
-            PackageDB.gatherPackages(ctx.db,
-                                        { name = requirement.packageName })
+            PackageDB.gatherPackages(ctx.db, { name = requirement.packageName })
         if not packageVersions then
             error(string.format('No package statisfies requirement: %s %s', requirement.packageName, requirement.versionRange))
         end

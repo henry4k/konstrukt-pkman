@@ -1,0 +1,18 @@
+{
+    "baseUrl": "http://example",
+    "packages":
+    {
+        "B":
+        [
+            {
+                "type" : "regular",
+                "version": "2",
+                "provides":
+                {
+                    "A": "1"
+                },
+                "dependencies": {}
+            }
+        ]
+    }
+}

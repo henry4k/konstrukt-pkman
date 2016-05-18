@@ -21,7 +21,8 @@ local function testResolver( name, indexFileName, dependencies, expectedPackages
     end
 
     local packages
-    lives_ok(function() packages = Dependency.resolve(db, dependencies) end, {}, name..': resolve')
+    packages = Dependency.resolve(db, dependencies)
+    --lives_ok(function() packages = Dependency.resolve(db, dependencies) end, {}, name..': resolve')
 
     -- Check for expected packages:
     for packageName, version in pairs(expectedPackages) do
@@ -42,6 +43,7 @@ local function testResolver( name, indexFileName, dependencies, expectedPackages
 end
 
 
-plan(16)
-testResolver('simple', 'test/simple.json', {A='1'}, {A='1', B='2', C='2'})
-testResolver('cyclic', 'test/cyclic.json', {A='1'}, {A='1', B='2', C='2'})
+plan(19)
+testResolver('simple',  'test/simple.json',  {A='1'}, {A='1', B='2', C='2'})
+testResolver('cyclic',  'test/cyclic.json',  {A='1'}, {A='1', B='2', C='2'})
+testResolver('virtual', 'test/virtual.json', {A='1'}, {A='1', B='2'})

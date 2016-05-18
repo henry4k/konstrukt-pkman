@@ -87,7 +87,7 @@ local function TryParseComparator( expr )
     end
 end
 
-local RangeMT
+local RangeMT = { __tostring = function( range ) return range.expression end }
 
 function Version.parseVersionRange( rangeExpr )
     -- a.b.c - x.y.z
@@ -108,61 +108,11 @@ function Version.parseVersionRange( rangeExpr )
     return setmetatable(range, RangeMT)
 end
 
---[[
-local function TryComposeAny( min, max )
-    if #min == 0 and #max == 0 then
-        return '*'
-    end
+function Version.versionToVersionRange( version )
+    return setmetatable({ min = version,
+                          max = version,
+                          expression = tostring(version) }, RangeMT)
 end
-
-local function TryComposeSingle( min, max )
-    for i = 1, 3 do
-        if min[i] ~= max[i] then
-            return
-        end
-    end
-    return table.concat(min, '.')
-end
-
-local function TryComposeRange( min, max )
-    return string.format('%s - %s',
-                         table.concat(min, '.'),
-                         table.concat(max, '.'))
-end
-
-local function ComposeVersionRange( range )
-    local min = {range.min.major,
-                 range.min.minor,
-                 range.min.patch}
-    for i = 3, 1, -1 do
-        if min[i] == 0 then
-            min[i] = nil
-        else
-            break
-        end
-    end
-
-    local max = {range.max.major,
-                 range.max.minor,
-                 range.max.patch}
-    for i = 3, 1, -1 do
-        if max[i] == math.huge then
-            max[i] = nil
-        else
-            break
-        end
-    end
-
-    local rangeExpr = TryComposeAny(min, max) or
-                      TryComposeSingle(min, max) or
-                      TryComposeRange(min, max)
-    assert(rangeExpr, 'Malformatted range.')
-    return rangeExpr
-end
-
-RangeMT = { __tostring = ComposeVersionRange }
-]]
-RangeMT = { __tostring = function( range ) return range.expression end }
 
 function Version.isVersionInVersionRange( version, range )
     return version >= range.min and

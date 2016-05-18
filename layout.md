@@ -19,6 +19,7 @@
         },
         ...
     }
+    repositoryCacheDir = ... -- defaults to 'repositories'
 }
 ```
 
@@ -55,5 +56,6 @@ An actual installable package.
     required = ... -- if the package has been marked for installation by the user
     localFileName = ... -- if the package is currently installed
     downloadUrl = ... -- if the package can be downloaded
+    virtual = true -- if package is provided by another package
 }
 ```

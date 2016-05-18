@@ -30,12 +30,10 @@ local function PreprocessLoadedPackageEntry( package, packageName )
                 Version.parseVersionRange(versionRange)
         end
     end
-    if package.provides then
-        for name, version in pairs(assert(package.provides)) do
-            assert(type(name) == 'string')
-            assert(type(version) == 'string')
-            package.provides[name] = semver(version)
-        end
+    for name, version in pairs(package.provides or {}) do
+        assert(type(name) == 'string')
+        assert(type(version) == 'string')
+        package.provides[name] = semver(version)
     end
 end
 
