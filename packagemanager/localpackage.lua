@@ -30,14 +30,12 @@ end
 local function PreprocessMetaData( metadata )
     metadata.version = semver(metadata.version or 0)
 
-    if not metadata.dependencies then
-        metadata.dependencies = {}
-    end
-
-    for package, versionRange in pairs(metadata.dependencies) do
-        assert(type(versionRange) == 'string')
-        metadata.dependencies[package] =
-            Version.parseVersionRange(versionRange)
+    if metadata.dependencies then
+        for package, versionRange in pairs(metadata.dependencies) do
+            assert(type(versionRange) == 'string')
+            metadata.dependencies[package] =
+                Version.parseVersionRange(versionRange)
+        end
     end
 
     if metadata.provides then

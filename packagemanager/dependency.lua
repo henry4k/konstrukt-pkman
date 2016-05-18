@@ -97,7 +97,7 @@ local function ResolveRequirement( ctx )
             if not conflictResolution then
                 local newCtx = CopyContext(ctx)
                 newCtx.selectedPackages[requirement.packageName] = package
-                AddDependenciesAsRequirements(newCtx, package.dependencies)
+                AddDependenciesAsRequirements(newCtx, package.dependencies or {})
                 conflictResolution = ResolveRequirement(newCtx)
             else
                 break

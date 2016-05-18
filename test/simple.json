@@ -37,17 +37,11 @@
         [
             {
                 "type" : "regular",
-                "version": "1",
-                "dependencies":
-                {
-                }
+                "version": "1"
             },
             {
                 "type" : "regular",
-                "version": "2",
-                "dependencies":
-                {
-                }
+                "version": "2"
             }
         ]
     }
