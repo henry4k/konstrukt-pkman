@@ -138,19 +138,23 @@ local function CreateLauncher( executableFileName )
 end
 
 function LocalPackage.setup( package )
-    if package.type == 'packagemanager' then
-        for _, executable in ipairs(package.executables or {}) do
-            local fileName = FS.path(package.localFileName, executable)
-            CreateLauncher(fileName)
+    if package.type == 'native' then
+        for executable, attributes in pairs(package.executables or {}) do
+            if attributes.install then
+                local fileName = FS.path(package.localFileName, executable)
+                CreateLauncher(fileName)
+            end
         end
     end
 end
 
 function LocalPackage.teardown( package )
-    if package.type == 'packagemanager' then
-        for _, executable in ipairs(package.executables or {}) do
-            local fileName = FS.path(package.localFileName, executable)
-            os.remove(GetLauncherFileName(fileName))
+    if package.type == 'native' then
+        for executable, attributes in pairs(package.executables or {}) do
+            if attributes.install then
+                local fileName = FS.path(package.localFileName, executable)
+                os.remove(GetLauncherFileName(fileName))
+            end
         end
     end
 end

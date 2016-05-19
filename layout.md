@@ -32,7 +32,7 @@ An actual installable package.
 {
     -- Required fields:
     name = ... -- Usually not needed in serialized form.
-    type = ... -- regular, scenario, packagemanager, engine, native
+    type = ... -- regular, scenario, native, executable
     version = {...}
 
     -- Optional fields:
@@ -45,10 +45,17 @@ An actual installable package.
         <package name> = <version>
     }
 
-    -- Specific to packagmanager packages:
+    -- Specific to packagemanager, engine and native packages:
+    operatingSystem = ... -- windows, linux, macosx, ...
+    architecture = ... -- x86, x86_64, ...
+
+    -- Specific to executable packages:
     executables =
     {
-        <file name>,
+        <file name> =
+        {
+            install = true -- install executable
+        },
         ...
     }
 
@@ -57,5 +64,6 @@ An actual installable package.
     localFileName = ... -- if the package is currently installed
     downloadUrl = ... -- if the package can be downloaded
     virtual = true -- if package is provided by another package
+    provider = ... -- providing package
 }
 ```

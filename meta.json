@@ -1,5 +1,11 @@
 {
-   "type": "packagemanager",
+   "type": "native",
    "version": "0.0.0",
-   "executables": ["pkman"]
+   "executables":
+   {
+       "pkman":
+       {
+           "install": true
+       }
+   }
 }
