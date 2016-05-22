@@ -153,10 +153,29 @@ end
 function utils.removeObsoletePackages( db )
     for package in PackageDB.packages(db) do
         if not package.required and package.localFileName then
-            print(string.format('%s %s', package.name, package.version))
+            print(string.format('Removing %s %s', package.name, package.version))
             LocalPackage.remove(db, package)
         end
     end
+end
+
+-- 'foobar' => package=foobar versionRange=*
+-- 'foobar=1.0' => package=foobar versionRange=1.0.*
+function utils.parseRequirement( str )
+    local packageName, versionRangeExpr = str:match('^([^%s<>=.]+)(.*)$')
+    if not packageName then
+        error('Unable to parse requirement "'..str..'"')
+    end
+
+    if not versionRangeExpr or #versionRangeExpr == 0 then
+        versionRangeExpr = '*'
+    else
+        -- Remove leading equals sign, as version ranges don't need it:
+        versionRangeExpr = versionRangeExpr:match('^%s*=(.*)') or versionRangeExpr
+    end
+    local versionRange = Version.parseVersionRange(versionRangeExpr)
+
+    return packageName, versionRange
 end
 
 
