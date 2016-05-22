@@ -29,21 +29,14 @@ end
 local function GetAvailablePackages( ctx, requirement )
     local selectedPackage = ctx.selectedPackages[requirement.packageName]
     if selectedPackage then
-        -- we already selected a package so we can't pick a different
+        -- we already selected a package, so we can't pick a different
         return {selectedPackage}
     else
-        -- we didn't select a package yet so all packages are possible
-        local packageVersions =
+        -- we didn't select a package yet, so all packages are possible
+        local packages =
             PackageDB.gatherPackages(ctx.db, { name = requirement.packageName })
-        if not packageVersions then
+        if not packages or #packages == 0 then
             error(string.format('No package statisfies requirement: %s %s', requirement.packageName, requirement.versionRange))
-        end
-        local packages = {}
-        for _, package in pairs(packageVersions) do
-            table.insert(packages, package)
-        end
-        if #packages == 0 then
-            error(string.format('Package %s is empty.', requirement.packageName)) -- This should not happen.
         end
         return packages
     end
