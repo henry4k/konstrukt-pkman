@@ -1,9 +1,42 @@
 local lfs = require 'lfs'
 local http = require 'socket.http'
+local https = require 'ssl.https'
 local Zip = require 'packagemanager/zip'
 
 
 local Network = {}
+
+local MaxRedirections = 1
+
+local function HttpHttpsRequest( options )
+    if options.url:match('^https') then
+        options.protocol = 'sslv23'
+        options.options = 'all'
+        -- TODO: Certificate validation is currently disabled, as I'm not sure
+        --       where/how to store the certificates yet.
+        --options.verify = {'peer', 'client_once'}
+        --options.capath = ...
+        --options.cafile = ...
+        return https.request(options)
+    else
+        return http.request(options)
+    end
+end
+
+local function RequestWithRedirection( options )
+    options.redirect = false
+    options.redirectionCount = options.redirectionCount or 0
+    assert(options.redirectionCount <= MaxRedirections, 'Too many redirections.')
+    local result, code, headers, status = HttpHttpsRequest(options)
+    if result and code >= 300 and code < 400 then
+        options.url = assert(headers.location, 'Location header missing - can\'t redirect.')
+        options.redirectionCount = options.redirectionCount + 1
+        return RequestWithRedirection(options)
+    end
+    return result, code, headers, status
+end
+
+Network.request = RequestWithRedirection
 
 local MonthNameIndexMap =
 {
@@ -42,7 +75,7 @@ end
 local function GetResourceHeaders( url )
     -- luacheck: ignore
     local response, statusCode, headers =
-        assert(http.request{method='HEAD', url=url})
+        assert(Network.request{method='HEAD', url=url})
     if statusCode < 200 or statusCode >= 300 then
         error(string.format('%s is not available: %d', url, statusCode))
     end
@@ -81,7 +114,7 @@ function Network.downloadFile( fileName, url, eventHandler )
         local sink = FileProcessSink(file, eventHandler)
         local size = tonumber(resourceHeaders['content-length'])
         eventHandler:onDownloadBegin(fileName, url, size)
-        assert(http.request{url=url, sink=sink})
+        assert(Network.request{url=url, sink=sink})
         eventHandler:onDownloadEnd()
     end
 end
