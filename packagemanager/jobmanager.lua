@@ -85,9 +85,12 @@ local DefaultWorkerCount = 1
 function JobManager.create( options )
     local typeName  = assert(options.typeName, 'typeName missing')
     local processor = assert(options.processor, 'processor missing')
-    local workerCount = options.workerCount or DefaultWorkerCount
+    local minWorkerCount = options.minWorkerCount or 0
+    local maxWorkerCount = options.maxWorkerCount or 1
     local laneLibraries = options.laneLibraries or '*'
     local laneOptions   = options.laneOptions or {}
+
+    assert(minWorkerCount <= maxWorkerCount, 'minWorkerCount must be smaller or equal to maxWorkerCount')
 
     local masterLinda = lanes.linda(typeName..' manager')
     local workerGenerator = lanes.gen(laneLibraries, laneOptions, WorkerFn)
@@ -95,6 +98,8 @@ function JobManager.create( options )
     local instance =
     {
         typeName = typeName,
+        minWorkerCount = minWorkerCount,
+        maxWorkerCount = maxWorkerCount,
         processor = processor,
         masterLinda = masterLinda, -- communication between master and worker
         workerGenerator = workerGenerator,
@@ -104,9 +109,7 @@ function JobManager.create( options )
     }
     setmetatable(instance, ManagerMT)
 
-    for i = 1, workerCount do
-        instance:_startWorker()
-    end
+    instance:_adaptWorkerCount()
 
     return instance
 end
@@ -116,7 +119,7 @@ function ManagerMT:__tostring()
 end
 
 function Manager:destroy()
-    self:_stopAllWorkers()
+    self:_stopAllWorkersNow()
 end
 
 function Manager:_startWorker()
@@ -134,13 +137,7 @@ function Manager:_startWorker()
     return worker, #self.workers
 end
 
-function Manager:_stopWorker( index )
-    local worker = assert(table.remove(self.workers, index))
-    worker.thread:cancel(-1, true)
-    local __ = worker.thread[1] -- join and propagate error if one occurs
-end
-
-function Manager:_stopAllWorkers()
+function Manager:_stopAllWorkersNow()
     for _, worker in ipairs(self.workers) do
         worker.thread:cancel(-1, true)
     end
@@ -152,10 +149,47 @@ function Manager:_stopAllWorkers()
     self.workers = {}
 end
 
+local function TryFindIdleWorkersIndex( manager )
+    if #manager.workers > 0 then
+        for i, worker in ipairs(manager.workers) do
+            if not worker.job then
+                return i
+            end
+        end
+        return #manager.workers -- return last worker
+    end
+end
+
+function Manager:_stopAWorker()
+    local index = assert(TryFindIdleWorkersIndex(self))
+    local worker = table.remove(self.workers, index)
+    worker.thread:cancel(-1, true)
+end
+
 function Manager:_getJobById( id )
     for _, job in ipairs(self.jobs) do
         if job.id == id then
             return job
+        end
+    end
+end
+
+local function boundBy( v, min, max )
+    return math.min(math.max(v, min), max)
+end
+
+function Manager:_adaptWorkerCount()
+    local oldWorkerCount = #self.workers
+    local newWorkerCount = boundBy(#self.jobs,
+                                   self.minWorkerCount,
+                                   self.maxWorkerCount)
+    if newWorkerCount > oldWorkerCount then
+        for i = 1, newWorkerCount-oldWorkerCount do
+            self:_startWorker()
+        end
+    else
+        for i = 1, oldWorkerCount-newWorkerCount do
+            self:_stopAWorker()
         end
     end
 end
@@ -168,6 +202,15 @@ local function HandleThreadError( manager, worker )
     end
 end
 
+local function HandleJobEvent( worker, name, ... )
+    local job = assert(worker.job)
+    local fn = job.eventHandler[name]
+    if fn then
+        fn(job, ...)
+    end
+end
+
+
 local function HandleWorkerEvent( manager, worker, event )
     if event.type == 'start job' then
         assert(not worker.job)
@@ -176,6 +219,7 @@ local function HandleWorkerEvent( manager, worker, event )
         worker.job = job
         job.worker = worker
         job.status = 'running'
+        HandleJobEvent(worker, 'start')
     elseif event.type == 'finish job' then
         assert(worker.job)
         -- remove job from table:
@@ -187,12 +231,13 @@ local function HandleWorkerEvent( manager, worker, event )
         worker.job.worker = nil
         worker.job.status = 'finished'
         worker.job.properties = event.properties
-        -- TODO: Fire event with errMsg and result!
+        HandleJobEvent(worker, 'finish', worker.job.result, worker.job.errMsg)
         worker.job = nil
+        manager:_adaptWorkerCount()
     elseif event.type == 'call' then
         local fnName    = event.fnName
         local arguments = event.arguments
-        assert(worker.job).eventHandler[fnName](unpack(arguments))
+        HandleJobEvent(worker, fnName, unpack(arguments))
     else
         error('Received unknown event from worker: '..event.type)
     end
@@ -211,7 +256,7 @@ local function HandleWorkerEvents( manager, worker )
     end
 end
 
-function Manager:update() -- Update all jobs.
+function Manager:update()
     for _, worker in ipairs(self.workers) do
         HandleThreadError(self, worker)
         HandleWorkerEvents(self, worker)
@@ -254,11 +299,13 @@ function Manager:createJob( arguments, eventHandler )
     {
         typeName = self.typeName,
         id = self:_genNextJobId(),
-        eventHandler = eventHandler,
+        eventHandler = eventHandler or {},
         status = 'waiting'
     }
     setmetatable(instance, JobMT)
     table.insert(self.jobs, instance)
+
+    self:_adaptWorkerCount()
 
     local jobQueueEntry =
     {

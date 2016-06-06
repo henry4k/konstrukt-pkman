@@ -20,7 +20,10 @@ local function processor()
     end
 end
 
-local manager = JobManager.create{typeName = 'test', processor = processor, workerCount = 2}
+local manager = JobManager.create{typeName = 'test',
+                                  processor = processor,
+                                  minWorkerCount = 2,
+                                  maxWorkerCount = 4}
 local jobs = {}
 for i = 1, 5 do
     local job = manager:createJob({3}, {})
