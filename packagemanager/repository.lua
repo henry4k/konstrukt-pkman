@@ -1,6 +1,6 @@
 local semver = require 'semver'
 local LocalPackage = require 'packagemanager/localpackage'
-local Network      = require 'packagemanager/network'
+local DownloadManager = require 'packagemanager/downloadmanager'
 local FS           = require 'packagemanager/fs'
 local Version      = require 'packagemanager/version'
 local Package      = require 'packagemanager/package'
@@ -16,7 +16,7 @@ end
 
 function Repository.updateIndex( name, url, downloadEventHandler )
     local fileName = BuildRepoIndexFileName(name)
-    Network.downloadFile(fileName, url, downloadEventHandler)
+    return DownloadManager.startDownload(fileName, url, downloadEventHandler)
 end
 
 local function PreprocessLoadedPackageEntry( package, packageName )
@@ -102,29 +102,6 @@ function Repository.saveIndexToFile( db, fileName, baseUrl )
         AddPackageToRepoData(repoData, package)
     end
     FS.writeJsonFile(fileName, repoData)
-end
-
-function Repository.installPackage( package, installPath, downloadEventHandler )
-    assert(package.downloadUrl, 'Package misses a download URL - maybe it\'s not available in a repository?')
-
-    local baseName = Package.buildBaseName(package.name, package.version)
-    local fileName
-
-    if package.type == 'native' then
-        fileName = FS.path(installPath, baseName)
-        Network.downloadAndUnpackZipFile(fileName,
-                                         package.downloadUrl,
-                                         downloadEventHandler)
-    else
-        fileName = FS.path(installPath, baseName..'.zip')
-        Network.downloadFile(fileName,
-                             package.downloadUrl,
-                             downloadEventHandler)
-    end
-
-    package.localFileName = fileName
-    Package.mergePackages(package, LocalPackage.readLocalPackage(fileName))
-    LocalPackage.setup(package)
 end
 
 

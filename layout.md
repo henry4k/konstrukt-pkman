@@ -67,3 +67,26 @@ An actual installable package.
     provider = ... -- providing package
 }
 ```
+
+
+## Job
+
+```
+{
+    typeName = ...
+    eventHandler = {}
+    status = [waiting, running, success, fail]
+    properties = {}
+}
+```
+
+
+## Change
+
+```
+{
+    type = [install, uninstall]
+    eventHandler = {}
+    package = ...
+}
+```
