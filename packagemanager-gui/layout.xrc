@@ -1,0 +1,233 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<resource xmlns="http://www.wxwindows.org/wxxrc" version="2.3.0.1">
+	<object class="wxFrame" name="mainFrame">
+		<style>wxDEFAULT_FRAME_STYLE|wxTAB_TRAVERSAL</style>
+		<size>500,300</size>
+		<title>konstrukt package manager</title>
+		<centered>1</centered>
+		<aui_managed>0</aui_managed>
+		<object class="wxStatusBar" name="statusBar">
+			<style>wxST_SIZEGRIP</style>
+			<fields>1</fields>
+		</object>
+		<object class="wxNotebook" name="notebook">
+			<object class="notebookpage">
+				<label>Changes</label>
+				<selected>1</selected>
+				<bitmap stock_id="wxART_TICK_MARK" stock_client="wxART_TOOLBAR">undefined.png</bitmap>
+				<object class="wxPanel" name="changesPanel">
+					<style>wxTAB_TRAVERSAL</style>
+					<object class="wxBoxSizer">
+						<orient>wxVERTICAL</orient>
+						<object class="sizeritem">
+							<option>1</option>
+							<flag>wxEXPAND | wxALL</flag>
+							<border>5</border>
+							<object class="wxScrolledWindow" name="changeWindow">
+								<style>wxHSCROLL|wxVSCROLL</style>
+								<scrollrate>5,5</scrollrate>
+							</object>
+						</object>
+						<object class="sizeritem">
+							<option>0</option>
+							<flag>wxEXPAND|wxALL</flag>
+							<border>5</border>
+							<object class="wxStaticBoxSizer">
+								<orient>wxHORIZONTAL</orient>
+								<label>Total progress</label>
+								<object class="sizeritem">
+									<option>1</option>
+									<flag>wxALL</flag>
+									<border>5</border>
+									<object class="wxGauge" name="totalProgressGauge">
+										<style>wxGA_HORIZONTAL</style>
+										<range>100</range>
+										<value>10</value>
+									</object>
+								</object>
+								<object class="sizeritem">
+									<option>0</option>
+									<flag>wxALL</flag>
+									<border>5</border>
+									<object class="wxStaticText" name="totalProgressText">
+										<label>4 / 100 MiB</label>
+										<wrap>-1</wrap>
+									</object>
+								</object>
+							</object>
+						</object>
+						<object class="sizeritem">
+							<option>0</option>
+							<flag>wxEXPAND</flag>
+							<border>5</border>
+							<object class="wxBoxSizer">
+								<orient>wxHORIZONTAL</orient>
+								<object class="sizeritem">
+									<option>0</option>
+									<flag>wxALL|wxEXPAND</flag>
+									<border>5</border>
+									<object class="wxStaticText" name="differenceText">
+										<label>Size difference: 10 MiB</label>
+										<wrap>-1</wrap>
+									</object>
+								</object>
+								<object class="spacer">
+									<option>1</option>
+									<flag>wxEXPAND</flag>
+									<border>5</border>
+									<size>0,0</size>
+								</object>
+								<object class="sizeritem">
+									<option>0</option>
+									<flag>wxALL</flag>
+									<border>5</border>
+									<object class="wxButton" name="applyButton">
+										<label>Apply</label>
+										<default>0</default>
+									</object>
+								</object>
+							</object>
+						</object>
+					</object>
+				</object>
+			</object>
+			<object class="notebookpage">
+				<label>Requirements</label>
+				<selected>0</selected>
+				<bitmap stock_id="wxART_QUESTION" stock_client="wxART_TOOLBAR">undefined.png</bitmap>
+				<object class="wxPanel" name="requirementsPanel">
+					<style>wxTAB_TRAVERSAL</style>
+					<object class="wxBoxSizer">
+						<orient>wxVERTICAL</orient>
+						<object class="sizeritem">
+							<option>1</option>
+							<flag>wxEXPAND | wxALL</flag>
+							<border>5</border>
+							<object class="wxListbook" name="requirementsListBook">
+								<style>wxLB_DEFAULT</style>
+							</object>
+						</object>
+					</object>
+				</object>
+			</object>
+			<object class="notebookpage">
+				<label>Settings</label>
+				<selected>0</selected>
+				<bitmap stock_id="configure" stock_client="wxART_TOOLBAR">undefined.png</bitmap>
+				<object class="wxPanel" name="settingsPanel">
+					<style>wxTAB_TRAVERSAL</style>
+				</object>
+			</object>
+		</object>
+	</object>
+	<object class="wxFrame" name="packageNameSelection">
+		<style>wxDEFAULT_FRAME_STYLE|wxFRAME_FLOAT_ON_PARENT|wxTAB_TRAVERSAL</style>
+		<size>500,300</size>
+		<title>Select package name</title>
+		<centered>1</centered>
+		<aui_managed>0</aui_managed>
+		<object class="wxBoxSizer">
+			<orient>wxVERTICAL</orient>
+			<object class="sizeritem">
+				<option>1</option>
+				<flag>wxALL|wxEXPAND</flag>
+				<border>5</border>
+				<object class="wxListBox" name="m_listBox1">
+					<style>wxLB_ALWAYS_SB</style>
+					<content>
+						<item>base-game</item>
+						<item>example</item>
+						<item>konstrukt-windows-x86</item>
+						<item>konstrukt-windows-x86_64</item>
+						<item>konstrukt-linux-x86</item>
+						<item>konstrukt-linux-x86_64</item>
+						<item>konstrukt</item>
+						<item>pbr</item>
+						<item>dev-tools</item>
+						<item>core</item>
+						<item>core</item>
+						<item>core</item>
+						<item>core</item>
+						<item>core</item>
+						<item>core</item>
+						<item>core</item>
+						<item>core</item>
+						<item>core</item>
+						<item>core</item>
+						<item>core</item>
+						<item>core</item>
+						<item>core</item>
+						<item>core</item>
+						<item>core</item>
+						<item>core</item>
+						<item>core</item>
+						<item>core</item>
+						<item>core</item>
+						<item>core</item>
+						<item>core</item>
+						<item>core</item>
+						<item>core</item>
+						<item>core</item>
+						<item>core</item>
+						<item>core</item>
+						<item>core</item>
+						<item>core</item>
+						<item>core</item>
+						<item>core</item>
+						<item>core</item>
+						<item>core</item>
+						<item>core</item>
+						<item>core</item>
+						<item>core</item>
+						<item>core</item>
+						<item>core</item>
+						<item>core</item>
+						<item>core</item>
+						<item>core</item>
+						<item>core</item>
+						<item>core</item>
+						<item>core</item>
+					</content>
+				</object>
+			</object>
+			<object class="sizeritem">
+				<option>0</option>
+				<flag>wxALL|wxEXPAND</flag>
+				<border>5</border>
+				<object class="wxSearchCtrl" name="m_searchCtrl2">
+					<style>wxTE_PROCESS_ENTER|wxTE_PROCESS_TAB</style>
+					<value></value>
+				</object>
+			</object>
+			<object class="sizeritem">
+				<option>0</option>
+				<flag>wxALIGN_RIGHT</flag>
+				<border>5</border>
+				<object class="wxPanel" name="m_panel9">
+					<style>wxTAB_TRAVERSAL</style>
+					<object class="wxBoxSizer">
+						<orient>wxHORIZONTAL</orient>
+						<object class="sizeritem">
+							<option>0</option>
+							<flag>wxALL</flag>
+							<border>5</border>
+							<object class="wxButton" name="m_button4">
+								<label>OK</label>
+								<default>0</default>
+							</object>
+						</object>
+						<object class="sizeritem">
+							<option>0</option>
+							<flag>wxALL</flag>
+							<border>5</border>
+							<object class="wxButton" name="m_button5">
+								<label>Cancel</label>
+								<default>0</default>
+							</object>
+						</object>
+					</object>
+				</object>
+			</object>
+		</object>
+	</object>
+</resource>
