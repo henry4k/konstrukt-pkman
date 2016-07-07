@@ -8,12 +8,12 @@
 		<aui_managed>0</aui_managed>
 		<object class="wxStatusBar" name="statusBar">
 			<style>wxST_SIZEGRIP</style>
-			<fields>1</fields>
+			<fields>3</fields>
 		</object>
 		<object class="wxNotebook" name="notebook">
 			<object class="notebookpage">
 				<label>Changes</label>
-				<selected>1</selected>
+				<selected>0</selected>
 				<bitmap stock_id="wxART_TICK_MARK" stock_client="wxART_TOOLBAR">undefined.png</bitmap>
 				<object class="wxPanel" name="changesPanel">
 					<style>wxTAB_TRAVERSAL</style>
@@ -86,6 +86,16 @@
 										<default>0</default>
 									</object>
 								</object>
+								<object class="sizeritem">
+									<option>0</option>
+									<flag>wxALL</flag>
+									<border>5</border>
+									<object class="wxButton" name="abortButton">
+										<enabled>0</enabled>
+										<label>Abort</label>
+										<default>0</default>
+									</object>
+								</object>
 							</object>
 						</object>
 					</object>
@@ -93,8 +103,8 @@
 			</object>
 			<object class="notebookpage">
 				<label>Requirements</label>
-				<selected>0</selected>
-				<bitmap stock_id="wxART_QUESTION" stock_client="wxART_TOOLBAR">undefined.png</bitmap>
+				<selected>1</selected>
+				<bitmap stock_id="wxART_FILE_OPEN" stock_client="wxART_TOOLBAR">undefined.png</bitmap>
 				<object class="wxPanel" name="requirementsPanel">
 					<style>wxTAB_TRAVERSAL</style>
 					<object class="wxBoxSizer">
@@ -103,9 +113,7 @@
 							<option>1</option>
 							<flag>wxEXPAND | wxALL</flag>
 							<border>5</border>
-							<object class="wxListbook" name="requirementsListBook">
-								<style>wxLB_DEFAULT</style>
-							</object>
+							<object class="wxNotebook" name="requirementsNotebook" />
 						</object>
 					</object>
 				</object>
@@ -191,39 +199,36 @@
 				</object>
 			</object>
 			<object class="sizeritem">
-				<option>0</option>
-				<flag>wxALL|wxEXPAND</flag>
+				<option>1</option>
+				<flag>wxEXPAND</flag>
 				<border>5</border>
-				<object class="wxSearchCtrl" name="m_searchCtrl2">
-					<style>wxTE_PROCESS_ENTER|wxTE_PROCESS_TAB</style>
-					<value></value>
-				</object>
-			</object>
-			<object class="sizeritem">
-				<option>0</option>
-				<flag>wxALIGN_RIGHT</flag>
-				<border>5</border>
-				<object class="wxPanel" name="m_panel9">
-					<style>wxTAB_TRAVERSAL</style>
-					<object class="wxBoxSizer">
-						<orient>wxHORIZONTAL</orient>
-						<object class="sizeritem">
-							<option>0</option>
-							<flag>wxALL</flag>
-							<border>5</border>
-							<object class="wxButton" name="m_button4">
-								<label>OK</label>
-								<default>0</default>
-							</object>
+				<object class="wxBoxSizer">
+					<orient>wxHORIZONTAL</orient>
+					<object class="sizeritem">
+						<option>1</option>
+						<flag>wxALL</flag>
+						<border>5</border>
+						<object class="wxSearchCtrl" name="m_searchCtrl2">
+							<style>wxTE_PROCESS_ENTER|wxTE_PROCESS_TAB</style>
+							<value></value>
 						</object>
-						<object class="sizeritem">
-							<option>0</option>
-							<flag>wxALL</flag>
-							<border>5</border>
-							<object class="wxButton" name="m_button5">
-								<label>Cancel</label>
-								<default>0</default>
-							</object>
+					</object>
+					<object class="sizeritem">
+						<option>0</option>
+						<flag>wxALL</flag>
+						<border>5</border>
+						<object class="wxButton" name="m_button4">
+							<label>OK</label>
+							<default>0</default>
+						</object>
+					</object>
+					<object class="sizeritem">
+						<option>0</option>
+						<flag>wxALL</flag>
+						<border>5</border>
+						<object class="wxButton" name="m_button5">
+							<label>Cancel</label>
+							<default>0</default>
 						</object>
 					</object>
 				</object>
