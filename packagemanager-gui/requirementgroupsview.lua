@@ -5,7 +5,7 @@ local Xrc   = require 'packagemanager-gui/xrc'
 local RequirementGroupsView = {}
 RequirementGroupsView.__index = RequirementGroupsView
 
-local RequirementGridSizerColumns = 4
+local RequirementGridSizerColumns = 5
 
 function RequirementGroupsView:_addRequirementEntry( groupEntry, requirement )
     local gridSizer = groupEntry.windows.entryGridSizer
@@ -23,11 +23,15 @@ function RequirementGroupsView:_addRequirementEntry( groupEntry, requirement )
     local versionRangeCtrl = wx.wxTextCtrl( window, wx.wxID_ANY, "Version range", wx.wxDefaultPosition, wx.wxDefaultSize, 0 )
     gridSizer:Add( versionRangeCtrl, 0, wx.wxALL + wx.wxEXPAND, 5 )
 
+    local removeButton = wx.wxBitmapButton( window, wx.wxID_ANY, wx.wxArtProvider.GetBitmap( wx.wxART_DELETE, wx.wxART_MENU ), wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxBU_AUTODRAW )
+    gridSizer:Add( removeButton, 0, wx.wxALL, 5 )
+
     local entry = {}
     entry.windows = { packageName = packageName,
                       searchPackageNameButton = searchPackageNameButton,
                       separator = separator,
-                      versionRangeCtrl = versionRangeCtrl }
+                      versionRangeCtrl = versionRangeCtrl,
+                      removeButton = removeButton }
     table.insert(groupEntry.requirementEntries, entry)
 end
 
@@ -40,27 +44,37 @@ function RequirementGroupsView:_removeRequirementEntry( groupEntry, index )
     table.remove(groupEntry.requirementEntries, index)
 end
 
-function RequirementGroupsView:addGroupEntry( groupName, requirements )
+function RequirementGroupsView:addGroupEntry( groupName )
+    local pageIndex = self.groupNotebook:GetPageCount()
+
     local window = wx.wxScrolledWindow( self.groupNotebook, wx.wxID_ANY, wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxHSCROLL + wx.wxVSCROLL )
     window:SetScrollRate( 5, 5 )
     local mainSizer = wx.wxBoxSizer( wx.wxVERTICAL )
 
     local toolBarSizer = wx.wxBoxSizer( wx.wxHORIZONTAL )
 
-    local nameTextCtrl = wx.wxTextCtrl( window, wx.wxID_ANY, groupName, wx.wxDefaultPosition, wx.wxDefaultSize, 0 )
+    local nameTextCtrl = wx.wxTextCtrl( window, wx.wxID_ANY, groupName, wx.wxDefaultPosition, wx.wxDefaultSize )
     toolBarSizer:Add( nameTextCtrl, 1, wx.wxALL, 5 )
-
-    local renameButton = wx.wxBitmapButton( window, wx.wxID_ANY, wx.wxArtProvider.GetBitmap( wx.wxART_REDO, wx.wxART_MENU ), wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxBU_AUTODRAW )
-    toolBarSizer:Add( renameButton, 0, wx.wxALL, 5 )
-
+    nameTextCtrl:Connect(wx.wxEVT_KILL_FOCUS, function()
+        self.renameGroupEvent(groupName, nameTextCtrl:GetValue())
+    end)
+    nameTextCtrl:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function()
+        self.groupNotebook:SetPageText(pageIndex, nameTextCtrl:GetValue())
+    end)
 
     toolBarSizer:Add( 0, 0, 1, wx.wxEXPAND, 5 )
 
     local deleteButton = wx.wxBitmapButton( window, wx.wxID_ANY, wx.wxArtProvider.GetBitmap( wx.wxART_DELETE, wx.wxART_MENU ), wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxBU_AUTODRAW )
     toolBarSizer:Add( deleteButton, 0, wx.wxALL, 5 )
+    deleteButton:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED, function()
+        self.removeGroupEvent(groupName)
+    end)
 
     local createButton = wx.wxBitmapButton( window, wx.wxID_ANY, wx.wxArtProvider.GetBitmap( wx.wxART_NEW, wx.wxART_MENU ), wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxBU_AUTODRAW )
     toolBarSizer:Add( createButton, 0, wx.wxALL, 5 )
+    createButton:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED, function()
+        self.createGroupEvent()
+    end)
 
 
     mainSizer:Add( toolBarSizer, 0, wx.wxEXPAND, 5 )
@@ -81,7 +95,6 @@ function RequirementGroupsView:addGroupEntry( groupName, requirements )
 
     self.groupNotebook:AddPage(window, groupName, False )
 
-    local pageIndex = self.groupNotebook:GetPageCount() - 1
 
     local entry = { groupName = groupName,
                     pageIndex = pageIndex,
@@ -90,27 +103,22 @@ function RequirementGroupsView:addGroupEntry( groupName, requirements )
                                 toolBarSizer = toolBarSizer,
                                 nameTextCtrl = nameTextCtrl,
                                 renameButton = renameButton,
-                                deleteButton = deleteButton,
                                 createButton = createButton,
                                 line = line,
                                 entryGridSizer = entryGridSizer },
                     requirementEntries = {} }
-    table.insert(self.groupEntries, entry)
-
-    for _, requirement in ipairs(requirements) do
-        self:_addRequirementEntry(entry, requirement)
-    end
+    self.groupEntries[groupName] = entry
 
     -- update layout:
     window:Layout()
     mainSizer:Fit( window )
 end
 
-function RequirementGroupsView:removeGroupEntry( index )
-    local entry = assert(self.groupEntries[index], 'Invalid index.')
+function RequirementGroupsView:removeGroupEntry( groupName )
+    local entry = assert(self.groupEntries[groupName], 'No such group.')
     self.groupNotebook:RemovePage(entry.pageIndex)
     entry.windows.window:Destroy()
-    table.remove(self.groupEntries, index)
+    self.groupEntries[groupName] = nil
 end
 
 function RequirementGroupsView:destroy()
@@ -119,6 +127,12 @@ end
 
 return function( rootWindow )
     local self = setmetatable({}, RequirementGroupsView)
+
+    self.createGroupEvent = Event()
+    self.removeGroupEvent = Event() -- groupName
+    self.removeRequirementEvent = Event() -- groupName, index
+    self.addRequirementEvent = Event() -- groupName
+    self.renameGroupEvent = Event() -- oldName, newName
 
     self.rootWindow = rootWindow
     self.groupNotebook = Xrc.getWindow(self.rootWindow, 'requirementsNotebook')

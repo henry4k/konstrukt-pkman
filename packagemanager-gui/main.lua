@@ -31,10 +31,10 @@ changeListView:addEntry()
 changeListView:removeEntry(1)
 
 local requirementGroupsView = mainFrameView.requirementGroupsView
-requirementGroupsView:addGroupEntry('wurst', {{}, {}, {}, {}, {}})
-requirementGroupsView:addGroupEntry('kaese', {{}, {}, {}, {}, {}})
-requirementGroupsView:addGroupEntry('nifty', {{}, {}, {}, {}, {}})
-requirementGroupsView:removeGroupEntry(2)
+requirementGroupsView:addGroupEntry('wurst')
+requirementGroupsView:addGroupEntry('kaese')
+requirementGroupsView:addGroupEntry('nifty')
+requirementGroupsView:removeGroupEntry('nifty')
 
 print('BEGIN MAIN LOOP')
 wx.wxGetApp():MainLoop()
