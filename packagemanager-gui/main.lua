@@ -1,8 +1,8 @@
 #!/usr/bin/env lua5.2
 local wx = require 'wx'
-local MainFrame = require 'packagemanager-gui/mainframe'
 local ArtProvider = require 'packagemanager-gui/artprovider'
 local Xrc = require 'packagemanager-gui/xrc'
+local MainFrameView = require 'packagemanager-gui/mainframeview'
 
 -- Prepare art provider:
 wx.wxArtProvider.Push(ArtProvider)
@@ -21,15 +21,21 @@ end
 
 Xrc.initialize()
 
-local mainFrame = MainFrame()
-mainFrame:addChangeEntry()
-mainFrame:addChangeEntry()
-mainFrame:addChangeEntry()
-mainFrame:removeChangeEntry(1)
-mainFrame:addRequirementGroupEntry('wurst', {{}, {}, {}, {}, {}})
-mainFrame:addRequirementGroupEntry('kaese', {{}, {}, {}, {}, {}})
-mainFrame:addRequirementGroupEntry('nifty', {{}, {}, {}, {}, {}})
-mainFrame:removeRequirementGroupEntry(2)
-mainFrame.frame:Show()
+local mainFrameView = MainFrameView()
+mainFrameView:show()
 
+local changeListView = mainFrameView.changeListView
+changeListView:addEntry()
+changeListView:addEntry()
+changeListView:addEntry()
+changeListView:removeEntry(1)
+
+local requirementGroupsView = mainFrameView.requirementGroupsView
+requirementGroupsView:addGroupEntry('wurst', {{}, {}, {}, {}, {}})
+requirementGroupsView:addGroupEntry('kaese', {{}, {}, {}, {}, {}})
+requirementGroupsView:addGroupEntry('nifty', {{}, {}, {}, {}, {}})
+requirementGroupsView:removeGroupEntry(2)
+
+print('BEGIN MAIN LOOP')
 wx.wxGetApp():MainLoop()
+print('END MAIN LOOP')
