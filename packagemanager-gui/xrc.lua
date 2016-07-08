@@ -20,11 +20,19 @@ function Xrc.createFrame( name )
     end
 end
 
+local CastTargetClasses =
+{
+    wxGauge95 = 'wxGauge'
+}
+
 function Xrc.getWindow( root, name )
     assert(root.FindWindow, 'Invalid root object. It must be a subclass of wxWindow.')
     local result = root:FindWindow(name)
     assert(result, 'Can\'t find '..name)
-    return result:DynamicCast(result:GetClassInfo():GetClassName())
+    local targetClassName = result:GetClassInfo():GetClassName()
+    targetClassName = CastTargetClasses[targetClassName] or
+                      targetClassName
+    return result:DynamicCast(targetClassName)
 end
 
 

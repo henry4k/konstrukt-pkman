@@ -4,6 +4,9 @@ local ArtProvider = require 'packagemanager-gui/artprovider'
 local Xrc = require 'packagemanager-gui/xrc'
 local MainFrameView = require 'packagemanager-gui/mainframeview'
 
+-- Remove wx from global namespace:
+_G.wx = nil
+
 -- Prepare art provider:
 wx.wxArtProvider.Push(ArtProvider)
 
@@ -21,14 +24,25 @@ end
 
 Xrc.initialize()
 
+-- Tests:
 local mainFrameView = MainFrameView()
 mainFrameView:show()
 
 local changeListView = mainFrameView.changeListView
-changeListView:addEntry()
-changeListView:addEntry()
-changeListView:addEntry()
+changeListView:addInstallEntry('base-game', '0.1.0')
+changeListView:addInstallEntry('base-game', '0.1.0')
+changeListView:addInstallEntry('base-game', '0.1.0')
 changeListView:removeEntry(1)
+
+changeListView.applyButtonPressed:addListener(function()
+    changeListView:enableApplyButton(false)
+    changeListView:enableAbortButton(true)
+end)
+
+changeListView.abortButtonPressed:addListener(function()
+    changeListView:enableAbortButton(false)
+    changeListView:enableApplyButton(true)
+end)
 
 local requirementGroupsView = mainFrameView.requirementGroupsView
 requirementGroupsView:addGroupEntry('wurst')
@@ -36,6 +50,7 @@ requirementGroupsView:addGroupEntry('kaese')
 requirementGroupsView:addGroupEntry('nifty')
 requirementGroupsView:removeGroupEntry('nifty')
 
+-- Main loop:
 print('BEGIN MAIN LOOP')
 wx.wxGetApp():MainLoop()
 print('END MAIN LOOP')

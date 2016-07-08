@@ -1,3 +1,4 @@
+local wx = require 'wx'
 local Event                 = require 'packagemanager-gui/event'
 local Xrc                   = require 'packagemanager-gui/xrc'
 local ChangeListView        = require 'packagemanager-gui/changelistview'
