@@ -34,15 +34,15 @@ local changeListController = ChangeListController(changeListView)
 local requirementGroupsView = mainFrameView.requirementGroupsView
 local requirementGroupsController = RequirementGroupsController(requirementGroupsView)
 
-changeListView:addInstallEntry('base-game', '0.1.0')
-changeListView:addInstallEntry('base-game', '0.1.0')
-changeListView:addInstallEntry('base-game', '0.1.0')
-changeListView:removeEntry(1)
+changeListView:addInstallChange('base-game', '0.1.0')
+changeListView:addInstallChange('base-game', '0.1.0')
+local change = changeListView:addInstallChange('base-game', '0.1.0')
+changeListView:removeChange(change)
 
-requirementGroupsView:addGroupEntry('wurst')
-requirementGroupsView:addGroupEntry('kaese')
-requirementGroupsView:addGroupEntry('nifty')
-requirementGroupsView:removeGroupEntry('nifty')
+requirementGroupsView:addGroup('wurst')
+requirementGroupsView:addGroup('kaese')
+local group = requirementGroupsView:addGroup('nifty')
+requirementGroupsView:removeGroup(group)
 
 mainFrameView:show()
 

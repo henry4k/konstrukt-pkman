@@ -9,7 +9,7 @@ return function( view )
         view:freeze()
             view:enableApplyButton(false)
             view:enableCancelButton(true)
-            view:addInstallEntry('test', '0.1.0')
+            view:addInstallChange('test', '0.1.0')
         view:thaw()
     end)
 

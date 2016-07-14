@@ -9,7 +9,10 @@ ChangeListView.__index = ChangeListView
 
 local ListGridColumns = 6
 
-function ChangeListView:addInstallEntry( packageName, packageVersion )
+function ChangeListView:addInstallChange( packageName, packageVersion )
+    local change = {}
+    change.type = 'install'
+
     local defaultSizerFlags = wx.wxALL + wx.wxALIGN_CENTER_VERTICAL
 
     local icon = wx.wxStaticBitmap( self.listWindow, wx.wxID_ANY, wx.wxArtProvider.GetBitmap('download', wx.wxART_MENU ), wx.wxDefaultPosition, wx.wxDefaultSize, 0 )
@@ -37,25 +40,26 @@ function ChangeListView:addInstallEntry( packageName, packageVersion )
         self.showUpgradeInfoEvent(packageName, packageVersion)
     end)
 
-    local entry = {}
-    entry.windows = { icon = icon,
-                      packageNameText = packageNameText,
-                      packageVersionText = packageVersionText,
-                      progressBar = progressBar,
-                      progressText = progressText,
-                      infoButton = infoButton }
-    table.insert(self.entries, entry)
+    change.windows = { icon = icon,
+                       packageNameText = packageNameText,
+                       packageVersionText = packageVersionText,
+                       progressBar = progressBar,
+                       progressText = progressText,
+                       infoButton = infoButton }
+    self.changes[change] = change
 
     utils.updateWindow(self.listWindow)
+
+    return change
 end
 
-function ChangeListView:removeEntry( index )
-    local entry = assert(self.entries[index], 'Invalid index.')
-    for _, window in pairs(entry.windows) do
+function ChangeListView:removeChange( change )
+    assert(self.changes[change])
+    for _, window in pairs(change.windows) do
         self.listGridSizer:Detach(window)
         window:Destroy()
     end
-    table.remove(self.entries, index)
+    self.changes[change] = nil
 end
 
 function ChangeListView:enableApplyButton( status )
@@ -116,7 +120,7 @@ return function( rootWindow )
 
     self.listGridSizer = listGridSizer
 
-    self.entries = {}
+    self.changes = {}
 
 
     return self
