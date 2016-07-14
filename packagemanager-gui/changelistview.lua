@@ -1,4 +1,5 @@
 local wx = require 'wx'
+local utils = require 'packagemanager-gui/utils'
 local Event = require 'packagemanager-gui/event'
 local Xrc   = require 'packagemanager-gui/xrc'
 
@@ -6,36 +7,46 @@ local Xrc   = require 'packagemanager-gui/xrc'
 local ChangeListView = {}
 ChangeListView.__index = ChangeListView
 
-local ListGridColumns = 5
+local ListGridColumns = 6
 
 function ChangeListView:addInstallEntry( packageName, packageVersion )
+    local defaultSizerFlags = wx.wxALL + wx.wxALIGN_CENTER_VERTICAL
+
     local icon = wx.wxStaticBitmap( self.listWindow, wx.wxID_ANY, wx.wxArtProvider.GetBitmap('download', wx.wxART_MENU ), wx.wxDefaultPosition, wx.wxDefaultSize, 0 )
-    self.listGridSizer:Add( icon, 0, wx.wxALL, 5 )
+    self.listGridSizer:Add( icon, 0, defaultSizerFlags, 5 )
 
-    local packageName = wx.wxStaticText( self.listWindow, wx.wxID_ANY, packageName, wx.wxDefaultPosition, wx.wxDefaultSize, 0 )
-    packageName:Wrap( -1 )
-    self.listGridSizer:Add( packageName, 0, wx.wxALL, 5 )
+    local packageNameText = wx.wxStaticText( self.listWindow, wx.wxID_ANY, packageName, wx.wxDefaultPosition, wx.wxDefaultSize, 0 )
+    packageNameText:Wrap( -1 )
+    self.listGridSizer:Add( packageNameText, 0, defaultSizerFlags, 5 )
 
-    local packageVersion = wx.wxStaticText( self.listWindow, wx.wxID_ANY, packageVersion, wx.wxDefaultPosition, wx.wxDefaultSize, 0 )
-    packageVersion:Wrap( -1 )
-    self.listGridSizer:Add( packageVersion, 0, wx.wxALL, 5 )
+    local packageVersionText = wx.wxStaticText( self.listWindow, wx.wxID_ANY, packageVersion, wx.wxDefaultPosition, wx.wxDefaultSize, 0 )
+    packageVersionText:Wrap( -1 )
+    self.listGridSizer:Add( packageVersionText, 0, defaultSizerFlags, 5 )
 
-    local progressBar = wx.wxGauge( self.listWindow, wx.wxID_ANY, 100, wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxGA_HORIZONTAL )
+    local progressBar = wx.wxGauge( self.listWindow, wx.wxID_ANY, 100, wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxGA_HORIZONTAL + wx.wxGA_SMOOTH )
     progressBar:SetValue( 0 )
-    self.listGridSizer:Add( progressBar, 0, wx.wxALL + wx.wxEXPAND, 5 )
+    self.listGridSizer:Add( progressBar, 0, defaultSizerFlags + wx.wxEXPAND, 5 )
 
     local progressText = wx.wxStaticText( self.listWindow, wx.wxID_ANY, "0 / 0 MiB", wx.wxDefaultPosition, wx.wxDefaultSize, 0 )
     progressText:Wrap( -1 )
-    self.listGridSizer:Add( progressText, 0, wx.wxALL + wx.wxALIGN_RIGHT, 5 )
+    self.listGridSizer:Add( progressText, 0, defaultSizerFlags + wx.wxALIGN_RIGHT, 5 )
+
+    local infoButton = wx.wxBitmapButton( self.listWindow, wx.wxID_ANY, wx.wxArtProvider.GetBitmap( wx.wxART_INFORMATION, wx.wxART_MENU ), wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxBU_AUTODRAW )
+    self.listGridSizer:Add( infoButton, 0, defaultSizerFlags, 5 )
+    infoButton:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED, function()
+        self.showUpgradeInfoEvent(packageName, packageVersion)
+    end)
 
     local entry = {}
     entry.windows = { icon = icon,
-                      packageName = packageName,
-                      packageVersion = packageVersion,
+                      packageNameText = packageNameText,
+                      packageVersionText = packageVersionText,
                       progressBar = progressBar,
-                      progressText = progressText }
+                      progressText = progressText,
+                      infoButton = infoButton }
     table.insert(self.entries, entry)
-    return #self.entries
+
+    utils.updateWindow(self.listWindow)
 end
 
 function ChangeListView:removeEntry( index )
@@ -69,18 +80,20 @@ end
 return function( rootWindow )
     local self = setmetatable({}, ChangeListView)
 
+    self.applyButtonPressEvent = Event()
+    self.abortButtonPressEvent = Event()
+    self.showUpgradeInfoEvent = Event() -- packageName, packageVersion
+
     self.rootWindow = rootWindow
 
     self.totalProgressGauge = Xrc.getWindow(self.rootWindow, 'totalProgressGauge')
     self.totalProgressText  = Xrc.getWindow(self.rootWindow, 'totalProgressText')
 
     self.applyButton = Xrc.getWindow(self.rootWindow, 'applyButton')
-    self.applyButtonPressed = Event()
-    self.applyButton:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED, function() self.applyButtonPressed() end)
+    self.applyButton:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED, function() self.applyButtonPressEvent() end)
 
     self.abortButton = Xrc.getWindow(self.rootWindow, 'abortButton')
-    self.abortButtonPressed = Event()
-    self.abortButton:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED, function() self.abortButtonPressed() end)
+    self.abortButton:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED, function() self.abortButtonPressEvent() end)
 
     self.listWindow = Xrc.getWindow(self.rootWindow, 'changeWindow')
 
@@ -90,9 +103,8 @@ return function( rootWindow )
     listGridSizer:SetNonFlexibleGrowMode( wx.wxFLEX_GROWMODE_SPECIFIED )
     self.listWindow:SetSizer( listGridSizer )
 
-    -- update layout:
     self.listWindow:Layout()
-    listGridSizer:Fit( self.listWindow )
+    self.totalProgressGauge:Layout()
 
     self.listGridSizer = listGridSizer
 

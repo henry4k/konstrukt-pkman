@@ -3,6 +3,8 @@ local wx = require 'wx'
 local ArtProvider = require 'packagemanager-gui/artprovider'
 local Xrc = require 'packagemanager-gui/xrc'
 local MainFrameView = require 'packagemanager-gui/mainframeview'
+local ChangeListController = require 'packagemanager-gui/changelistcontroller'
+local RequirementGroupsController = require 'packagemanager-gui/requirementgroupscontroller'
 
 -- Remove wx from global namespace:
 _G.wx = nil
@@ -26,29 +28,23 @@ Xrc.initialize()
 
 -- Tests:
 local mainFrameView = MainFrameView()
-mainFrameView:show()
 
 local changeListView = mainFrameView.changeListView
+local changeListController = ChangeListController(changeListView)
+local requirementGroupsView = mainFrameView.requirementGroupsView
+local requirementGroupsController = RequirementGroupsController(requirementGroupsView)
+
 changeListView:addInstallEntry('base-game', '0.1.0')
 changeListView:addInstallEntry('base-game', '0.1.0')
 changeListView:addInstallEntry('base-game', '0.1.0')
 changeListView:removeEntry(1)
 
-changeListView.applyButtonPressed:addListener(function()
-    changeListView:enableApplyButton(false)
-    changeListView:enableAbortButton(true)
-end)
-
-changeListView.abortButtonPressed:addListener(function()
-    changeListView:enableAbortButton(false)
-    changeListView:enableApplyButton(true)
-end)
-
-local requirementGroupsView = mainFrameView.requirementGroupsView
 requirementGroupsView:addGroupEntry('wurst')
 requirementGroupsView:addGroupEntry('kaese')
 requirementGroupsView:addGroupEntry('nifty')
 requirementGroupsView:removeGroupEntry('nifty')
+
+mainFrameView:show()
 
 -- Main loop:
 print('BEGIN MAIN LOOP')

@@ -26,7 +26,7 @@
         <property name="ui_table">ui</property>
         <property name="use_enum">0</property>
         <property name="use_microsoft_bom">0</property>
-        <object class="Frame" expanded="0">
+        <object class="Frame" expanded="1">
             <property name="aui_managed">0</property>
             <property name="aui_manager_style">wxAUI_MGR_DEFAULT</property>
             <property name="bg"></property>
@@ -134,16 +134,16 @@
                 <event name="OnSize"></event>
                 <event name="OnUpdateUI"></event>
             </object>
-            <object class="wxBoxSizer" expanded="0">
+            <object class="wxBoxSizer" expanded="1">
                 <property name="minimum_size"></property>
                 <property name="name">mainSizer</property>
                 <property name="orient">wxHORIZONTAL</property>
                 <property name="permission">none</property>
-                <object class="sizeritem" expanded="0">
+                <object class="sizeritem" expanded="1">
                     <property name="border">5</property>
                     <property name="flag">wxEXPAND|wxALL</property>
                     <property name="proportion">1</property>
-                    <object class="wxNotebook" expanded="0">
+                    <object class="wxNotebook" expanded="1">
                         <property name="BottomDockable">1</property>
                         <property name="LeftDockable">1</property>
                         <property name="RightDockable">1</property>
@@ -221,11 +221,11 @@
                         <event name="OnSetFocus"></event>
                         <event name="OnSize"></event>
                         <event name="OnUpdateUI"></event>
-                        <object class="notebookpage" expanded="0">
+                        <object class="notebookpage" expanded="1">
                             <property name="bitmap">Load From Art Provider; wxART_TICK_MARK; wxART_TOOLBAR</property>
                             <property name="label">Changes</property>
-                            <property name="select">0</property>
-                            <object class="wxPanel" expanded="0">
+                            <property name="select">1</property>
+                            <object class="wxPanel" expanded="1">
                                 <property name="BottomDockable">1</property>
                                 <property name="LeftDockable">1</property>
                                 <property name="RightDockable">1</property>
@@ -299,7 +299,7 @@
                                 <event name="OnSetFocus"></event>
                                 <event name="OnSize"></event>
                                 <event name="OnUpdateUI"></event>
-                                <object class="wxBoxSizer" expanded="0">
+                                <object class="wxBoxSizer" expanded="1">
                                     <property name="minimum_size"></property>
                                     <property name="name">changesPanelSizer</property>
                                     <property name="orient">wxVERTICAL</property>
@@ -400,11 +400,11 @@
                                             </object>
                                         </object>
                                     </object>
-                                    <object class="sizeritem" expanded="0">
+                                    <object class="sizeritem" expanded="1">
                                         <property name="border">5</property>
                                         <property name="flag">wxEXPAND|wxALL</property>
                                         <property name="proportion">0</property>
-                                        <object class="wxStaticBoxSizer" expanded="0">
+                                        <object class="wxStaticBoxSizer" expanded="1">
                                             <property name="id">wxID_ANY</property>
                                             <property name="label">Total progress</property>
                                             <property name="minimum_size"></property>
@@ -414,7 +414,7 @@
                                             <event name="OnUpdateUI"></event>
                                             <object class="sizeritem" expanded="0">
                                                 <property name="border">5</property>
-                                                <property name="flag">wxALL</property>
+                                                <property name="flag">wxALL|wxALIGN_CENTER_VERTICAL</property>
                                                 <property name="proportion">1</property>
                                                 <object class="wxGauge" expanded="0">
                                                     <property name="BottomDockable">1</property>
@@ -461,8 +461,8 @@
                                                     <property name="range">100</property>
                                                     <property name="resize">Resizable</property>
                                                     <property name="show">1</property>
-                                                    <property name="size"></property>
-                                                    <property name="style">wxGA_HORIZONTAL</property>
+                                                    <property name="size">-1,-1</property>
+                                                    <property name="style">wxGA_HORIZONTAL|wxGA_SMOOTH</property>
                                                     <property name="subclass"></property>
                                                     <property name="toolbar_pane">0</property>
                                                     <property name="tooltip"></property>
@@ -501,7 +501,7 @@
                                             </object>
                                             <object class="sizeritem" expanded="0">
                                                 <property name="border">5</property>
-                                                <property name="flag">wxALL</property>
+                                                <property name="flag">wxALL|wxALIGN_CENTER_VERTICAL</property>
                                                 <property name="proportion">0</property>
                                                 <object class="wxStaticText" expanded="0">
                                                     <property name="BottomDockable">1</property>
@@ -867,11 +867,11 @@
                                 </object>
                             </object>
                         </object>
-                        <object class="notebookpage" expanded="0">
+                        <object class="notebookpage" expanded="1">
                             <property name="bitmap">Load From Art Provider; wxART_FILE_OPEN; wxART_TOOLBAR</property>
                             <property name="label">Requirements</property>
-                            <property name="select">1</property>
-                            <object class="wxPanel" expanded="0">
+                            <property name="select">0</property>
+                            <object class="wxPanel" expanded="1">
                                 <property name="BottomDockable">1</property>
                                 <property name="LeftDockable">1</property>
                                 <property name="RightDockable">1</property>
@@ -945,7 +945,7 @@
                                 <event name="OnSetFocus"></event>
                                 <event name="OnSize"></event>
                                 <event name="OnUpdateUI"></event>
-                                <object class="wxBoxSizer" expanded="0">
+                                <object class="wxBoxSizer" expanded="1">
                                     <property name="minimum_size"></property>
                                     <property name="name">requirementsSizer</property>
                                     <property name="orient">wxVERTICAL</property>

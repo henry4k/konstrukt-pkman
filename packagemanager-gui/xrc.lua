@@ -1,6 +1,7 @@
-local here = require 'packagemanager-gui/here'
 local wx = require 'wx'
 local xmlRes = wx.wxXmlResource.Get()
+local utils = require 'packagemanager-gui/utils'
+local here  = require 'packagemanager-gui/here'
 
 
 local Xrc = {}
@@ -20,19 +21,11 @@ function Xrc.createFrame( name )
     end
 end
 
-local CastTargetClasses =
-{
-    wxGauge95 = 'wxGauge'
-}
-
 function Xrc.getWindow( root, name )
     assert(root.FindWindow, 'Invalid root object. It must be a subclass of wxWindow.')
     local result = root:FindWindow(name)
     assert(result, 'Can\'t find '..name)
-    local targetClassName = result:GetClassInfo():GetClassName()
-    targetClassName = CastTargetClasses[targetClassName] or
-                      targetClassName
-    return result:DynamicCast(targetClassName)
+    return utils.autoCast(result)
 end
 
 
