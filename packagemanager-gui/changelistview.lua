@@ -62,8 +62,8 @@ function ChangeListView:enableApplyButton( status )
     self.applyButton:Enable(status)
 end
 
-function ChangeListView:enableAbortButton( status )
-    self.abortButton:Enable(status)
+function ChangeListView:enableCancelButton( status )
+    self.cancelButton:Enable(status)
 end
 
 function ChangeListView:updateTotalProgress()
@@ -71,6 +71,14 @@ function ChangeListView:updateTotalProgress()
     -- self.totalProgressGauge:SetRange(x)
     self.totalProgressGauge:SetValue(0)
     self.totalProgressText:SetValue('x / x MiB')
+end
+
+function ChangeListView:freeze()
+    self.rootWindow:Freeze()
+end
+
+function ChangeListView:thaw()
+    self.rootWindow:Thaw()
 end
 
 function ChangeListView:destroy()
@@ -81,7 +89,7 @@ return function( rootWindow )
     local self = setmetatable({}, ChangeListView)
 
     self.applyButtonPressEvent = Event()
-    self.abortButtonPressEvent = Event()
+    self.cancelButtonPressEvent = Event()
     self.showUpgradeInfoEvent = Event() -- packageName, packageVersion
 
     self.rootWindow = rootWindow
@@ -89,11 +97,11 @@ return function( rootWindow )
     self.totalProgressGauge = Xrc.getWindow(self.rootWindow, 'totalProgressGauge')
     self.totalProgressText  = Xrc.getWindow(self.rootWindow, 'totalProgressText')
 
-    self.applyButton = Xrc.getWindow(self.rootWindow, 'applyButton')
+    self.applyButton = Xrc.getWindow(self.rootWindow, 'wxID_APPLY')
     self.applyButton:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED, function() self.applyButtonPressEvent() end)
 
-    self.abortButton = Xrc.getWindow(self.rootWindow, 'abortButton')
-    self.abortButton:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED, function() self.abortButtonPressEvent() end)
+    self.cancelButton = Xrc.getWindow(self.rootWindow, 'wxID_CANCEL')
+    self.cancelButton:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED, function() self.cancelButtonPressEvent() end)
 
     self.listWindow = Xrc.getWindow(self.rootWindow, 'changeWindow')
 

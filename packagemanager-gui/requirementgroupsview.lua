@@ -83,13 +83,11 @@ function RequirementGroupsView:removeRequirementEntry( groupName, entry )
         window:Destroy()
     end
     table.remove(groupEntry.requirementEntries, index)
-    groupEntry.windows.window:Layout()
+    utils.updateWindow(groupEntry.windows.window)
 end
 
 function RequirementGroupsView:addGroupEntry( groupName )
     assert(not self.groupEntries[groupName], 'Group with this name already exists.')
-
-    local pageIndex = self.groupNotebook:GetPageCount()
 
     local window = wx.wxScrolledWindow( self.groupNotebook, wx.wxID_ANY, wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxHSCROLL + wx.wxVSCROLL )
     window:SetScrollRate( 5, 5 )
@@ -97,13 +95,17 @@ function RequirementGroupsView:addGroupEntry( groupName )
 
     local toolBarSizer = wx.wxBoxSizer( wx.wxHORIZONTAL )
 
-    local nameTextCtrl = wx.wxTextCtrl( window, wx.wxID_ANY, groupName, wx.wxDefaultPosition, wx.wxDefaultSize )
+    local nameTextCtrl = wx.wxTextCtrl( window, wx.wxID_ANY, groupName, wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxTE_PROCESS_ENTER )
     toolBarSizer:Add( nameTextCtrl, 1, wx.wxALL, 5 )
     nameTextCtrl:Connect(wx.wxEVT_KILL_FOCUS, function()
         self.renameGroupEvent(groupName, nameTextCtrl:GetValue())
     end)
+    nameTextCtrl:Connect(wx.wxEVT_COMMAND_TEXT_ENTER, function()
+        self.renameGroupEvent(groupName, nameTextCtrl:GetValue())
+    end)
     nameTextCtrl:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function()
-        self.groupNotebook:SetPageText(pageIndex, nameTextCtrl:GetValue())
+        local pageIndex = assert(self:_getGroupEntryPageIndex(groupName))
+        self.groupNotebook:SetPageText(pageIndex, nameTextCtrl:GetValue()..'*')
     end)
 
     toolBarSizer:Add( 0, 0, 1, wx.wxEXPAND, 5 )
@@ -138,13 +140,9 @@ function RequirementGroupsView:addGroupEntry( groupName )
     window:SetSizer( mainSizer )
 
     self.groupNotebook:AddPage(window, groupName, false )
-    --self.groupNotebook:Refresh()
-    --utils.updateWindow(self.groupNotebook)
 
 
-    local entry = { groupName = groupName,
-                    pageIndex = pageIndex,
-                    windows = { window = window,
+    local entry = { windows = { window = window,
                                 mainSizer = mainSizer,
                                 toolBarSizer = toolBarSizer,
                                 nameTextCtrl = nameTextCtrl,
@@ -157,7 +155,26 @@ function RequirementGroupsView:addGroupEntry( groupName )
 
     self:_createRequirementAddButton(groupName)
 
-    window:Layout()
+    utils.updateWindow(window)
+end
+
+function RequirementGroupsView:renameGroupEntry( oldName, newName )
+    if oldName == newName then
+        return
+    end
+
+    local entry = assert(self.groupEntries[oldName], 'No such group.')
+    assert(not self.groupEntries[newName], 'There is alrady a group with this name.')
+    self.groupEntries[oldName] = nil
+    self.groupEntries[newName] = entry
+
+    local nameTextCtrl = entry.windows.nameTextCtrl
+    if nameTextCtrl:GetValue() ~= newName then
+        nameTextCtrl:ChangeValue(newName)
+    end
+
+    local pageIndex = self:_getGroupEntryPageIndex(newName)
+    self.groupNotebook:SetPageText(pageIndex, newName)
 end
 
 function RequirementGroupsView:_getGroupEntryPageIndex( groupName )
@@ -175,15 +192,24 @@ function RequirementGroupsView:selectGroupEntry( groupName )
     local notebook = self.groupNotebook
     local pageIndex = assert(self:_getGroupEntryPageIndex(groupName))
     if notebook:GetSelection() ~= pageIndex then
-        print(notebook:SetSelection(pageIndex))
+        notebook:SetSelection(pageIndex)
     end
 end
 
 function RequirementGroupsView:removeGroupEntry( groupName )
-    local entry = assert(self.groupEntries[groupName], 'No such group.')
-    self.groupNotebook:RemovePage(entry.pageIndex)
+    local entry = assert(self.groupEntries[groupName])
+    local pageIndex = self:_getGroupEntryPageIndex(groupName)
+    self.groupNotebook:RemovePage(pageIndex)
     entry.windows.window:Destroy()
     self.groupEntries[groupName] = nil
+end
+
+function RequirementGroupsView:freeze()
+    self.rootWindow:Freeze()
+end
+
+function RequirementGroupsView:thaw()
+    self.rootWindow:Thaw()
 end
 
 function RequirementGroupsView:destroy()

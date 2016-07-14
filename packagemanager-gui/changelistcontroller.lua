@@ -6,15 +6,18 @@ return function( view )
     self.view = view
 
     view.applyButtonPressEvent:addListener(function()
-        self.view:enableApplyButton(false)
-        self.view:enableAbortButton(true)
-
-        self.view:addInstallEntry('test', '0.1.0')
+        view:freeze()
+            view:enableApplyButton(false)
+            view:enableCancelButton(true)
+            view:addInstallEntry('test', '0.1.0')
+        view:thaw()
     end)
 
-    view.abortButtonPressEvent:addListener(function()
-        self.view:enableApplyButton(true)
-        self.view:enableAbortButton(false)
+    view.cancelButtonPressEvent:addListener(function()
+        view:freeze()
+            view:enableApplyButton(true)
+            view:enableCancelButton(false)
+        view:thaw()
     end)
 
     view.showUpgradeInfoEvent:addListener(function( packageName, packageVersion )
