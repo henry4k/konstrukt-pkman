@@ -166,6 +166,7 @@ function RequirementGroupsView:addGroup( groupName )
 
     self:_createRequirementAddButton(group)
 
+    self:_showNoGroupsPanel(false)
     utils.updateWindow(window)
 
     return group
@@ -218,6 +219,16 @@ function RequirementGroupsView:removeGroup( group )
     self.groupNotebook:RemovePage(pageIndex)
     group.windows.window:Destroy()
     self.groups[group] = nil
+
+    if not next(self.groups) then
+        self:_showNoGroupsPanel(true)
+    end
+end
+
+function RequirementGroupsView:_showNoGroupsPanel( show )
+    self.noGroupsPanel:Show(show)
+    self.groupNotebook:Show(not show)
+    utils.updateWindow(self.rootWindow)
 end
 
 function RequirementGroupsView:freeze()
@@ -244,6 +255,14 @@ return function( rootWindow )
     self.rootWindow = rootWindow
     self.groupNotebook = Xrc.getWindow(self.rootWindow, 'requirementsNotebook')
     self.groups = {}
+
+    self.noGroupsPanel = Xrc.getWindow(self.rootWindow, 'noGroupsPanel')
+    self:_showNoGroupsPanel(true)
+
+    local createButton = Xrc.getWindow(self.rootWindow, 'createButton')
+    createButton:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED, function()
+        self.createGroupEvent()
+    end)
 
     return self
 end

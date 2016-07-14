@@ -130,7 +130,7 @@
 							<option>1</option>
 							<flag>wxEXPAND | wxALL</flag>
 							<border>5</border>
-							<object class="wxPanel" name="noRequirementGroupsPanel">
+							<object class="wxPanel" name="noGroupsPanel">
 								<style>wxTAB_TRAVERSAL</style>
 								<hidden>1</hidden>
 								<object class="wxBoxSizer">
