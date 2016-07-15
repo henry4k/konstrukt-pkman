@@ -3,6 +3,7 @@ local Event                 = require 'packagemanager-gui/event'
 local Xrc                   = require 'packagemanager-gui/xrc'
 local ChangeListView        = require 'packagemanager-gui/changelistview'
 local RequirementGroupsView = require 'packagemanager-gui/requirementgroupsview'
+local StatusBarView         = require 'packagemanager-gui/statusbarview'
 
 
 local MainFrameView = {}
@@ -28,6 +29,9 @@ return function()
 
     local requirementsRoot = Xrc.getWindow(self.frame, 'requirementsPanel')
     self.requirementGroupsView = RequirementGroupsView(requirementsRoot)
+
+    local statusBar = Xrc.getWindow(self.frame, 'statusBar')
+    self.statusBarView = StatusBarView(statusBar)
 
     return self
 end

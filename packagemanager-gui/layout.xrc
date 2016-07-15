@@ -8,7 +8,7 @@
 		<aui_managed>0</aui_managed>
 		<object class="wxStatusBar" name="statusBar">
 			<style>wxST_SIZEGRIP</style>
-			<fields>3</fields>
+			<fields>1</fields>
 		</object>
 		<object class="wxNotebook" name="notebook">
 			<object class="notebookpage">
@@ -132,7 +132,6 @@
 							<border>5</border>
 							<object class="wxPanel" name="noGroupsPanel">
 								<style>wxTAB_TRAVERSAL</style>
-								<hidden>1</hidden>
 								<object class="wxBoxSizer">
 									<orient>wxVERTICAL</orient>
 									<object class="spacer">

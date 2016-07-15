@@ -5,6 +5,8 @@ return function( view )
     local self = setmetatable({}, ChangeListController)
     self.view = view
 
+    local statusField
+
     view.applyButtonPressEvent:addListener(function()
         view:freeze()
             view:enableApplyButton(false)

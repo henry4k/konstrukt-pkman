@@ -29,20 +29,11 @@ Xrc.initialize()
 -- Tests:
 local mainFrameView = MainFrameView()
 
+local statusBarView = mainFrameView.statusBarView
 local changeListView = mainFrameView.changeListView
 local changeListController = ChangeListController(changeListView)
 local requirementGroupsView = mainFrameView.requirementGroupsView
 local requirementGroupsController = RequirementGroupsController(requirementGroupsView)
-
-changeListView:addInstallChange('base-game', '0.1.0')
-changeListView:addInstallChange('base-game', '0.1.0')
-local change = changeListView:addInstallChange('base-game', '0.1.0')
-changeListView:removeChange(change)
-
-requirementGroupsView:addGroup('wurst')
-requirementGroupsView:addGroup('kaese')
-local group = requirementGroupsView:addGroup('nifty')
-requirementGroupsView:removeGroup(group)
 
 mainFrameView:show()
 
