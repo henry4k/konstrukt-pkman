@@ -26,13 +26,24 @@ end
 
 local CastOverrides =
 {
-    wxGauge95 = 'wxGauge'
+    wxGauge95 = 'wxGauge',
+    wxSearchCtrl = 'wxWindow'
 }
 
 function utils.autoCast( object )
     local className = object:GetClassInfo():GetClassName()
     className = CastOverrides[className] or className
     return object:DynamicCast(className)
+end
+
+function utils.getOperatingSystem() -- Unix, Windows, Mac
+    local platformInfo = wx.wxPlatformInfo.Get()
+    return platformInfo:GetOperatingSystemFamilyName()
+end
+
+function utils.getUiSubsystem() -- gtk, msw, cocoa
+    local platformInfo = wx.wxPlatformInfo.Get()
+    return platformInfo:GetPortIdShortName()
 end
 
 return utils

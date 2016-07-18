@@ -14,7 +14,7 @@
 			<object class="notebookpage">
 				<label>Changes</label>
 				<selected>1</selected>
-				<bitmap stock_id="wxART_TICK_MARK" stock_client="wxART_TOOLBAR">undefined.png</bitmap>
+				<bitmap stock_id="changes" stock_client="wxART_TOOLBAR">undefined.png</bitmap>
 				<object class="wxPanel" name="changesPanel">
 					<style>wxTAB_TRAVERSAL</style>
 					<object class="wxBoxSizer">
@@ -115,7 +115,7 @@
 			<object class="notebookpage">
 				<label>Requirements</label>
 				<selected>0</selected>
-				<bitmap stock_id="wxART_FILE_OPEN" stock_client="wxART_TOOLBAR">undefined.png</bitmap>
+				<bitmap stock_id="requirements" stock_client="wxART_TOOLBAR">undefined.png</bitmap>
 				<object class="wxPanel" name="requirementsPanel">
 					<style>wxTAB_TRAVERSAL</style>
 					<object class="wxBoxSizer">
@@ -174,9 +174,55 @@
 			<object class="notebookpage">
 				<label>Settings</label>
 				<selected>0</selected>
-				<bitmap stock_id="configure" stock_client="wxART_TOOLBAR">undefined.png</bitmap>
+				<bitmap stock_id="settings" stock_client="wxART_TOOLBAR">undefined.png</bitmap>
 				<object class="wxPanel" name="settingsPanel">
 					<style>wxTAB_TRAVERSAL</style>
+				</object>
+			</object>
+			<object class="notebookpage">
+				<label>Search</label>
+				<selected>0</selected>
+				<bitmap stock_id="package-search" stock_client="wxART_TOOLBAR">undefined.png</bitmap>
+				<object class="wxPanel" name="searchPanel">
+					<style>wxTAB_TRAVERSAL</style>
+					<object class="wxBoxSizer">
+						<orient>wxVERTICAL</orient>
+						<object class="sizeritem">
+							<option>0</option>
+							<flag>wxEXPAND</flag>
+							<border>5</border>
+							<object class="wxBoxSizer">
+								<orient>wxHORIZONTAL</orient>
+								<object class="sizeritem">
+									<option>1</option>
+									<flag>wxALL|wxALIGN_CENTER_VERTICAL</flag>
+									<border>5</border>
+									<object class="wxSearchCtrl" name="searchCtrl">
+										<style>wxTE_PROCESS_ENTER|wxTE_PROCESS_TAB</style>
+										<value></value>
+									</object>
+								</object>
+								<object class="sizeritem">
+									<option>0</option>
+									<flag>wxALL|wxALIGN_CENTER_VERTICAL</flag>
+									<border>5</border>
+									<object class="wxBitmapButton" name="searchEditButton">
+										<style>wxBU_AUTODRAW</style>
+										<bitmap stock_id="edit" stock_client="wxART_MENU">undefined.png</bitmap>
+										<default>0</default>
+									</object>
+								</object>
+							</object>
+						</object>
+						<object class="sizeritem">
+							<option>1</option>
+							<flag>wxALL|wxEXPAND</flag>
+							<border>5</border>
+							<object class="wxListCtrl" name="searchResultList">
+								<style>wxLC_HRULES|wxLC_REPORT|wxLC_SINGLE_SEL|wxLC_VIRTUAL</style>
+							</object>
+						</object>
+					</object>
 				</object>
 			</object>
 		</object>

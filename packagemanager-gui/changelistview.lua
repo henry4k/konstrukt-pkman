@@ -15,7 +15,7 @@ function ChangeListView:addInstallChange( packageName, packageVersion )
 
     local defaultSizerFlags = wx.wxALL + wx.wxALIGN_CENTER_VERTICAL
 
-    local icon = wx.wxStaticBitmap( self.listWindow, wx.wxID_ANY, wx.wxArtProvider.GetBitmap('download', wx.wxART_MENU ), wx.wxDefaultPosition, wx.wxDefaultSize, 0 )
+    local icon = wx.wxStaticBitmap( self.listWindow, wx.wxID_ANY, wx.wxArtProvider.GetBitmap('package-install', wx.wxART_MENU ), wx.wxDefaultPosition, wx.wxDefaultSize, 0 )
     self.listGridSizer:Add( icon, 0, defaultSizerFlags, 5 )
 
     local packageNameText = wx.wxStaticText( self.listWindow, wx.wxID_ANY, packageName, wx.wxDefaultPosition, wx.wxDefaultSize, 0 )
