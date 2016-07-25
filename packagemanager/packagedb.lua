@@ -9,13 +9,6 @@ function PackageDB.create()
     return {}
 end
 
-local function GetPackageKey( package, db )
-    if package.virtual then
-        package = package.provider
-    end
-    return string.format('%s.%s', package.name, package.version)
-end
-
 local function RemovePackageAlternative( db,
                                          providedName,
                                          providedVersion,
@@ -45,7 +38,7 @@ function PackageDB.addPackage( db, package )
     local alternatives = Misc.createTableHierachy(db,
                                                   package.name,
                                                   tostring(package.version))
-    local key = GetPackageKey(package, db)
+    local key = Package.genKey(package)
     local destPackage = alternatives[key]
     if destPackage then
         Package.mergePackages(destPackage, package)
