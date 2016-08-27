@@ -1,13 +1,21 @@
 #!/usr/bin/env lua5.2
 local wx = require 'wx'
+
+-- Remove wx from global namespace:
+_G.wx = nil
+
+-- Early configuration:
+local app = wx.wxGetApp()
+app:SetAppName('konstrukt-pkman')
+app:SetClassName('konstrukt-pkman')
+
+-- Load modules:
+local PackageManager = require 'packagemanager/init'
 local ArtProvider = require 'packagemanager-gui/artprovider'
 local Xrc = require 'packagemanager-gui/xrc'
 local MainFrameView = require 'packagemanager-gui/mainframeview'
 local ChangeListController = require 'packagemanager-gui/changelistcontroller'
 local RequirementGroupsController = require 'packagemanager-gui/requirementgroupscontroller'
-
--- Remove wx from global namespace:
-_G.wx = nil
 
 -- Prepare art provider:
 wx.wxArtProvider.Push(ArtProvider)
@@ -26,8 +34,9 @@ end
 
 Xrc.initialize()
 
--- Tests:
 local mainFrameView = MainFrameView()
+PackageManager.initialize()
+mainFrameView.frame:Connect(wx.wxEVT_CLOSE_WINDOW, PackageManager.finalize)
 
 local statusBarView = mainFrameView.statusBarView
 local changeListView = mainFrameView.changeListView
@@ -39,5 +48,5 @@ mainFrameView:show()
 
 -- Main loop:
 print('BEGIN MAIN LOOP')
-wx.wxGetApp():MainLoop()
+app:MainLoop()
 print('END MAIN LOOP')

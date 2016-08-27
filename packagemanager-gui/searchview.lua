@@ -69,8 +69,8 @@ return function( rootWindow )
 
     self.rootWindow = rootWindow
 
-    local searchCtrl = Xrc.getWindow(self.rootWindow, 'searchCtrl')
-    local searchEditButton = Xrc.getWindow(self.rootWindow, 'searchEditButton')
+    --local searchCtrl = Xrc.getWindow(self.rootWindow, 'searchCtrl')
+    --local searchEditButton = Xrc.getWindow(self.rootWindow, 'searchEditButton')
     local resultList = Xrc.getWindow(self.rootWindow, 'searchResultList')
     self.resultList = resultList
 
