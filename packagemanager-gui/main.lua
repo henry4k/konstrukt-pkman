@@ -16,6 +16,7 @@ local Xrc = require 'packagemanager-gui/xrc'
 local MainFrameView = require 'packagemanager-gui/mainframeview'
 local ChangeListController = require 'packagemanager-gui/changelistcontroller'
 local RequirementGroupsController = require 'packagemanager-gui/requirementgroupscontroller'
+local SearchController = require 'packagemanager-gui/searchcontroller'
 
 -- Prepare art provider:
 wx.wxArtProvider.Push(ArtProvider)
@@ -43,6 +44,8 @@ local changeListView = mainFrameView.changeListView
 local changeListController = ChangeListController(changeListView)
 local requirementGroupsView = mainFrameView.requirementGroupsView
 local requirementGroupsController = RequirementGroupsController(requirementGroupsView)
+local searchView = mainFrameView.searchView
+local searchController = SearchController(searchView)
 
 mainFrameView:show()
 
