@@ -26,8 +26,7 @@ end
 
 local CastOverrides =
 {
-    wxGauge95 = 'wxGauge',
-    wxSearchCtrl = 'wxWindow'
+    wxGauge95 = 'wxGauge'
 }
 
 function utils.autoCast( object )

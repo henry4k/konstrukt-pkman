@@ -7,16 +7,24 @@ local Xrc   = require 'packagemanager-gui/xrc'
 local SearchView = {}
 SearchView.__index = SearchView
 
+function SearchView:getQuery()
+    return self.searchCtrl:GetValue()
+end
+
+function SearchView:setQuery( query )
+    self.searchCtrl:ChangeValue(query)
+end
+
 local StatusColumn  = 0
 local NameColumn    = 1
 local VersionColumn = 2
 
 local PackageStatusToImageIdMap =
 {
-    ['available'] = 0,
+    ['available']         = 0,
     ['installed-updated'] = 1,
-    ['install'] = 2,
-    ['remove'] = 3
+    ['install']           = 2,
+    ['remove']            = 3
 }
 
 function SearchView:addResultEntry( packageStatus, packageName, packageVersion )
@@ -36,7 +44,7 @@ function SearchView:adaptColumnWidths()
     self.resultList:SetColumnWidth(VersionColumn, wx.wxLIST_AUTOSIZE)
 end
 
-function SearchView:clear()
+function SearchView:clearResults()
     self.resultList:DeleteAllItems()
 end
 
@@ -67,10 +75,22 @@ end
 return function( rootWindow )
     local self = setmetatable({}, SearchView)
 
+    self.searchChangeEvent = Event()
+    self.searchEditEvent   = Event()
+
     self.rootWindow = rootWindow
 
     local searchCtrl = Xrc.getWindow(self.rootWindow, 'searchCtrl')
+    self.searchCtrl = searchCtrl
+    searchCtrl:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function()
+        self.searchChangeEvent()
+    end)
+
     local searchEditButton = Xrc.getWindow(self.rootWindow, 'searchEditButton')
+    searchEditButton:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED, function()
+        self.searchEditEvent()
+    end)
+
     local resultList = Xrc.getWindow(self.rootWindow, 'searchResultList')
     self.resultList = resultList
 
