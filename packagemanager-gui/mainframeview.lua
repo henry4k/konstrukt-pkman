@@ -23,18 +23,21 @@ end
 return function()
     local self = setmetatable({}, MainFrameView)
 
-    self.frame = Xrc.createFrame('mainFrame')
+    local frame = Xrc.createFrame('mainFrame')
+    --frame:SetAcceleratorTable(...)
+    --frame:SetDropTarget(...)
+    self.frame = frame
 
-    local changeRoot = Xrc.getWindow(self.frame, 'changesPanel')
+    local changeRoot = Xrc.getWindow(frame, 'changesPanel')
     self.changeListView = ChangeListView(changeRoot)
 
-    local requirementsRoot = Xrc.getWindow(self.frame, 'requirementsPanel')
+    local requirementsRoot = Xrc.getWindow(frame, 'requirementsPanel')
     self.requirementGroupsView = RequirementGroupsView(requirementsRoot)
 
-    local searchRoot = Xrc.getWindow(self.frame, 'searchPanel')
+    local searchRoot = Xrc.getWindow(frame, 'searchPanel')
     self.searchView = SearchView(searchRoot)
 
-    local statusBar = Xrc.getWindow(self.frame, 'statusBar')
+    local statusBar = Xrc.getWindow(frame, 'statusBar')
     self.statusBarView = StatusBarView(statusBar)
 
     return self

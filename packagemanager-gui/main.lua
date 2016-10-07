@@ -8,6 +8,7 @@ _G.wx = nil
 local app = wx.wxGetApp()
 app:SetAppName('konstrukt-pkman')
 app:SetClassName('konstrukt-pkman')
+--app:SetExitOnFrameDelete(true)
 
 -- Load modules:
 local PackageManager = require 'packagemanager/init'
@@ -37,7 +38,12 @@ Xrc.initialize()
 
 local mainFrameView = MainFrameView()
 PackageManager.initialize()
-mainFrameView.frame:Connect(wx.wxEVT_CLOSE_WINDOW, PackageManager.finalize)
+mainFrameView.frame:Connect(wx.wxEVT_CLOSE_WINDOW, function( event )
+    mainFrameView:destroy()
+    PackageManager.finalize()
+    -- ensure the event is skipped to allow the frame to close
+    event:Skip()
+end)
 
 local statusBarView = mainFrameView.statusBarView
 local changeListView = mainFrameView.changeListView
@@ -50,6 +56,4 @@ local searchController = SearchController(searchView)
 mainFrameView:show()
 
 -- Main loop:
-print('BEGIN MAIN LOOP')
 app:MainLoop()
-print('END MAIN LOOP')
