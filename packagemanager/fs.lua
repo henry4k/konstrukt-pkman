@@ -30,7 +30,7 @@ end
 
 function FS.makeAbsolutePath( filePath, baseDir )
     if FS.isRelativePath(filePath) then
-        baseDir = baseDir or Misc.getCurrentDirectory()
+        baseDir = baseDir or FS.getCurrentDirectory()
         assert(FS.isAbsolutePath(baseDir))
         return FS.path(baseDir, filePath)
     else
@@ -52,6 +52,10 @@ end
 
 function FS.stripExtension( filePath )
     return filePath:match('(.+)%.[^./\\]*$') or filePath
+end
+
+function FS.fileExists( fileName )
+    return lfs.attributes(fileName, 'mode') ~= nil
 end
 
 function FS.readFile( fileName )
@@ -145,6 +149,14 @@ function FS.makeDirectoryPath( base, path )
         end
     end
     return MakeDirIfNotExists(FS.path(base, path))
+end
+
+function FS.changeDirectory( path )
+    assert(lfs.chdir(path))
+end
+
+function FS.getCurrentDirectory()
+    return assert(lfs.currentdir())
 end
 
 

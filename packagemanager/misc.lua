@@ -85,20 +85,17 @@ function Misc.traverseTableHierachy( t, ... )
     return t
 end
 
+function Misc.readProcess( program )
+    local f = assert(io.popen(program, 'r'))
+    local output = f:read('*a')
+    f:close()
+    return output
+end
+
 if package.config:sub(1,1) == '\\' then
     Misc.os = 'windows'
 else
     Misc.os = 'unix'
-end
-
-function Misc.getCurrentDirectory()
-    local dir
-    if Misc.os == 'windows' then
-        dir = os.getenv('CD')
-    else
-        dir = os.getenv('PWD')
-    end
-    return assert(dir)
 end
 
 

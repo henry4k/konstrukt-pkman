@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   id="svg2"
+   enable-background="new 0 0 48 48"
+   viewBox="0 0 48 48"
+   version="1"
+   inkscape:version="0.91 r13725"
+   sodipodi:docname="edit.svg">
+  <sodipodi:namedview
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1"
+     objecttolerance="10"
+     gridtolerance="10"
+     guidetolerance="10"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:window-width="960"
+     inkscape:window-height="1139"
+     id="namedview4144"
+     showgrid="false"
+     inkscape:zoom="8.6458333"
+     inkscape:cx="24"
+     inkscape:cy="24"
+     inkscape:window-x="960"
+     inkscape:window-y="0"
+     inkscape:window-maximized="0"
+     inkscape:current-layer="svg2" />
+  <metadata
+     id="metadata26">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <defs
+     id="defs24" />
+  <path
+     style="fill:#e57373"
+     id="path12"
+     d="M 44.427272,8.918182 39.081818,3.5727273 c -0.763636,-0.7636364 -2.099999,-0.7636364 -3.054545,0 l -2.481819,2.4818182 8.400001,8.4000005 2.481817,-2.481818 c 0.763637,-0.763637 0.763637,-2.1000005 0,-3.054546 z"
+     inkscape:connector-curvature="0" />
+  <rect
+     style="fill:#ff9800"
+     id="rect14"
+     height="11.834576"
+     width="33.213165"
+     transform="matrix(0.70710676,-0.7071068,0.70710676,0.7071068,0,0)"
+     y="28.047863"
+     x="-19.843445" />
+  <rect
+     style="fill:#b0bec5"
+     id="rect16"
+     height="11.834576"
+     width="5.9172878"
+     transform="matrix(-0.70710676,0.7071068,-0.70710676,-0.7071068,0,0)"
+     y="-39.931854"
+     x="-19.387712" />
+  <polygon
+     style="fill:#ffc107"
+     transform="matrix(1.9090908,0,0,1.9090909,-46.636362,-46.636365)"
+     id="polygon18"
+     points="27.5,42.2 26,48 31.8,46.5 " />
+  <polygon
+     style="fill:#37474f"
+     transform="matrix(1.9090908,0,0,1.9090909,-46.636362,-46.636365)"
+     id="polygon20"
+     points="26.7,45 26,48 29,47.3 " />
+</svg>

@@ -30,13 +30,13 @@ local function buildPackageDB( options )
 end
 
 function PackageManager.initialize( configFileName )
-    Config.load(configFileName or 'config.json')
+    Config.load(configFileName)
     db = buildPackageDB{localPackages=true, remotePackages=true}
 end
 
 function PackageManager.finalize()
     DownloadManager.finalize()
-    -- TODO: Config.save() ?
+    Config.save()
 end
 
 function PackageManager.update()
