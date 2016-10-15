@@ -1,7 +1,7 @@
 local wx = require 'wx'
 local utils = require 'packagemanager-gui/utils'
-local Event = require 'packagemanager-gui/event'
-local Xrc   = require 'packagemanager-gui/xrc'
+local Event = require 'packagemanager-gui/Event'
+local xrc   = require 'packagemanager-gui/xrc'
 
 
 local ChangeListView = {}
@@ -104,16 +104,16 @@ return function( rootWindow )
 
     self.rootWindow = rootWindow
 
-    self.totalProgressGauge = Xrc.getWindow(self.rootWindow, 'totalProgressGauge')
-    self.totalProgressText  = Xrc.getWindow(self.rootWindow, 'totalProgressText')
+    self.totalProgressGauge = xrc.getWindow(self.rootWindow, 'totalProgressGauge')
+    self.totalProgressText  = xrc.getWindow(self.rootWindow, 'totalProgressText')
 
-    self.applyButton = Xrc.getWindow(self.rootWindow, 'wxID_APPLY')
+    self.applyButton = xrc.getWindow(self.rootWindow, 'wxID_APPLY')
     self.applyButton:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED, function() self.applyButtonPressEvent() end)
 
-    self.cancelButton = Xrc.getWindow(self.rootWindow, 'wxID_CANCEL')
+    self.cancelButton = xrc.getWindow(self.rootWindow, 'wxID_CANCEL')
     self.cancelButton:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED, function() self.cancelButtonPressEvent() end)
 
-    self.listWindow = Xrc.getWindow(self.rootWindow, 'changeWindow')
+    self.listWindow = xrc.getWindow(self.rootWindow, 'changeWindow')
 
     local listGridSizer = wx.wxFlexGridSizer( 0, ListGridColumns, 0, 0 )
     listGridSizer:AddGrowableCol( 3 )

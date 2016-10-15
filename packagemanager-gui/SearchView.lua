@@ -1,7 +1,7 @@
 local wx = require 'wx'
 local utils = require 'packagemanager-gui/utils'
-local Event = require 'packagemanager-gui/event'
-local Xrc   = require 'packagemanager-gui/xrc'
+local Event = require 'packagemanager-gui/Event'
+local xrc   = require 'packagemanager-gui/xrc'
 
 
 local SearchView = {}
@@ -111,18 +111,18 @@ return function( rootWindow )
 
     self.rootWindow = rootWindow
 
-    local searchCtrl = Xrc.getWindow(self.rootWindow, 'searchCtrl')
+    local searchCtrl = xrc.getWindow(self.rootWindow, 'searchCtrl')
     self.searchCtrl = searchCtrl
     searchCtrl:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function()
         self.searchChangeEvent()
     end)
 
-    local searchEditButton = Xrc.getWindow(self.rootWindow, 'searchEditButton')
+    local searchEditButton = xrc.getWindow(self.rootWindow, 'searchEditButton')
     searchEditButton:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED, function()
         self.searchEditEvent()
     end)
 
-    local resultList = Xrc.getWindow(self.rootWindow, 'searchResultList')
+    local resultList = xrc.getWindow(self.rootWindow, 'searchResultList')
     self.resultList = resultList
 
     local imageClient = wx.wxART_MENU

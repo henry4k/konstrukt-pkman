@@ -12,11 +12,11 @@ app:SetClassName('konstrukt-pkman')
 
 -- Load modules:
 local PackageManager = require 'packagemanager/init'
-local ArtProvider = require 'packagemanager-gui/artprovider'
-local Xrc = require 'packagemanager-gui/xrc'
-local MainFrameView = require 'packagemanager-gui/mainframeview'
-local ChangeListPresenter = require 'packagemanager-gui/changelistpresenter'
-local SearchPresenter = require 'packagemanager-gui/searchpresenter'
+local ArtProvider = require 'packagemanager-gui/ArtProvider'
+local xrc = require 'packagemanager-gui/xrc'
+local MainFrameView = require 'packagemanager-gui/MainFrameView'
+local ChangeListPresenter = require 'packagemanager-gui/ChangeListPresenter'
+local SearchPresenter = require 'packagemanager-gui/SearchPresenter'
 
 -- Prepare art provider:
 wx.wxArtProvider.Push(ArtProvider)
@@ -33,7 +33,7 @@ print = function( ... )
     io.stdout:flush()
 end
 
-Xrc.initialize()
+xrc.initialize()
 
 local mainFrameView = MainFrameView()
 PackageManager.initialize()

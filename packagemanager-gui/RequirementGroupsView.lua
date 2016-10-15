@@ -1,7 +1,7 @@
 local wx = require 'wx'
 local utils = require 'packagemanager-gui/utils'
-local Event = require 'packagemanager-gui/event'
-local Xrc   = require 'packagemanager-gui/xrc'
+local Event = require 'packagemanager-gui/Event'
+local xrc   = require 'packagemanager-gui/xrc'
 
 
 local RequirementGroupsView = {}
@@ -253,13 +253,13 @@ return function( rootWindow )
     self.removeRequirementEvent = Event() -- group, requirement
 
     self.rootWindow = rootWindow
-    self.groupNotebook = Xrc.getWindow(self.rootWindow, 'requirementsNotebook')
+    self.groupNotebook = xrc.getWindow(self.rootWindow, 'requirementsNotebook')
     self.groups = {}
 
-    self.noGroupsPanel = Xrc.getWindow(self.rootWindow, 'noGroupsPanel')
+    self.noGroupsPanel = xrc.getWindow(self.rootWindow, 'noGroupsPanel')
     self:_showNoGroupsPanel(true)
 
-    local createButton = Xrc.getWindow(self.rootWindow, 'createButton')
+    local createButton = xrc.getWindow(self.rootWindow, 'createButton')
     createButton:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED, function()
         self.createGroupEvent()
     end)
