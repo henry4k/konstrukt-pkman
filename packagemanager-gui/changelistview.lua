@@ -62,6 +62,12 @@ function ChangeListView:removeChange( change )
     self.changes[change] = nil
 end
 
+function ChangeListView:clearChanges()
+    for change in pairs(self.changes) do
+        self:removeChange(change)
+    end
+end
+
 function ChangeListView:enableApplyButton( status )
     self.applyButton:Enable(status)
 end

@@ -53,7 +53,9 @@ function Config.load( fileName )
     setmetatable(Config, nil)
     assert(not Config.content, 'Reloading is not supported.')
 
+    print(fileName)
     fileName = FS.makeAbsolutePath(fileName)
+    print(fileName)
     local baseDir = FS.dirName(fileName)
     Config.fileName = fileName
     Config.baseDir = baseDir

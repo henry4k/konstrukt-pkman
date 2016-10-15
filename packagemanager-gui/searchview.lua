@@ -19,12 +19,19 @@ local StatusColumn  = 0
 local NameColumn    = 1
 local VersionColumn = 2
 
+local SortModeToImageIdMap =
+{
+    none = -1,
+    ascending  = 0,
+    descending = 1
+}
+
 local PackageStatusToImageIdMap =
 {
-    ['available']         = 0,
-    ['installed-updated'] = 1,
-    ['install']           = 2,
-    ['remove']            = 3
+    ['available']         = 2,
+    ['installed-updated'] = 3,
+    ['install']           = 4,
+    ['remove']            = 5
 }
 
 function SearchView:addResultEntry( packageStatus, packageName, packageVersion )
@@ -36,12 +43,38 @@ function SearchView:addResultEntry( packageStatus, packageName, packageVersion )
     self.resultList:SetItem(row, StatusColumn,  '', PackageStatusToImageIdMap[packageStatus])
     self.resultList:SetItem(row, NameColumn,    packageName)
     self.resultList:SetItem(row, VersionColumn, packageVersion)
+    self:adaptColumnWidths()
 end
 
 function SearchView:adaptColumnWidths()
-    self.resultList:SetColumnWidth(StatusColumn,  wx.wxLIST_AUTOSIZE)
-    self.resultList:SetColumnWidth(NameColumn,    wx.wxLIST_AUTOSIZE)
-    self.resultList:SetColumnWidth(VersionColumn, wx.wxLIST_AUTOSIZE)
+    local list = self.resultList
+    for i = 0, list:GetColumnCount()-1 do
+        list:SetColumnWidth(i, wx.wxLIST_AUTOSIZE_USEHEADER)
+        local headerWidth = list:GetColumnWidth(i)
+
+        list:SetColumnWidth(i, wx.wxLIST_AUTOSIZE)
+        local itemWidth = list:GetColumnWidth(i)
+
+        list:SetColumnWidth(i, math.max(headerWidth, itemWidth))
+    end
+end
+
+function SearchView:sort( column, mode )
+    local list = self.resultList
+    local item = wx.wxListItem()
+    for i = 0, list:GetColumnCount()-1 do
+        local imageId
+        if i == column then
+            imageId = SortModeToImageIdMap[mode]
+        else
+            imageId = SortModeToImageIdMap.none
+        end
+        item:SetImage(imageId)
+        item:SetMask(wx.wxLIST_MASK_IMAGE)
+        list:SetColumn(i, item)
+    end
+    item:delete()
+    --list:SortItems()
 end
 
 function SearchView:clearResults()
@@ -60,14 +93,11 @@ function SearchView:destroy()
     self.imageList:Destroy()
 end
 
-function SearchView:_setColumn( column, text, width )
+function SearchView:_setColumn( column, text )
     local item = wx.wxListItem()
     item:SetId(column)
     if text then
         item:SetText(text)
-    end
-    if width then
-        item:SetWidth(width)
     end
     self.resultList:InsertColumn(column, item)
 end
@@ -77,6 +107,7 @@ return function( rootWindow )
 
     self.searchChangeEvent = Event()
     self.searchEditEvent   = Event()
+    self.columnClickEvent  = Event()
 
     self.rootWindow = rootWindow
 
@@ -99,6 +130,8 @@ return function( rootWindow )
     local imageList = wx.wxImageList(size:GetWidth(), size:GetHeight())
     self.imageList = imageList
 
+    imageList:Add(wx.wxArtProvider.GetIcon('sort-ascending',            imageClient))
+    imageList:Add(wx.wxArtProvider.GetIcon('sort-descending',           imageClient))
     imageList:Add(wx.wxArtProvider.GetIcon('package-available',         imageClient))
     imageList:Add(wx.wxArtProvider.GetIcon('package-installed-updated', imageClient))
     imageList:Add(wx.wxArtProvider.GetIcon('package-install',           imageClient))
@@ -108,6 +141,13 @@ return function( rootWindow )
     self:_setColumn(StatusColumn)
     self:_setColumn(NameColumn,    'Name')
     self:_setColumn(VersionColumn, 'Version')
+    self:sort(NameColumn, 'ascending')
+    self:adaptColumnWidths()
+
+    resultList:Connect(wx.wxEVT_COMMAND_LIST_COL_CLICK, function(e)
+        local column = e:GetColumn()
+        self.columnClickEvent(column)
+    end)
 
     return self
 end

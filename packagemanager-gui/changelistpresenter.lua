@@ -1,8 +1,21 @@
-local ChangeListController = {}
-ChangeListController.__index = ChangeListController
+local PackageManager = require 'packagemanager/init'
+
+
+local ChangeListPresenter = {}
+ChangeListPresenter.__index = ChangeListPresenter
+
+function ChangeListPresenter:gatherChanges()
+    self.changes = PackageManager.gatherChanges()
+    local view = self.view
+    view:clearChanges()
+    for _, change in ipairs(self.changes) do
+        view:addInstallChange(change.package.name, tostring(change.package.version))
+    end
+    -- PackageManager.applyChanges()
+end
 
 return function( view )
-    local self = setmetatable({}, ChangeListController)
+    local self = setmetatable({}, ChangeListPresenter)
     self.view = view
 
     local statusField
@@ -11,7 +24,7 @@ return function( view )
         view:freeze()
             view:enableApplyButton(false)
             view:enableCancelButton(true)
-            view:addInstallChange('test', '0.1.0')
+            self:gatherChanges()
         view:thaw()
     end)
 

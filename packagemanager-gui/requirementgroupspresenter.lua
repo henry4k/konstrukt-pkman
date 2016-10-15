@@ -1,9 +1,10 @@
-local RequirementGroupsController = {}
-RequirementGroupsController.__index = RequirementGroupsController
+local RequirementGroupsPresenter = {}
+RequirementGroupsPresenter.__index = RequirementGroupsPresenter
 
-return function( view )
-    local self = setmetatable({}, RequirementGroupsController)
+return function( view, model )
+    local self = setmetatable({}, RequirementGroupsPresenter)
     self.view = view
+    self.model = model
 
     view.createGroupEvent:addListener(function()
         view:freeze()

@@ -1,7 +1,6 @@
 include config.mk
 
 #VERSION = $(shell sed -n -e 's/.*"version": "\(.*\)".*/\1/p' meta.json)
-PACKAGE_BASENAME = package
 SYMLINK = 0
 
 GENERATED += pkman$(EXECUTABLE_POSTFIX)
@@ -16,10 +15,10 @@ CONTENTS += packagemanager-gui
 CONTENTS += $(GENERATED)
 CONTENTS += $(DEPENDENCIES)/*
 
-$(PACKAGE_BASENAME).zip: $(PACKAGE_BASENAME)
+build.zip: build
 	zip -r $@ $<
 
-$(PACKAGE_BASENAME): $(CONTENTS)
+build: $(CONTENTS)
 	rm -rf $@
 	mkdir $@
 ifeq ($(SYMLINK),0)
@@ -34,6 +33,6 @@ endif
 	lua5.1 build-tools/wxluafreeze.lua $(DEPENDENCIES)/wxLuaFreeze$(EXECUTABLE_POSTFIX) $< $@
 
 clean:
-	rm -rf $(PACKAGE_BASENAME) $(GENERATED)
+	rm -rf build $(GENERATED)
 
 .PHONY: clean
