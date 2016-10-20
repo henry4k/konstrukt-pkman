@@ -11,9 +11,9 @@ function xrc.initialize()
     xmlRes:Load(here('layout.xrc'))
 end
 
-function xrc.createFrame( name )
+function xrc.createFrame( name, parent )
     local frame = wx.wxFrame()
-    if xmlRes:LoadFrame(frame, wx.NULL, name) then
+    if xmlRes:LoadFrame(frame, parent or wx.NULL, name) then
         return frame
     else
         frame:Destroy()

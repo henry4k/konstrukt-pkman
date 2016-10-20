@@ -40,9 +40,9 @@ function SearchView:addResultEntry( packageStatus, packageName, packageVersion )
     item:SetId(row)
     self.resultList:InsertItem(item)
 
-    self.resultList:SetItem(row, StatusColumn,  '', PackageStatusToImageIdMap[packageStatus])
-    self.resultList:SetItem(row, NameColumn,    packageName)
-    self.resultList:SetItem(row, VersionColumn, packageVersion)
+    self.resultList:InsertItem(row, StatusColumn,  '', PackageStatusToImageIdMap[packageStatus])
+    self.resultList:SetItem(   row, NameColumn,    packageName)
+    self.resultList:SetItem(   row, VersionColumn, packageVersion)
     self:adaptColumnWidths()
 end
 
@@ -90,7 +90,6 @@ function SearchView:thaw()
 end
 
 function SearchView:destroy()
-    self.imageList:Destroy()
 end
 
 function SearchView:_setColumn( column, text )
@@ -113,14 +112,10 @@ return function( rootWindow )
 
     local searchCtrl = xrc.getWindow(self.rootWindow, 'searchCtrl')
     self.searchCtrl = searchCtrl
-    searchCtrl:Connect(wx.wxEVT_COMMAND_TEXT_UPDATED, function()
-        self.searchChangeEvent()
-    end)
+    utils.connect(searchCtrl, 'command_text_updated', self.searchChangeEvent)
 
     local searchEditButton = xrc.getWindow(self.rootWindow, 'searchEditButton')
-    searchEditButton:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED, function()
-        self.searchEditEvent()
-    end)
+    utils.connect(searchEditButton, 'command_button_clicked', self.searchEditEvent)
 
     local resultList = xrc.getWindow(self.rootWindow, 'searchResultList')
     self.resultList = resultList
@@ -144,7 +139,7 @@ return function( rootWindow )
     self:sort(NameColumn, 'ascending')
     self:adaptColumnWidths()
 
-    resultList:Connect(wx.wxEVT_COMMAND_LIST_COL_CLICK, function(e)
+    utils.connect(resultList, 'command_list_col_click', function()
         local column = e:GetColumn()
         self.columnClickEvent(column)
     end)

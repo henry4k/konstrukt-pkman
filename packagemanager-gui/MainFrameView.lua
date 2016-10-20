@@ -1,9 +1,7 @@
-local wx = require 'wx'
-local Event                 = require 'packagemanager-gui/Event'
-local xrc                   = require 'packagemanager-gui/xrc'
-local ChangeListView        = require 'packagemanager-gui/ChangeListView'
-local SearchView            = require 'packagemanager-gui/SearchView'
-local StatusBarView         = require 'packagemanager-gui/StatusBarView'
+local xrc            = require 'packagemanager-gui/xrc'
+local ChangeListView = require 'packagemanager-gui/ChangeListView'
+local SearchView     = require 'packagemanager-gui/SearchView'
+local StatusBarView  = require 'packagemanager-gui/StatusBarView'
 
 
 local MainFrameView = {}
@@ -15,7 +13,8 @@ end
 
 function MainFrameView:destroy()
     self.changeListView:destroy()
-    self.requirementGroupsView:destroy()
+    self.searchView:destroy()
+    self.statusBarView:destroy()
     self.frame:Destroy()
 end
 

@@ -13,7 +13,7 @@
 		<object class="wxNotebook" name="notebook">
 			<object class="notebookpage">
 				<label>Scenarios</label>
-				<selected>1</selected>
+				<selected>0</selected>
 				<bitmap stock_id="scenario" stock_client="wxART_TOOLBAR">undefined.png</bitmap>
 				<object class="wxPanel" name="scenarioPanel">
 					<style>wxTAB_TRAVERSAL</style>
@@ -41,7 +41,7 @@
 												<orient>wxHORIZONTAL</orient>
 												<object class="sizeritem">
 													<option>1</option>
-													<flag>wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL</flag>
+													<flag>wxALL</flag>
 													<border>5</border>
 													<object class="wxTextCtrl" name="m_textCtrl10">
 														<value></value>
@@ -49,7 +49,7 @@
 												</object>
 												<object class="sizeritem">
 													<option>0</option>
-													<flag>wxALL|wxALIGN_CENTER_VERTICAL|wxEXPAND</flag>
+													<flag>wxALL|wxEXPAND</flag>
 													<border>5</border>
 													<object class="wxBitmapButton" name="m_bpButton81">
 														<style>wxBU_AUTODRAW</style>
@@ -114,13 +114,13 @@
 												<orient>wxHORIZONTAL</orient>
 												<object class="spacer">
 													<option>1</option>
-													<flag>wxEXPAND</flag>
+													<flag></flag>
 													<border>5</border>
 													<size>0,0</size>
 												</object>
 												<object class="sizeritem">
 													<option>0</option>
-													<flag>wxALL|wxALIGN_CENTER_VERTICAL|wxEXPAND</flag>
+													<flag>wxALL|wxEXPAND</flag>
 													<border>5</border>
 													<object class="wxBitmapButton" name="m_bpButton11">
 														<style>wxBU_AUTODRAW</style>
@@ -130,7 +130,7 @@
 												</object>
 												<object class="sizeritem">
 													<option>0</option>
-													<flag>wxALL|wxALIGN_CENTER_VERTICAL|wxEXPAND</flag>
+													<flag>wxALL|wxEXPAND</flag>
 													<border>5</border>
 													<object class="wxBitmapButton" name="m_bpButton10">
 														<style>wxBU_AUTODRAW</style>
@@ -141,7 +141,7 @@
 												</object>
 												<object class="sizeritem">
 													<option>0</option>
-													<flag>wxALL|wxALIGN_CENTER_VERTICAL|wxEXPAND</flag>
+													<flag>wxALL|wxEXPAND</flag>
 													<border>5</border>
 													<object class="wxBitmapButton" name="m_bpButton91">
 														<style>wxBU_AUTODRAW</style>
@@ -152,7 +152,7 @@
 												</object>
 												<object class="sizeritem">
 													<option>0</option>
-													<flag>wxALIGN_CENTER_VERTICAL|wxALL|wxEXPAND</flag>
+													<flag>wxALL|wxEXPAND</flag>
 													<border>5</border>
 													<object class="wxButton" name="launchButton">
 														<label>Launch</label>
@@ -316,7 +316,7 @@
 			</object>
 			<object class="notebookpage">
 				<label>Settings</label>
-				<selected>0</selected>
+				<selected>1</selected>
 				<bitmap stock_id="settings" stock_client="wxART_TOOLBAR">undefined.png</bitmap>
 				<object class="wxPanel" name="settingsPanel">
 					<style>wxTAB_TRAVERSAL</style>
@@ -577,6 +577,116 @@
 							<object class="wxTextCtrl" name="m_textCtrl1">
 								<style>wxTE_MULTILINE|wxTE_READONLY</style>
 								<value>## [0.3.0] - 2015-12-03\n### Added\n- RU translation from @aishek.\n- pt-BR translation from @tallesl.\n- es-ES translation from @ZeliosAriex.\n\n## [0.2.0] - 2015-10-06\n### Changed\n- Remove exclusionary mentions of &quot;open source&quot; since this project can benefit\nboth &quot;open&quot; and &quot;closed&quot; source projects equally.\n\n## [0.1.0] - 2015-10-06\n### Added\n- Answer &quot;Should you ever rewrite a change log?&quot;.</value>
+							</object>
+						</object>
+					</object>
+				</object>
+			</object>
+		</object>
+	</object>
+	<object class="wxFrame" name="errorFrame">
+		<style>wxCAPTION|wxFRAME_FLOAT_ON_PARENT|wxRESIZE_BORDER|wxTAB_TRAVERSAL</style>
+		<title>Error</title>
+		<centered>1</centered>
+		<aui_managed>0</aui_managed>
+		<object class="wxBoxSizer">
+			<orient>wxVERTICAL</orient>
+			<object class="sizeritem">
+				<option>0</option>
+				<flag>wxEXPAND</flag>
+				<border>5</border>
+				<object class="wxBoxSizer">
+					<orient>wxHORIZONTAL</orient>
+					<object class="sizeritem">
+						<option>0</option>
+						<flag>wxALL</flag>
+						<border>5</border>
+						<object class="wxStaticBitmap" name="m_bitmap1">
+							<bitmap stock_id="wxART_ERROR" stock_client="wxART_MESSAGE_BOX">undefined.png</bitmap>
+						</object>
+					</object>
+					<object class="sizeritem">
+						<option>1</option>
+						<flag>wxALL|wxALIGN_CENTER_VERTICAL</flag>
+						<border>5</border>
+						<object class="wxStaticText" name="messageText">
+							<font>
+								<style>normal</style>
+								<weight>normal</weight>
+								<underlined>0</underlined>
+							</font>
+							<label></label>
+							<wrap>-1</wrap>
+						</object>
+					</object>
+				</object>
+			</object>
+			<object class="sizeritem">
+				<option>1</option>
+				<flag>wxALL|wxEXPAND</flag>
+				<border>5</border>
+				<object class="wxTextCtrl" name="reportText">
+					<style>wxTE_DONTWRAP|wxTE_MULTILINE|wxTE_READONLY</style>
+					<hidden>1</hidden>
+					<font>
+						<family>teletype</family>
+						<style>normal</style>
+						<weight>normal</weight>
+						<underlined>0</underlined>
+					</font>
+					<value></value>
+				</object>
+			</object>
+			<object class="sizeritem">
+				<option>0</option>
+				<flag>wxEXPAND</flag>
+				<border>5</border>
+				<object class="wxBoxSizer">
+					<orient>wxHORIZONTAL</orient>
+					<object class="sizeritem">
+						<option>0</option>
+						<flag>wxALL|wxEXPAND</flag>
+						<border>5</border>
+						<object class="wxButton" name="showReportButton">
+							<label>Show Report</label>
+							<default>0</default>
+						</object>
+					</object>
+					<object class="sizeritem">
+						<option>0</option>
+						<flag>wxALL|wxEXPAND</flag>
+						<border>5</border>
+						<object class="wxButton" name="hideReportButton">
+							<label>Hide Report</label>
+							<default>0</default>
+						</object>
+					</object>
+					<object class="sizeritem">
+						<option>0</option>
+						<flag>wxALL|wxEXPAND</flag>
+						<border>5</border>
+						<object class="wxButton" name="copyReportButton">
+							<label>Copy Report</label>
+							<default>0</default>
+						</object>
+					</object>
+					<object class="spacer">
+						<option>1</option>
+						<flag></flag>
+						<border>5</border>
+						<size>0,0</size>
+					</object>
+					<object class="sizeritem">
+						<option>0</option>
+						<flag>wxEXPAND</flag>
+						<border>5</border>
+						<object class="wxStdDialogButtonSizer">
+							<object class="button">
+								<flag>wxALIGN_CENTER_HORIZONTAL|wxALL</flag>
+								<border>5</border>
+								<object class="wxButton" name="wxID_OK">
+									<label>&amp;OK</label>
+								</object>
 							</object>
 						</object>
 					</object>

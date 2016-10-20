@@ -89,8 +89,8 @@ local IconStacks =
                   Mac     = {{type = 'bitmap', file = 'empty?.png'}}},
     ['package-installed-updated'] =
         IconStack{Unix    = {{type = 'system', name = 'document-save'}},
-                  Windows = {{type = 'bitmap', file = 'error.png'}},
-                  Mac     = {{type = 'bitmap', file = 'error.png'}}},
+                  Windows = {{type = 'bitmap', file = 'download?.png'}},
+                  Mac     = {{type = 'bitmap', file = 'download?.png'}}},
     ['package-install'] =
         IconStack{Unix    = {{type = 'system', name = 'list-add'}},
                   Windows = {{type = 'bitmap', file = 'add?.png'}},
@@ -150,7 +150,11 @@ local IconStacks =
     ['wxART_WARNING'] =
         IconStack{Unix    = {{type = 'system', name = 'wxART_WARNING'}},
                   Windows = {{type = 'system', name = 'wxART_WARNING'}},
-                  Mac     = {{type = 'system', name = 'wxART_WARNING'}}}
+                  Mac     = {{type = 'system', name = 'wxART_WARNING'}}},
+    ['wxART_MISSING_IMAGE'] =
+        IconStack{Unix    = {{type = 'system', name = 'wxART_MISSING_IMAGE'}},
+                  Windows = {{type = 'bitmap', file = 'remove?.png'}},
+                  Mac     = {{type = 'bitmap', file = 'remove?.png'}}}
 }
 
 function ArtProvider:DoGetSizeHint( client )
@@ -175,6 +179,9 @@ function ArtProvider:CreateBitmap( id, client, size )
             if iconSource.type == 'system' then
                 result = wx.wxArtProvider.GetBitmap(iconSource.name, client, size)
             elseif iconSource.type == 'bitmap' then
+                if not iconSource.file then
+                    print(id)
+                end
                 local size = wx.wxArtProvider.GetSizeHint(client, true)
                 local baseName = iconSource.file:gsub('%?', size:GetWidth())
                 local fileName = here(fs.path('icons', baseName))

@@ -11,27 +11,25 @@ function ChangeListPresenter:gatherChanges()
     for _, change in ipairs(self.changes) do
         view:addInstallChange(change.package.name, tostring(change.package.version))
     end
-    -- PackageManager.applyChanges()
 end
 
 return function( view )
     local self = setmetatable({}, ChangeListPresenter)
     self.view = view
-
-    local statusField
+    self:gatherChanges()
+    view:enableButton('apply')
 
     view.applyButtonPressEvent:addListener(function()
         view:freeze()
-            view:enableApplyButton(false)
-            view:enableCancelButton(true)
-            self:gatherChanges()
+            view:enableButton('cancel')
+            local future = PackageManager.applyChanges(self.changes)
+            print('applyChanges future:', future)
         view:thaw()
     end)
 
     view.cancelButtonPressEvent:addListener(function()
         view:freeze()
-            view:enableApplyButton(true)
-            view:enableCancelButton(false)
+            view:enableButton('apply')
         view:thaw()
     end)
 

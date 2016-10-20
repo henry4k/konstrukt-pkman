@@ -3,6 +3,24 @@ local wx = require 'wx'
 
 local utils = {}
 
+function utils.getTopLevelWindow( window )
+    if window:IsTopLevel() then
+        return window
+    else
+        return utils.getTopLevelWindow(assert(window:GetParent()))
+    end
+end
+
+function utils.connect( eventHandler, eventName, callback )
+    assert(callback, 'Callback missing')
+    local eventId = assert(wx['wxEVT_'..string.upper(eventName)], 'Unknown event type')
+
+    eventHandler:Connect(eventId, function( event )
+        local showError = require 'packagemanager-gui/showError'
+        xpcall(callback, showError, event)
+    end)
+end
+
 function utils.updateWindow( window )
     -- Call this to force layout of the children anew, e.g. after having added
     -- a child to or removed a child (window, other sizer or space) from the
@@ -17,11 +35,33 @@ function utils.updateWindow( window )
     -- addition/removal/alteration of scrollbars required to view the virtual
     -- area in windows which manage it.
     --
-    window:FitInside()
+    window:Fit()
+    --window:FitInside()
 end
 
 function utils.scrollWindowToEnd( window )
     window:ScrollLines(9999) -- hack :D
+end
+
+function utils.addListColumn( list, items )
+    local row = list:GetItemCount()
+    local item = wx.wxListItem()
+    for i, itemData in ipairs(items) do
+        item:Clear()
+        item:SetId(row)
+        item:SetColumn(i-1) -- zero based index
+        if itemData.data then
+            item:SetData(itemData.data)
+        end
+        if itemData.image then
+            item:SetImage(itemData.image)
+        end
+        if itemData.text then
+            item:SetText(itemData.text)
+        end
+        list:InsertItem(item)
+    end
+    --item:delete()
 end
 
 local CastOverrides =

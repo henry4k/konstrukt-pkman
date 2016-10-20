@@ -33,6 +33,9 @@ function StatusBarView:setFieldText( field, text )
     self.window:SetStatusText(text, field.index-1)
 end
 
+function StatusBarView:destroy()
+end
+
 return function( window )
     local self = setmetatable({}, StatusBarView)
     self.window = window

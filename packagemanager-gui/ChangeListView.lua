@@ -36,7 +36,7 @@ function ChangeListView:addInstallChange( packageName, packageVersion )
 
     local infoButton = wx.wxBitmapButton( self.listWindow, wx.wxID_ANY, wx.wxArtProvider.GetBitmap( wx.wxART_INFORMATION, wx.wxART_MENU ), wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxBU_AUTODRAW )
     self.listGridSizer:Add( infoButton, 0, defaultSizerFlags, 5 )
-    infoButton:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED, function()
+    utils.connect(infoButton, 'command_button_clicked', function()
         self.showUpgradeInfoEvent(packageName, packageVersion)
     end)
 
@@ -68,12 +68,14 @@ function ChangeListView:clearChanges()
     end
 end
 
-function ChangeListView:enableApplyButton( status )
-    self.applyButton:Enable(status)
-end
-
-function ChangeListView:enableCancelButton( status )
-    self.cancelButton:Enable(status)
+function ChangeListView:enableButton( name )
+    if name == 'apply' then
+        self.applyButton:Enable(true)
+        self.cancelButton:Enable(false)
+    else
+        self.applyButton:Enable(false)
+        self.cancelButton:Enable(true)
+    end
 end
 
 function ChangeListView:updateTotalProgress()
@@ -108,10 +110,10 @@ return function( rootWindow )
     self.totalProgressText  = xrc.getWindow(self.rootWindow, 'totalProgressText')
 
     self.applyButton = xrc.getWindow(self.rootWindow, 'wxID_APPLY')
-    self.applyButton:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED, function() self.applyButtonPressEvent() end)
+    utils.connect(self.applyButton, 'command_button_clicked', self.applyButtonPressEvent)
 
     self.cancelButton = xrc.getWindow(self.rootWindow, 'wxID_CANCEL')
-    self.cancelButton:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED, function() self.cancelButtonPressEvent() end)
+    utils.connect(self.cancelButton, 'command_button_clicked', self.cancelButtonPressEvent)
 
     self.listWindow = xrc.getWindow(self.rootWindow, 'changeWindow')
 
@@ -127,7 +129,6 @@ return function( rootWindow )
     self.listGridSizer = listGridSizer
 
     self.changes = {}
-
 
     return self
 end
