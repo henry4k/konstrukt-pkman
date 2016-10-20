@@ -35,14 +35,9 @@ local PackageStatusToImageIdMap =
 }
 
 function SearchView:addResultEntry( packageStatus, packageName, packageVersion )
-    local row = self.resultList:GetItemCount()
-    local item = wx.wxListItem()
-    item:SetId(row)
-    self.resultList:InsertItem(item)
-
-    self.resultList:InsertItem(row, StatusColumn,  '', PackageStatusToImageIdMap[packageStatus])
-    self.resultList:SetItem(   row, NameColumn,    packageName)
-    self.resultList:SetItem(   row, VersionColumn, packageVersion)
+    utils.addListColumn(self.resultList, {{image = PackageStatusToImageIdMap[packageStatus]},
+                                          {text = packageName},
+                                          {text = packageVersion}})
     self:adaptColumnWidths()
 end
 
@@ -139,7 +134,7 @@ return function( rootWindow )
     self:sort(NameColumn, 'ascending')
     self:adaptColumnWidths()
 
-    utils.connect(resultList, 'command_list_col_click', function()
+    utils.connect(resultList, 'command_list_col_click', function(e)
         local column = e:GetColumn()
         self.columnClickEvent(column)
     end)

@@ -81,6 +81,19 @@ end
 
 -- Query database {{{1
 
+function PackageManager.searchWithQueryString( query )
+    local comparators = {}
+    local options = {}
+
+    if query and #query > 0 then
+        comparators.name = function( value )
+            return value:match(query)
+        end
+    end
+
+    return PackageManager.search(comparators, options)
+end
+
 --- ...
 --
 -- @param[type=table] comparators
@@ -91,6 +104,7 @@ end
 -- `remote` controls whether packages from repositories are searched.  Defaults to `true`.
 --
 function PackageManager.search( comparators, options )
+    return PackageDB.gatherPackages(db, comparators)
 end
 
 

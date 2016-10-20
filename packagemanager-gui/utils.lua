@@ -44,24 +44,27 @@ function utils.scrollWindowToEnd( window )
 end
 
 function utils.addListColumn( list, items )
-    local row = list:GetItemCount()
-    local item = wx.wxListItem()
-    for i, itemData in ipairs(items) do
-        item:Clear()
-        item:SetId(row)
-        item:SetColumn(i-1) -- zero based index
-        if itemData.data then
-            item:SetData(itemData.data)
-        end
-        if itemData.image then
-            item:SetImage(itemData.image)
-        end
-        if itemData.text then
-            item:SetText(itemData.text)
-        end
-        list:InsertItem(item)
-    end
+    --local item = wx.wxListItem()
+    --for i, itemData in ipairs(items) do
+    --    item:Clear()
+    --    item:SetColumn(i-1) -- zero based index
+    --    if itemData.data then
+    --        item:SetData(itemData.data)
+    --    end
+    --    if itemData.image then
+    --        item:SetImage(itemData.image)
+    --    end
+    --    if itemData.text then
+    --        item:SetText(itemData.text)
+    --    end
+    --    list:InsertItem(item)
+    --end
     --item:delete()
+
+    local itemIndex = list:InsertItem(0, items[1].text or '', items[1].image or -1)
+    for i = 2, #items do
+        list:SetItem(itemIndex, i-1, items[i].text or '', items[i].image or -1)
+    end
 end
 
 local CastOverrides =

@@ -1,17 +1,42 @@
+local PackageManager = require 'packagemanager/init'
+
+
 local SearchPresenter = {}
 SearchPresenter.__index = SearchPresenter
+
+local function GetPackageStatus( package )
+    if package.virtual then
+        package = package.provider
+    end
+
+    if package.required then
+        if package.localFileName then
+            return 'installed-updated'
+        else
+            return 'install'
+        end
+    else
+        if package.localFileName then
+            return 'remove'
+        else
+            return 'available'
+        end
+    end
+end
 
 return function( view )
     local self = setmetatable({}, SearchPresenter)
     self.view = view
 
     view.searchChangeEvent:addListener(function()
+        local query = view:getQuery()
+        local results = PackageManager.searchWithQueryString(query)
+
         view:freeze()
             view:clearResults()
-            view:addResultEntry('available', view:getQuery(), '0.0.0')
-            view:addResultEntry('installed-updated', view:getQuery(), '0.0.0')
-            view:addResultEntry('install', view:getQuery(), '0.0.0')
-            view:addResultEntry('remove', view:getQuery(), '0.0.0')
+            for _, package in ipairs(results) do
+                view:addResultEntry(GetPackageStatus(package), package.name, tostring(package.version))
+            end
         view:thaw()
     end)
 
