@@ -32,12 +32,13 @@ local function ExecuteQuery( view, query )
         resultList:clear()
         for _, package in ipairs(results) do
             local statusIcon, statusSortValue = GetPackageStatus(package)
-            resultList:addRow{{ icon = statusIcon,
-                                value = statusSortValue },
-                              { text = package.name,
-                                value = package.name },
-                              { text = tostring(package.version),
-                                value = package.version }}
+            resultList:addRow(package,
+                              {{ icon = statusIcon,
+                                 value = statusSortValue },
+                               { text = package.name,
+                                 value = package.name },
+                               { text = tostring(package.version),
+                                 value = package.version }})
         end
         resultList:sort()
         resultList:adaptColumnWidths()

@@ -18,6 +18,9 @@ function List:_prepareItem( item, column, columnData )
 end
 
 ---
+-- @param reference
+-- Used in callbacks to reference the list entry.
+--
 -- @param[type=table] columns
 -- A list, which holds these properties for each column:
 --
@@ -25,7 +28,7 @@ end
 -- - `text` (Optional)
 -- - `value` (Optional)
 --
-function List:addRow( columns )
+function List:addRow( reference, columns )
     local window = self.window
     local index = window:GetItemCount()
 
@@ -40,11 +43,11 @@ function List:addRow( columns )
     end
     item:delete()
 
-    local value = {}
+    local columnValues = {}
     for i = 1, #columns do
-        value[i] = columns[i].value
+        columnValues[i] = columns[i].value
     end
-    table.insert(self.rows, value)
+    table.insert(self.rows, { reference = reference, columns = columnValues })
 end
 
 function List:clear()
@@ -132,8 +135,8 @@ function List:sort( columnIndex, mode )
 
     local function comparator( aIndex, bIndex )
         local rows = self.rows
-        local a = rows[aIndex][columnIndex]
-        local b = rows[bIndex][columnIndex]
+        local a = rows[aIndex].columns[columnIndex]
+        local b = rows[bIndex].columns[columnIndex]
         if a == b then
             return 0
         else
@@ -194,7 +197,7 @@ return function( listWindow, columns, icons )
     self.currentlySortedColumn = -1
     self.currentSortMode = ''
 
-    utils.connect(listWindow, 'command_list_col_click', function(e)
+    utils.connect(listWindow, 'command_list_col_click', function( e )
         local column = e:GetColumn() + 1
 
         local sortMode
@@ -210,6 +213,16 @@ return function( listWindow, columns, icons )
 
         self:sort(column, sortMode)
         self:adaptColumnWidths()
+    end)
+
+    self.rowFocusChangeEvent = Event()
+    utils.connect(listWindow, 'command_list_item_focused', function( e )
+        local rowIndex = e:GetIndex()+1
+        local reference
+        if rowIndex ~= 0 then
+            reference = self.rows[rowIndex].reference
+        end
+        self.rowFocusChangeEvent(reference)
     end)
 
     return self

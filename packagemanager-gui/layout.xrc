@@ -63,13 +63,13 @@
 											<option>1</option>
 											<flag>wxALL|wxEXPAND</flag>
 											<border>5</border>
-											<object class="wxListCtrl" name="searchResultList">
+											<object class="wxListCtrl" name="resultList">
 												<style>wxLC_HRULES|wxLC_REPORT|wxLC_SINGLE_SEL</style>
 											</object>
 										</object>
 									</object>
 								</object>
-								<object class="wxPanel" name="m_panel20">
+								<object class="wxPanel" name="detailsPanel">
 									<style>wxTAB_TRAVERSAL</style>
 									<object class="wxBoxSizer">
 										<orient>wxVERTICAL</orient>
@@ -77,7 +77,7 @@
 											<option>0</option>
 											<flag>wxALL|wxEXPAND</flag>
 											<border>5</border>
-											<object class="wxTextCtrl" name="nameTextCtrl">
+											<object class="wxTextCtrl" name="nameText">
 												<style>wxTE_PROCESS_ENTER</style>
 												<font>
 													<style>normal</style>
@@ -100,7 +100,7 @@
 														<option>1</option>
 														<flag>wxALL|wxEXPAND</flag>
 														<border>5</border>
-														<object class="wxTextCtrl" name="m_textCtrl91">
+														<object class="wxTextCtrl" name="descriptionText">
 															<style>wxTE_AUTO_URL|wxTE_MULTILINE|wxTE_RICH|wxTE_WORDWRAP</style>
 															<value>Hier geht es um eine Raumstation im Erdorbit. Spielziel ist das Überleben in der Raumstation. Dazu muss diese ggf. erweitert werden. http://konstrukt.henry4k.de/apoapsis</value>
 														</object>
@@ -114,17 +114,11 @@
 											<border>5</border>
 											<object class="wxBoxSizer">
 												<orient>wxHORIZONTAL</orient>
-												<object class="spacer">
-													<option>1</option>
-													<flag></flag>
-													<border>5</border>
-													<size>0,0</size>
-												</object>
 												<object class="sizeritem">
 													<option>0</option>
 													<flag>wxALL|wxEXPAND</flag>
 													<border>5</border>
-													<object class="wxBitmapButton" name="m_bpButton11">
+													<object class="wxBitmapButton" name="deleteButton">
 														<style>wxBU_AUTODRAW</style>
 														<bitmap stock_id="wxART_DELETE" stock_client="wxART_BUTTON">undefined.png</bitmap>
 														<default>0</default>
@@ -134,7 +128,7 @@
 													<option>0</option>
 													<flag>wxALL|wxEXPAND</flag>
 													<border>5</border>
-													<object class="wxBitmapButton" name="m_bpButton10">
+													<object class="wxBitmapButton" name="reloadButton">
 														<style>wxBU_AUTODRAW</style>
 														<enabled>0</enabled>
 														<bitmap stock_id="wxART_UNDO" stock_client="wxART_BUTTON">undefined.png</bitmap>
@@ -145,12 +139,18 @@
 													<option>0</option>
 													<flag>wxALL|wxEXPAND</flag>
 													<border>5</border>
-													<object class="wxBitmapButton" name="m_bpButton91">
+													<object class="wxBitmapButton" name="saveButton">
 														<style>wxBU_AUTODRAW</style>
 														<enabled>0</enabled>
 														<bitmap stock_id="wxART_FILE_SAVE" stock_client="wxART_BUTTON">undefined.png</bitmap>
 														<default>0</default>
 													</object>
+												</object>
+												<object class="spacer">
+													<option>1</option>
+													<flag></flag>
+													<border>5</border>
+													<size>0,0</size>
 												</object>
 												<object class="sizeritem">
 													<option>0</option>

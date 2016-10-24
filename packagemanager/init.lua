@@ -79,6 +79,36 @@ function PackageManager.setRequirementGroup( name, group )
 end
 
 
+-- Access scenarios {{{1
+
+function PackageManager.getScenarioNames()
+end
+
+function PackageManager.getScenario( name )
+end
+
+function PackageManager.saveScenario( name, scenario )
+end
+
+function PackageManager.launchScenario( name )
+end
+
+function PackageManager.getScenarios()
+    return {
+        {
+            type = 'template',
+            name = 'Apoapsis',
+            description = 'Description goes here.'
+        },
+        {
+            type = 'savegame',
+            name = 'Apoapsis 2016-10-24',
+            description = 'Nothing to see here.'
+        }
+    }
+end
+
+
 -- Query database {{{1
 
 function PackageManager.searchWithQueryString( query )

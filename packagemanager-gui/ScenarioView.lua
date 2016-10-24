@@ -16,7 +16,40 @@ function ScenarioView:setQuery( query )
     self.searchCtrl:ChangeValue(query)
 end
 
-function ScenarioView:clearResults()
+function ScenarioView:getName()
+    return self.nameText:GetValue()
+end
+
+function ScenarioView:setName( name )
+    self.nameText:ChangeValue(name)
+end
+
+function ScenarioView:getDescription()
+    return self.descriptionText:GetValue()
+end
+
+function ScenarioView:setDescription( desc )
+    self.descriptionText:ChangeValue(desc)
+end
+
+function ScenarioView:enableDeleteButton( enabled )
+    self.deleteButton:Enable(enabled)
+end
+
+function ScenarioView:enableReloadButton( enabled )
+    self.reloadButton:Enable(enabled)
+end
+
+function ScenarioView:enableSaveButton( enabled )
+    self.saveButton:Enable(enabled)
+end
+
+function ScenarioView:enableLaunchButton( enabled )
+    self.launchButton:Enable(enabled)
+end
+
+function ScenarioView:enableDetailsPanel( enabled )
+    self.detailsPanel:Enable(enabled)
 end
 
 function ScenarioView:freeze()
@@ -30,15 +63,17 @@ end
 function ScenarioView:destroy()
 end
 
-function ScenarioView:setScenarioTree( tree )
-end
-
 return function( rootWindow )
     local self = setmetatable({}, ScenarioView)
 
     self.searchChangeEvent   = Event()
     self.createScenarioEvent = Event()
-    self.columnClickEvent    = Event()
+    self.nameChangeEvent     = Event()
+    self.descriptionChangeEvent = Event()
+    self.deleteEvent         = Event()
+    self.reloadEvent         = Event()
+    self.saveEvent           = Event()
+    self.launchEvent         = Event()
 
     self.rootWindow = rootWindow
 
@@ -54,16 +89,38 @@ return function( rootWindow )
     local createScenarioButton = xrc.getWindow(rootWindow, 'createScenarioButton')
     utils.connect(createScenarioButton, 'command_button_clicked', self.createScenarioEvent)
 
-    local comp = function(a,b) return a < b end
-    local searchResultList = List(xrc.getWindow(rootWindow, 'searchResultList'),
-                                  {{label='name'}, {label='date'}},
-                                  {})
-    searchResultList:freeze()
-    searchResultList:addRow{{text='bbb', value=2}, {text='222', value=20}}
-    searchResultList:addRow{{text='aaa', value=1}, {text='111', value=10}}
-    searchResultList:addRow{{text='ccc', value=3}, {text='333', value=30}}
-    searchResultList:adaptColumnWidths()
-    searchResultList:thaw()
+    local resultList = List(xrc.getWindow(rootWindow, 'resultList'),
+                            {{},
+                             { label = 'Name' },
+                             { label = 'Date' }},
+                            {})
+    self.resultList = resultList
+
+    local nameText = xrc.getWindow(rootWindow, 'nameText')
+    self.nameText = nameText
+    utils.connect(nameText, 'command_text_updated', self.nameChangeEvent)
+
+    local descriptionText = xrc.getWindow(rootWindow, 'descriptionText')
+    self.descriptionText = descriptionText
+    utils.connect(descriptionText, 'command_text_updated', self.descriptionChangeEvent)
+
+    local deleteButton = xrc.getWindow(rootWindow, 'deleteButton')
+    self.deleteButton = deleteButton
+    utils.connect(deleteButton, 'command_button_clicked', self.deleteEvent)
+
+    local reloadButton = xrc.getWindow(rootWindow, 'reloadButton')
+    self.reloadButton = reloadButton
+    utils.connect(reloadButton, 'command_button_clicked', self.reloadEvent)
+
+    local saveButton = xrc.getWindow(rootWindow, 'saveButton')
+    self.saveButton = saveButton
+    utils.connect(saveButton, 'command_button_clicked', self.saveEvent)
+
+    local launchButton = xrc.getWindow(rootWindow, 'launchButton')
+    self.launchButton = launchButton
+    utils.connect(launchButton, 'command_button_clicked', self.launchEvent)
+
+    self.detailsPanel = xrc.getWindow(rootWindow, 'detailsPanel')
 
     return self
 end

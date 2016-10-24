@@ -25,6 +25,7 @@ local utils = require 'packagemanager-gui/utils'
 local MainFrameView = require 'packagemanager-gui/MainFrameView'
 local ChangeListPresenter = require 'packagemanager-gui/ChangeListPresenter'
 local SearchPresenter = require 'packagemanager-gui/SearchPresenter'
+local ScenarioPresenter = require 'packagemanager-gui/ScenarioPresenter'
 
 -- Prepare art provider:
 wx.wxArtProvider.Push(ArtProvider)
@@ -44,7 +45,9 @@ local statusBarView = mainFrameView.statusBarView
 local changeListView = mainFrameView.changeListView
 local changeListPresenter = ChangeListPresenter(changeListView)
 local searchView = mainFrameView.searchView
+local scenarioView = mainFrameView.scenarioView
 local searchPresenter = SearchPresenter(searchView)
+local scenarioPresenter = ScenarioPresenter(scenarioView)
 
 mainFrameView:show()
 
