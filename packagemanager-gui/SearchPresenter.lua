@@ -11,17 +11,37 @@ local function GetPackageStatus( package )
 
     if package.required then
         if package.localFileName then
-            return 'installed-updated'
+            return 'package-installed-updated', 1
         else
-            return 'install'
+            return 'package-install', 2
         end
     else
         if package.localFileName then
-            return 'remove'
+            return 'package-remove', 3
         else
-            return 'available'
+            return 'package-available', 4
         end
     end
+end
+
+local function ExecuteQuery( view, query )
+    local results = PackageManager.searchWithQueryString(query)
+    local resultList = view.resultList
+
+    resultList:freeze()
+        resultList:clear()
+        for _, package in ipairs(results) do
+            local statusIcon, statusSortValue = GetPackageStatus(package)
+            resultList:addRow{{ icon = statusIcon,
+                                value = statusSortValue },
+                              { text = package.name,
+                                value = package.name },
+                              { text = tostring(package.version),
+                                value = package.version }}
+        end
+        resultList:sort()
+        resultList:adaptColumnWidths()
+    resultList:thaw()
 end
 
 return function( view )
@@ -30,25 +50,14 @@ return function( view )
 
     view.searchChangeEvent:addListener(function()
         local query = view:getQuery()
-        local results = PackageManager.searchWithQueryString(query)
-
-        view:freeze()
-            view:clearResults()
-            for _, package in ipairs(results) do
-                view:addResultEntry(GetPackageStatus(package), package.name, tostring(package.version))
-            end
-        view:thaw()
+        ExecuteQuery(view, query)
     end)
 
-    view.searchEditEvent:addListener(function()
-        print('edit search not implemented yet')
-        view:setQuery('loljk')
-    end)
-
-    view.columnClickEvent:addListener(function( column )
-        view:sort(column, 'ascending')
-        view:adaptColumnWidths()
-    end)
+    view:freeze()
+    view.resultList:sort(2, 'ascending')
+    view:setQuery('')
+    ExecuteQuery(view, '')
+    view:thaw()
 
     return self
 end

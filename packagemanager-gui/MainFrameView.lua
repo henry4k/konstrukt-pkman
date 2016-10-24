@@ -1,4 +1,5 @@
 local xrc            = require 'packagemanager-gui/xrc'
+local ScenarioView   = require 'packagemanager-gui/ScenarioView'
 local ChangeListView = require 'packagemanager-gui/ChangeListView'
 local SearchView     = require 'packagemanager-gui/SearchView'
 local StatusBarView  = require 'packagemanager-gui/StatusBarView'
@@ -12,6 +13,7 @@ function MainFrameView:show()
 end
 
 function MainFrameView:destroy()
+    self.scenarioView:destroy()
     self.changeListView:destroy()
     self.searchView:destroy()
     self.statusBarView:destroy()
@@ -25,6 +27,9 @@ return function()
     --frame:SetAcceleratorTable(...)
     --frame:SetDropTarget(...)
     self.frame = frame
+
+    local scenarioRoot = xrc.getWindow(frame, 'scenarioPanel')
+    self.scenarioView = ScenarioView(scenarioRoot)
 
     local changeRoot = xrc.getWindow(frame, 'changesPanel')
     self.changeListView = ChangeListView(changeRoot)

@@ -13,7 +13,7 @@
 		<object class="wxNotebook" name="notebook">
 			<object class="notebookpage">
 				<label>Scenarios</label>
-				<selected>0</selected>
+				<selected>1</selected>
 				<bitmap stock_id="scenario" stock_client="wxART_TOOLBAR">undefined.png</bitmap>
 				<object class="wxPanel" name="scenarioPanel">
 					<style>wxTAB_TRAVERSAL</style>
@@ -23,11 +23,11 @@
 							<option>1</option>
 							<flag>wxEXPAND</flag>
 							<border>5</border>
-							<object class="wxSplitterWindow" name="m_splitter2">
+							<object class="wxSplitterWindow" name="splitter">
 								<style>wxSP_3D|wxSP_LIVE_UPDATE</style>
-								<sashpos>199</sashpos>
+								<sashpos>-1</sashpos>
 								<gravity>1</gravity>
-								<minsize>0</minsize>
+								<minsize>1</minsize>
 								<orientation>vertical</orientation>
 								<object class="wxPanel" name="m_panel18">
 									<style>wxTAB_TRAVERSAL</style>
@@ -43,7 +43,7 @@
 													<option>1</option>
 													<flag>wxALL</flag>
 													<border>5</border>
-													<object class="wxTextCtrl" name="m_textCtrl10">
+													<object class="wxTextCtrl" name="searchCtrl">
 														<value></value>
 													</object>
 												</object>
@@ -51,7 +51,7 @@
 													<option>0</option>
 													<flag>wxALL|wxEXPAND</flag>
 													<border>5</border>
-													<object class="wxBitmapButton" name="m_bpButton81">
+													<object class="wxBitmapButton" name="createScenarioButton">
 														<style>wxBU_AUTODRAW</style>
 														<bitmap stock_id="wxART_NEW" stock_client="wxART_BUTTON">undefined.png</bitmap>
 														<default>0</default>
@@ -61,9 +61,11 @@
 										</object>
 										<object class="sizeritem">
 											<option>1</option>
-											<flag>wxEXPAND | wxALL</flag>
+											<flag>wxALL|wxEXPAND</flag>
 											<border>5</border>
-											<object class="unknown" name="m_treeListCtrl1" />
+											<object class="wxListCtrl" name="searchResultList">
+												<style>wxLC_HRULES|wxLC_REPORT|wxLC_SINGLE_SEL</style>
+											</object>
 										</object>
 									</object>
 								</object>
@@ -190,16 +192,6 @@
 										<value></value>
 									</object>
 								</object>
-								<object class="sizeritem">
-									<option>0</option>
-									<flag>wxALL|wxALIGN_CENTER_VERTICAL</flag>
-									<border>5</border>
-									<object class="wxBitmapButton" name="searchEditButton">
-										<style>wxBU_AUTODRAW</style>
-										<bitmap stock_id="edit" stock_client="wxART_MENU">undefined.png</bitmap>
-										<default>0</default>
-									</object>
-								</object>
 							</object>
 						</object>
 						<object class="sizeritem">
@@ -316,7 +308,7 @@
 			</object>
 			<object class="notebookpage">
 				<label>Settings</label>
-				<selected>1</selected>
+				<selected>0</selected>
 				<bitmap stock_id="settings" stock_client="wxART_TOOLBAR">undefined.png</bitmap>
 				<object class="wxPanel" name="settingsPanel">
 					<style>wxTAB_TRAVERSAL</style>
@@ -327,7 +319,6 @@
 							<flag>wxEXPAND | wxALL</flag>
 							<border>5</border>
 							<object class="wxNotebook" name="m_notebook3">
-								<style>wxNB_LEFT</style>
 								<object class="notebookpage">
 									<label>Repositories</label>
 									<selected>0</selected>

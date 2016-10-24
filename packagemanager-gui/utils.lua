@@ -11,14 +11,17 @@ function utils.getTopLevelWindow( window )
     end
 end
 
-function utils.connect( eventHandler, eventName, callback )
+function utils.wrapCallbackForWx( callback )
     assert(callback, 'Callback missing')
-    local eventId = assert(wx['wxEVT_'..string.upper(eventName)], 'Unknown event type')
-
-    eventHandler:Connect(eventId, function( event )
+    return function( ... )
         local showError = require 'packagemanager-gui/showError'
-        xpcall(callback, showError, event)
-    end)
+        return select(2, xpcall(callback, showError, ...))
+    end
+end
+
+function utils.connect( eventHandler, eventName, callback )
+    local eventId = assert(wx['wxEVT_'..string.upper(eventName)], 'Unknown event type')
+    eventHandler:Connect(eventId, utils.wrapCallbackForWx(callback))
 end
 
 function utils.updateWindow( window )
@@ -43,30 +46,6 @@ function utils.scrollWindowToEnd( window )
     window:ScrollLines(9999) -- hack :D
 end
 
-function utils.addListColumn( list, items )
-    --local item = wx.wxListItem()
-    --for i, itemData in ipairs(items) do
-    --    item:Clear()
-    --    item:SetColumn(i-1) -- zero based index
-    --    if itemData.data then
-    --        item:SetData(itemData.data)
-    --    end
-    --    if itemData.image then
-    --        item:SetImage(itemData.image)
-    --    end
-    --    if itemData.text then
-    --        item:SetText(itemData.text)
-    --    end
-    --    list:InsertItem(item)
-    --end
-    --item:delete()
-
-    local itemIndex = list:InsertItem(0, items[1].text or '', items[1].image or -1)
-    for i = 2, #items do
-        list:SetItem(itemIndex, i-1, items[i].text or '', items[i].image or -1)
-    end
-end
-
 local CastOverrides =
 {
     wxGauge95 = 'wxGauge'
@@ -76,6 +55,16 @@ function utils.autoCast( object )
     local className = object:GetClassInfo():GetClassName()
     className = CastOverrides[className] or className
     return object:DynamicCast(className)
+end
+
+function utils.setClipboard( value )
+    local c = wx.wxClipboard:Get()
+    if c:Open() then
+        c:SetData(wx.wxTextDataObject(value))
+        c:Close()
+    else
+        error('Can\'t access clipboard.')
+    end
 end
 
 function utils.getOperatingSystem() -- Unix, Windows, Mac
