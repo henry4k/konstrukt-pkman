@@ -15,7 +15,6 @@ _G.print = originalPrint -- because wxLua overrides it
 local app = wx.wxGetApp()
 app:SetAppName('konstrukt-pkman')
 app:SetClassName('konstrukt-pkman')
---app:SetExitOnFrameDelete(true)
 
 -- Load modules:
 local PackageManager = require 'packagemanager/init'
@@ -24,8 +23,8 @@ local xrc = require 'packagemanager-gui/xrc'
 local utils = require 'packagemanager-gui/utils'
 local MainFrameView = require 'packagemanager-gui/MainFrameView'
 local ChangeListPresenter = require 'packagemanager-gui/ChangeListPresenter'
-local SearchPresenter = require 'packagemanager-gui/SearchPresenter'
-local ScenarioPresenter = require 'packagemanager-gui/ScenarioPresenter'
+local PackageListPresenter = require 'packagemanager-gui/PackageListPresenter'
+local RequirementListPresenter = require 'packagemanager-gui/RequirementListPresenter'
 
 -- Prepare art provider:
 wx.wxArtProvider.Push(ArtProvider)
@@ -42,12 +41,15 @@ utils.connect(mainFrameView.frame, 'close_window', function( event )
 end)
 
 local statusBarView = mainFrameView.statusBarView
+
 local changeListView = mainFrameView.changeListView
 local changeListPresenter = ChangeListPresenter(changeListView)
-local searchView = mainFrameView.searchView
-local scenarioView = mainFrameView.scenarioView
-local searchPresenter = SearchPresenter(searchView)
-local scenarioPresenter = ScenarioPresenter(scenarioView)
+
+local packageListView = mainFrameView.packageListView
+local packageListPresenter = PackageListPresenter(packageListView)
+
+local requirementListView = mainFrameView.requirementListView
+local requirementListPresenter = RequirementListPresenter(requirementListView)
 
 mainFrameView:show()
 

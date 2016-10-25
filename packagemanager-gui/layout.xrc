@@ -2,7 +2,7 @@
 <resource xmlns="http://www.wxwindows.org/wxxrc" version="2.3.0.1">
 	<object class="wxFrame" name="mainFrame">
 		<style>wxDEFAULT_FRAME_STYLE|wxTAB_TRAVERSAL</style>
-		<size>500,300</size>
+		<size>700,500</size>
 		<title>konstrukt package manager</title>
 		<centered>1</centered>
 		<aui_managed>0</aui_managed>
@@ -12,10 +12,10 @@
 		</object>
 		<object class="wxNotebook" name="notebook">
 			<object class="notebookpage">
-				<label>Scenarios</label>
+				<label>Packages</label>
 				<selected>1</selected>
-				<bitmap stock_id="scenario" stock_client="wxART_TOOLBAR">undefined.png</bitmap>
-				<object class="wxPanel" name="scenarioPanel">
+				<bitmap stock_id="package-search" stock_client="wxART_TOOLBAR">undefined.png</bitmap>
+				<object class="wxPanel" name="packagesPanel">
 					<style>wxTAB_TRAVERSAL</style>
 					<object class="wxBoxSizer">
 						<orient>wxVERTICAL</orient>
@@ -40,8 +40,17 @@
 											<object class="wxBoxSizer">
 												<orient>wxHORIZONTAL</orient>
 												<object class="sizeritem">
+													<option>0</option>
+													<flag>wxALL|wxALIGN_CENTER_VERTICAL</flag>
+													<border>5</border>
+													<object class="wxStaticText" name="m_staticText81">
+														<label>Filter</label>
+														<wrap>-1</wrap>
+													</object>
+												</object>
+												<object class="sizeritem">
 													<option>1</option>
-													<flag>wxALL</flag>
+													<flag>wxALL|wxALIGN_CENTER_VERTICAL</flag>
 													<border>5</border>
 													<object class="wxTextCtrl" name="searchCtrl">
 														<value></value>
@@ -49,7 +58,7 @@
 												</object>
 												<object class="sizeritem">
 													<option>0</option>
-													<flag>wxALL|wxEXPAND</flag>
+													<flag>wxALL|wxALIGN_CENTER_VERTICAL</flag>
 													<border>5</border>
 													<object class="wxBitmapButton" name="createScenarioButton">
 														<style>wxBU_AUTODRAW</style>
@@ -57,6 +66,14 @@
 														<default>0</default>
 													</object>
 												</object>
+											</object>
+										</object>
+										<object class="sizeritem">
+											<option>0</option>
+											<flag>wxEXPAND | wxALL</flag>
+											<border>5</border>
+											<object class="wxStaticLine" name="m_staticline1">
+												<style>wxLI_HORIZONTAL</style>
 											</object>
 										</object>
 										<object class="sizeritem">
@@ -171,10 +188,10 @@
 				</object>
 			</object>
 			<object class="notebookpage">
-				<label>Search</label>
+				<label>Requirements</label>
 				<selected>0</selected>
-				<bitmap stock_id="package-search" stock_client="wxART_TOOLBAR">undefined.png</bitmap>
-				<object class="wxPanel" name="searchPanel">
+				<bitmap stock_id="requirements" stock_client="wxART_TOOLBAR">undefined.png</bitmap>
+				<object class="wxPanel" name="requirementsPanel">
 					<style>wxTAB_TRAVERSAL</style>
 					<object class="wxBoxSizer">
 						<orient>wxVERTICAL</orient>
@@ -184,6 +201,15 @@
 							<border>5</border>
 							<object class="wxBoxSizer">
 								<orient>wxHORIZONTAL</orient>
+								<object class="sizeritem">
+									<option>0</option>
+									<flag>wxALL|wxALIGN_CENTER_VERTICAL</flag>
+									<border>5</border>
+									<object class="wxStaticText" name="m_staticText91">
+										<label>Filter</label>
+										<wrap>-1</wrap>
+									</object>
+								</object>
 								<object class="sizeritem">
 									<option>1</option>
 									<flag>wxALL|wxALIGN_CENTER_VERTICAL</flag>
@@ -195,11 +221,74 @@
 							</object>
 						</object>
 						<object class="sizeritem">
-							<option>1</option>
-							<flag>wxALL|wxEXPAND</flag>
+							<option>0</option>
+							<flag>wxEXPAND | wxALL</flag>
 							<border>5</border>
-							<object class="wxListCtrl" name="searchResultList">
-								<style>wxLC_HRULES|wxLC_REPORT|wxLC_SINGLE_SEL</style>
+							<object class="wxStaticLine" name="m_staticline2">
+								<style>wxLI_HORIZONTAL</style>
+							</object>
+						</object>
+						<object class="sizeritem">
+							<option>1</option>
+							<flag>wxEXPAND | wxALL</flag>
+							<border>5</border>
+							<object class="wxScrolledWindow" name="resultWindow">
+								<style>wxHSCROLL|wxVSCROLL</style>
+								<scrollrate>5,5</scrollrate>
+								<object class="wxFlexGridSizer">
+									<rows>0</rows>
+									<cols>3</cols>
+									<vgap>0</vgap>
+									<hgap>0</hgap>
+									<growablecols>0,1</growablecols>
+									<growablerows></growablerows>
+									<object class="sizeritem">
+										<option>0</option>
+										<flag>wxALL</flag>
+										<border>5</border>
+										<object class="wxStaticText" name="m_staticText71">
+											<label>Name</label>
+											<wrap>-1</wrap>
+										</object>
+									</object>
+									<object class="sizeritem">
+										<option>0</option>
+										<flag>wxALL</flag>
+										<border>5</border>
+										<object class="wxStaticText" name="m_staticText9">
+											<label>Version Range</label>
+											<wrap>-1</wrap>
+										</object>
+									</object>
+									<object class="spacer">
+										<option>1</option>
+										<flag>wxEXPAND</flag>
+										<border>5</border>
+										<size>0,0</size>
+									</object>
+									<object class="spacer">
+										<option>1</option>
+										<flag>wxEXPAND</flag>
+										<border>5</border>
+										<size>0,0</size>
+									</object>
+									<object class="spacer">
+										<option>1</option>
+										<flag>wxEXPAND</flag>
+										<border>5</border>
+										<size>0,0</size>
+									</object>
+									<object class="sizeritem">
+										<option>0</option>
+										<flag>wxALL</flag>
+										<border>5</border>
+										<object class="wxBitmapButton" name="addRequirementButton">
+											<style>wxBU_AUTODRAW</style>
+											<bitmap stock_id="wxART_NEW" stock_client="wxART_BUTTON">undefined.png</bitmap>
+											<default>0</default>
+										</object>
+									</object>
+								</object>
 							</object>
 						</object>
 					</object>

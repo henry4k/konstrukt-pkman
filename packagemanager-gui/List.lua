@@ -91,7 +91,7 @@ function List:_setupColumns( columns )
     self.sortableColumns = sortableColumns
 
     for i, column in ipairs(columns) do
-        sortableColumns[i] = column.sortable or true
+        sortableColumns[i] = not column.unsortable
 
         local item = wx.wxListItem()
         if column.label then

@@ -1,8 +1,8 @@
 local PackageManager = require 'packagemanager/init'
 
 
-local SearchPresenter = {}
-SearchPresenter.__index = SearchPresenter
+local PackageListPresenter = {}
+PackageListPresenter.__index = PackageListPresenter
 
 local function GetPackageStatus( package )
     if package.virtual then
@@ -38,7 +38,9 @@ local function ExecuteQuery( view, query )
                                { text = package.name,
                                  value = package.name },
                                { text = tostring(package.version),
-                                 value = package.version }})
+                                 value = package.version },
+                               { text = '',
+                                 value = 0 }})
         end
         resultList:sort()
         resultList:adaptColumnWidths()
@@ -46,12 +48,26 @@ local function ExecuteQuery( view, query )
 end
 
 return function( view )
-    local self = setmetatable({}, SearchPresenter)
+    local self = setmetatable({}, PackageListPresenter)
     self.view = view
 
     view.searchChangeEvent:addListener(function()
         local query = view:getQuery()
         ExecuteQuery(view, query)
+    end)
+
+    view.resultList.rowFocusChangeEvent:addListener(function( package )
+        view:freeze()
+        if package then
+            view:setName(package.name)
+            view:setDescription(package.description or '')
+            view:enableDetailsPanel(true)
+        else
+            view:setName('')
+            view:setDescription('')
+            view:enableDetailsPanel(false)
+        end
+        view:thaw()
     end)
 
     view:freeze()

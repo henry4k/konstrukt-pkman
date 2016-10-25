@@ -38,8 +38,11 @@ function utils.updateWindow( window )
     -- addition/removal/alteration of scrollbars required to view the virtual
     -- area in windows which manage it.
     --
-    window:Fit()
-    --window:FitInside()
+    if window:IsTopLevel() then
+        window:Fit()
+    else
+        window:FitInside()
+    end
 end
 
 function utils.scrollWindowToEnd( window )

@@ -1,8 +1,8 @@
-local xrc            = require 'packagemanager-gui/xrc'
-local ScenarioView   = require 'packagemanager-gui/ScenarioView'
-local ChangeListView = require 'packagemanager-gui/ChangeListView'
-local SearchView     = require 'packagemanager-gui/SearchView'
-local StatusBarView  = require 'packagemanager-gui/StatusBarView'
+local xrc             = require 'packagemanager-gui/xrc'
+local PackageListView = require 'packagemanager-gui/PackageListView'
+local RequirementListView = require 'packagemanager-gui/RequirementListView'
+local ChangeListView  = require 'packagemanager-gui/ChangeListView'
+local StatusBarView   = require 'packagemanager-gui/StatusBarView'
 
 
 local MainFrameView = {}
@@ -13,9 +13,9 @@ function MainFrameView:show()
 end
 
 function MainFrameView:destroy()
-    self.scenarioView:destroy()
+    self.packageListView:destroy()
+    self.requirementListView:destroy()
     self.changeListView:destroy()
-    self.searchView:destroy()
     self.statusBarView:destroy()
     self.frame:Destroy()
 end
@@ -28,14 +28,14 @@ return function()
     --frame:SetDropTarget(...)
     self.frame = frame
 
-    local scenarioRoot = xrc.getWindow(frame, 'scenarioPanel')
-    self.scenarioView = ScenarioView(scenarioRoot)
+    local packagesPanel = xrc.getWindow(frame, 'packagesPanel')
+    self.packageListView = PackageListView(packagesPanel)
 
-    local changeRoot = xrc.getWindow(frame, 'changesPanel')
-    self.changeListView = ChangeListView(changeRoot)
+    local requirementsPanel = xrc.getWindow(frame, 'requirementsPanel')
+    self.requirementListView = RequirementListView(requirementsPanel)
 
-    local searchRoot = xrc.getWindow(frame, 'searchPanel')
-    self.searchView = SearchView(searchRoot)
+    local changesPanel = xrc.getWindow(frame, 'changesPanel')
+    self.changeListView = ChangeListView(changesPanel)
 
     local statusBar = xrc.getWindow(frame, 'statusBar')
     self.statusBarView = StatusBarView(statusBar)

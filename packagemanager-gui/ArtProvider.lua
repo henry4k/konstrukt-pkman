@@ -62,7 +62,7 @@ local IconStacks =
         IconStack{Unix    = {{type = 'system', name = 'view-refresh'}},
                   Windows = {{type = 'bitmap', file = 'changes?.png'}},
                   Mac     = {{type = 'bitmap', file = 'changes?.png'}}},
-    ['scenario'] =
+    ['requirements'] =
         IconStack{Unix    = {{type = 'system', name = 'bookmarks-organize'},
                              {type = 'system', name = 'bookmarks'},
                              {type = 'system', name = 'user-bookmarks'}},

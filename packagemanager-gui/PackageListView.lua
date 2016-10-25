@@ -1,72 +1,72 @@
 local wx = require 'wx'
 local utils = require 'packagemanager-gui/utils'
-local Event = require 'packagemanager-gui/Event'
 local xrc   = require 'packagemanager-gui/xrc'
+local Event = require 'packagemanager-gui/Event'
 local List  = require 'packagemanager-gui/List'
 
 
-local ScenarioView = {}
-ScenarioView.__index = ScenarioView
+local PackageListView = {}
+PackageListView.__index = PackageListView
 
-function ScenarioView:getQuery()
+function PackageListView:getQuery()
     return self.searchCtrl:GetValue()
 end
 
-function ScenarioView:setQuery( query )
+function PackageListView:setQuery( query )
     self.searchCtrl:ChangeValue(query)
 end
 
-function ScenarioView:getName()
+function PackageListView:getName()
     return self.nameText:GetValue()
 end
 
-function ScenarioView:setName( name )
+function PackageListView:setName( name )
     self.nameText:ChangeValue(name)
 end
 
-function ScenarioView:getDescription()
+function PackageListView:getDescription()
     return self.descriptionText:GetValue()
 end
 
-function ScenarioView:setDescription( desc )
+function PackageListView:setDescription( desc )
     self.descriptionText:ChangeValue(desc)
 end
 
-function ScenarioView:enableDeleteButton( enabled )
+function PackageListView:enableDeleteButton( enabled )
     self.deleteButton:Enable(enabled)
 end
 
-function ScenarioView:enableReloadButton( enabled )
+function PackageListView:enableReloadButton( enabled )
     self.reloadButton:Enable(enabled)
 end
 
-function ScenarioView:enableSaveButton( enabled )
+function PackageListView:enableSaveButton( enabled )
     self.saveButton:Enable(enabled)
 end
 
-function ScenarioView:enableLaunchButton( enabled )
+function PackageListView:enableLaunchButton( enabled )
     self.launchButton:Enable(enabled)
 end
 
-function ScenarioView:enableDetailsPanel( enabled )
+function PackageListView:enableDetailsPanel( enabled )
     self.detailsPanel:Enable(enabled)
 end
 
-function ScenarioView:freeze()
+function PackageListView:freeze()
     self.rootWindow:Freeze()
 end
 
-function ScenarioView:thaw()
+function PackageListView:thaw()
     self.rootWindow:Thaw()
 end
 
-function ScenarioView:destroy()
+function PackageListView:destroy()
 end
 
 return function( rootWindow )
-    local self = setmetatable({}, ScenarioView)
+    local self = setmetatable({}, PackageListView)
 
-    self.searchChangeEvent   = Event()
+    self.searchChangeEvent = Event()
     self.createScenarioEvent = Event()
     self.nameChangeEvent     = Event()
     self.descriptionChangeEvent = Event()
@@ -82,18 +82,22 @@ return function( rootWindow )
     local splitter = xrc.getWindow(rootWindow, 'splitter')
     splitter:SetSashPosition(splitter:GetSize():GetWidth()-sidebarWidth)
 
-    local searchCtrl = xrc.getWindow(rootWindow, 'searchCtrl')
+    local searchCtrl = xrc.getWindow(self.rootWindow, 'searchCtrl')
     self.searchCtrl = searchCtrl
     utils.connect(searchCtrl, 'command_text_updated', self.searchChangeEvent)
 
     local createScenarioButton = xrc.getWindow(rootWindow, 'createScenarioButton')
     utils.connect(createScenarioButton, 'command_button_clicked', self.createScenarioEvent)
 
-    local resultList = List(xrc.getWindow(rootWindow, 'resultList'),
+    local resultList = List(xrc.getWindow(self.rootWindow, 'resultList'),
                             {{},
                              { label = 'Name' },
+                             { label = 'Version' },
                              { label = 'Date' }},
-                            {})
+                            {'package-available',
+                             'package-installed-updated',
+                             'package-install',
+                             'package-remove'})
     self.resultList = resultList
 
     local nameText = xrc.getWindow(rootWindow, 'nameText')

@@ -53,58 +53,12 @@ function PackageManager.updateRepositoryIndices()
 end
 
 
--- Read/edit requirement groups {{{1
+-- Read/edit requirements {{{1
 
-function PackageManager.getRequirementGroupNames()
-    local names = {}
-    for name, _ in pairs(Config.requirements) do
-        table.insert(names, name)
-    end
-    return names
-end
-
-function PackageManager.getRequirementGroup( name )
-    local group = Config.requirements[name]
-    if group then
-        return group
-    else
-        return nil, string.format('Requirement group %s doesn\'t exist.', name)
-    end
-end
-
--- Replaces or removes a requirement group.
-function PackageManager.setRequirementGroup( name, group )
-    -- TODO: Validate new group either here or in Config.
-    Config.requirements[name] = group
-end
-
-
--- Access scenarios {{{1
-
-function PackageManager.getScenarioNames()
-end
-
-function PackageManager.getScenario( name )
-end
-
-function PackageManager.saveScenario( name, scenario )
-end
-
-function PackageManager.launchScenario( name )
-end
-
-function PackageManager.getScenarios()
-    return {
-        {
-            type = 'template',
-            name = 'Apoapsis',
-            description = 'Description goes here.'
-        },
-        {
-            type = 'savegame',
-            name = 'Apoapsis 2016-10-24',
-            description = 'Nothing to see here.'
-        }
+function PackageManager.getRequirements()
+    return
+    {
+        { name = 'example', versionRange = '1.1 - 2.4' }
     }
 end
 
