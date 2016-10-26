@@ -8,6 +8,7 @@ local LocalPackage = require 'packagemanager/localpackage'
 local Dependency = require 'packagemanager/dependency'
 local PackageDB = require 'packagemanager/packagedb'
 local Package = require 'packagemanager/package'
+local Version = require 'packagemanager/version'
 local FS = require 'packagemanager/fs'
 
 
@@ -192,6 +193,29 @@ function PackageManager.applyChanges( changes )
         change.coro = coroutine.create(coroFn)
         ResumeCoroutineAndPropagateErrors(change.coro, change)
     end
+end
+
+
+-- Launch scenarios {{{1
+
+function PackageManager.launchScenario( package )
+    assert(package.type == 'scenario', 'Package is not a scenario.')
+
+    local dependencies = {}
+    dependencies[package.name] = Version.versionToVersionRange(package.version)
+    local packages = Dependency.resolve(db, dependencies)
+
+    local engine
+    for _, package in ipairs(packages) do
+        assert(package.localFileName, package.name..' is not installed.')
+        if package.type == 'engine' then
+            assert(not engine, 'Multiple engine packages detected!')
+            engine = package
+        end
+    end
+    assert(engine, 'Scenario has no engine as (indirect) dependency.')
+
+    print('TODO: launch '..engine.localFileName)
 end
 
 

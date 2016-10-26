@@ -56,11 +56,17 @@ return function( view )
         ExecuteQuery(view, query)
     end)
 
+    local currentPackage
+
     view.resultList.rowFocusChangeEvent:addListener(function( package )
         view:freeze()
         if package then
             view:setName(package.name)
             view:setDescription(package.description or '')
+            view:enableLaunchButton(package.type == 'scenario')
+            view:enableDeleteButton(false) -- There are no user created packages yet
+            view:enableReloadButton(false) -- dito
+            view:enableSaveButton(false) -- dito
             view:enableDetailsPanel(true)
         else
             view:setName('')
@@ -68,6 +74,13 @@ return function( view )
             view:enableDetailsPanel(false)
         end
         view:thaw()
+        currentPackage = package
+    end)
+
+    view.launchEvent:addListener(function()
+        assert(currentPackage)
+        assert(currentPackage.type == 'scenario')
+        PackageManager.launchScenario(currentPackage)
     end)
 
     view:freeze()
