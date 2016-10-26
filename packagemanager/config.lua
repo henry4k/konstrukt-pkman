@@ -22,14 +22,13 @@ local function JsonToInternal( json, internal )
     internal.searchPaths = json.searchPaths or {}
     internal.repositories = json.repositories or {}
     internal.repositoryCacheDir = json.repositoryCacheDir or 'repositories'
-
     internal.requirements = {}
-    for groupName, group in pairs(json.requirements or {}) do
-        for packageName, versionRangeExpr in pairs(group) do
-            local versionRange = Version.parseVersionRange(versionRangeExpr)
-            group[packageName] = versionRange
-        end
-        internal.requirements[groupName] = group
+    for _, requirement in ipairs(json.requirements) do
+        local versionRangeExpr = requirement.versionRange
+        local versionRange = Version.parseVersionRange(versionRangeExpr)
+        table.insert(internal.requirements,
+                     { packageName = requirement.packageName,
+                       versionRange = versionRange })
     end
 end
 
@@ -38,12 +37,10 @@ local function InternalToJson( internal, json )
     json.repositories = internal.repositories
     json.repositoryCacheDir = internal.repositoryCacheDir
     json.requirements = {}
-    for groupName, group in pairs(internal.requirements) do
-        local newGroup = {}
-        for packageName, versionRange in pairs(group) do
-            newGroup[packageName] = tostring(versionRange)
-        end
-        json.requirements[groupName] = newGroup
+    for _, requirement in ipairs(internal.requirements) do
+        table.insert(json.requirements,
+                     { packageName = requirement.packageName,
+                       versionRange = tostring(requirement.versionRange) })
     end
 end
 

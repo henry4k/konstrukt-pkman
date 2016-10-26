@@ -56,10 +56,11 @@ end
 -- Read/edit requirements {{{1
 
 function PackageManager.getRequirements()
-    return
-    {
-        { name = 'example', versionRange = '1.1 - 2.4' }
-    }
+    return Config.requirements
+end
+
+function PackageManager.setRequirements( requirements )
+    Config.requirements = requirements
 end
 
 
@@ -101,13 +102,20 @@ end
 -- message if something went wrong.
 -- Each change looks like this: `{ type = [install, uninstall], package = ... }`
 function PackageManager.gatherChanges()
+    local errors = {}
     local neededPackages = {}
-    for groupName, group in pairs(Config.requirements) do
-        local packages = assert(Dependency.resolve(db, group))
-        for _, package in pairs(packages) do
-            if not package.localFileName and not package.virtual then
-                neededPackages[package] = true
+    for _, requirement in ipairs(Config.requirements) do
+        local dependencies = {}
+        dependencies[requirement.packageName] = requirement.versionRange
+        local success, packagesOrErr = pcall(Dependency.resolve, db, dependencies)
+        if success then
+            for _, package in pairs(packagesOrErr) do
+                if not package.localFileName and not package.virtual then
+                    neededPackages[package] = true
+                end
             end
+        else
+            table.insert(errors, packagesOrErr)
         end
     end
 
@@ -118,7 +126,7 @@ function PackageManager.gatherChanges()
 
     -- TODO: Gather obsolete packages too!
 
-    return changes
+    return changes, errors
 end
 
 local function ResumeCoroutineAndPropagateErrors( coro, ... )

@@ -31,26 +31,34 @@ end
 
 function RequirementListView:clear()
     local resultGrid = self.resultGrid
-    for _, requirement in pairs(self.requirements) do
+    for requirement in pairs(self.requirementEntries) do
         self:removeRequirement(requirement)
     end
 end
 
-function RequirementListView:addRequirement( name, versionRange )
+function RequirementListView:addRequirement( requirement )
     local resultGrid = self.resultGrid
     local resultWindow = self.resultWindow
 
-    local requirement = {}
+    local entry = {}
 
     local insertIndex = resultGrid:GetChildren():GetCount() - ResultGridColumns
 
-    local packageName = wx.wxTextCtrl( resultWindow, wx.wxID_ANY, name, wx.wxDefaultPosition, wx.wxDefaultSize, 0 )
-    resultGrid:Insert(insertIndex, packageName, 0, wx.wxALL + wx.wxEXPAND, 5 )
+    local packageNameCtrl = wx.wxTextCtrl( resultWindow, wx.wxID_ANY, requirement.packageName, wx.wxDefaultPosition, wx.wxDefaultSize, 0 )
+    resultGrid:Insert(insertIndex, packageNameCtrl, 0, wx.wxALL + wx.wxEXPAND, 5 )
     insertIndex = insertIndex + 1
 
-    local versionRangeCtrl = wx.wxTextCtrl( resultWindow, wx.wxID_ANY, versionRange, wx.wxDefaultPosition, wx.wxDefaultSize, 0 )
+    local versionRangeCtrl = wx.wxTextCtrl( resultWindow, wx.wxID_ANY, tostring(requirement.versionRange), wx.wxDefaultPosition, wx.wxDefaultSize, 0 )
     resultGrid:Insert(insertIndex, versionRangeCtrl, 0, wx.wxALL + wx.wxEXPAND, 5 )
     insertIndex = insertIndex + 1
+
+    local function changeFn()
+        self.changeRequirementEvent(requirement,
+                                    packageNameCtrl:GetValue(),
+                                    versionRangeCtrl:GetValue())
+    end
+    utils.connect(packageNameCtrl,  'command_text_updated', changeFn)
+    utils.connect(versionRangeCtrl, 'command_text_updated', changeFn)
 
     local removeButton = wx.wxBitmapButton( resultWindow, wx.wxID_ANY, wx.wxArtProvider.GetBitmap( wx.wxART_DELETE, wx.wxART_BUTTON ), wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxBU_AUTODRAW )
     resultGrid:Insert(insertIndex, removeButton, 0, wx.wxALL, 5 )
@@ -60,11 +68,10 @@ function RequirementListView:addRequirement( name, versionRange )
         self.removeRequirementEvent(requirement)
     end)
 
-    requirement.windows = { packageName = packageName,
-                            versionRangeCtrl = versionRangeCtrl,
-                            removeButton = removeButton }
-    self.requirements[requirement] = requirement
-    return requirement
+    entry.windows = { packageNameCtrl = packageNameCtrl,
+                      versionRangeCtrl = versionRangeCtrl,
+                      removeButton = removeButton }
+    self.requirementEntries[requirement] = entry
 end
 
 function RequirementListView:showRequirement( requirement )
@@ -74,24 +81,53 @@ function RequirementListView:showRequirement( requirement )
 end
 
 function RequirementListView:removeRequirement( requirement )
-    assert(self.requirements[requirement])
+    local entry = assert(self.requirementEntries[requirement])
     local resultGrid = self.resultGrid
-    for _, window in pairs(requirement.windows) do
+    for _, window in pairs(entry.windows) do
         resultGrid:Detach(window)
         window:Destroy()
     end
-    self.requirements[requirement] = nil
+    self.requirementEntries[requirement] = nil
     utils.updateWindow(self.resultWindow)
+end
+
+local function GetHintColour( mode )
+    local colour = wx.wxSystemSettings.GetColour(wx.wxSYS_COLOUR_WINDOW)
+    if mode ~= 'none' then
+        local referenceColour = wx.wxSystemSettings.GetColour(wx.wxSYS_COLOUR_WINDOWFRAME)
+        if mode == 'warning' then
+            colour:Set(colour:Red(), colour:Green(), referenceColour:Blue())
+        elseif mode == 'error' then
+            colour:Set(colour:Red(), referenceColour:Green(), referenceColour:Blue())
+        else
+            error('Unknown mode.')
+        end
+    end
+    return colour
+end
+
+---
+-- @param[type=string] mode
+-- One of these: `none`, `warning`, `error`
+--
+-- @param[type=string,opt] message
+--
+function RequirementListView:setVersionRangeHint( requirement, mode, message )
+    local entry = assert(self.requirementEntries[requirement])
+    local ctrl = entry.windows.versionRangeCtrl
+    ctrl:SetBackgroundColour(GetHintColour(mode))
+    ctrl:SetToolTip(message or '')
 end
 
 return function( rootWindow )
     local self = setmetatable({}, RequirementListView)
 
-    self.requirements = {}
+    self.requirementEntries = {}
 
     self.searchChangeEvent = Event()
     self.addRequirementEvent = Event()
     self.removeRequirementEvent = Event()
+    self.changeRequirementEvent = Event()
 
     self.rootWindow = rootWindow
 
