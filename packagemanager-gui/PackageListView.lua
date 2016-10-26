@@ -86,9 +86,6 @@ return function( rootWindow )
     self.searchCtrl = searchCtrl
     utils.connect(searchCtrl, 'command_text_updated', self.searchChangeEvent)
 
-    local createScenarioButton = xrc.getWindow(rootWindow, 'createScenarioButton')
-    utils.connect(createScenarioButton, 'command_button_clicked', self.createScenarioEvent)
-
     local resultList = List(xrc.getWindow(self.rootWindow, 'resultList'),
                             {{},
                              { label = 'Name' },
