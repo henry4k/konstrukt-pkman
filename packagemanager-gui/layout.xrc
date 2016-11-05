@@ -13,7 +13,7 @@
 		<object class="wxNotebook" name="notebook">
 			<object class="notebookpage">
 				<label>Packages</label>
-				<selected>1</selected>
+				<selected>0</selected>
 				<bitmap stock_id="package-search" stock_client="wxART_TOOLBAR">undefined.png</bitmap>
 				<object class="wxPanel" name="packagesPanel">
 					<style>wxTAB_TRAVERSAL</style>
@@ -286,7 +286,7 @@
 			</object>
 			<object class="notebookpage">
 				<label>Changes</label>
-				<selected>0</selected>
+				<selected>1</selected>
 				<bitmap stock_id="changes" stock_client="wxART_TOOLBAR">undefined.png</bitmap>
 				<object class="wxPanel" name="changesPanel">
 					<style>wxTAB_TRAVERSAL</style>

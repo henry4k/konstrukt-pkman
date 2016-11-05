@@ -33,9 +33,12 @@ An actual installable package.
     -- Required fields:
     name = ... -- Usually not needed in serialized form.
     type = ... -- regular, scenario, native, executable
-    version = {...}
+
+    version = {...} -- optional for local packages
 
     -- Optional fields:
+    date = ...
+    description = ...
     dependencies =
     {
         <package name> = <version range>
@@ -50,7 +53,7 @@ An actual installable package.
     architecture = ... -- x86, x86_64, ...
 
     -- Specific to executable packages:
-    executables =
+    executables
     {
         <file name> =
         {

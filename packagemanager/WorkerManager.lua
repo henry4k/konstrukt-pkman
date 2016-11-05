@@ -1,14 +1,13 @@
 local lanes = require('lanes').configure{ with_timers = false,
                                           verbose_errors = true }
 local unpack = unpack or table.unpack -- backward compatibility to 5.1
+local Task = require 'packagemanager/Task'
 
-
-local JobManager = {}
 
 local Manager = {}
 local ManagerMT = { __index = Manager }
 
-local function WorkerFn( ThreadName, JobQueueLinda, JobLinda, Processor )
+local function WorkerFn( ThreadName, TaskQueueLinda, TaskLinda, Processor )
     local unpack = _G.unpack or table.unpack -- backward compatibility to 5.1
 
     set_debug_threadname(ThreadName)
@@ -16,24 +15,24 @@ local function WorkerFn( ThreadName, JobQueueLinda, JobLinda, Processor )
     local ProcessorCb = Processor()
 
     local function EmitEvent( e )
-        JobLinda:send('events', e)
+        TaskLinda:send('events', e)
     end
 
-    function EmitJobEvent( fnName, ... )
+    function EmitTaskEvent( fnName, ... )
         EmitEvent{ type = 'call', fnName = fnName, arguments = {...} }
     end
 
     local UsedProperties = {}
 
-    function SetJobProperty( name, value )
-        JobLinda:set(name, value)
+    function SetTaskProperty( name, value )
+        TaskLinda:set(name, value)
         UsedProperties[name] = true
     end
 
     local function CollectProperties()
         local properties = {}
         for name, _ in pairs(UsedProperties) do
-            local value = JobLinda:get(name)
+            local value = TaskLinda:get(name)
             if value ~= lanes.cancel_error then
                 properties[name] = value
             end
@@ -43,31 +42,31 @@ local function WorkerFn( ThreadName, JobQueueLinda, JobLinda, Processor )
 
     local function ClearProperties()
         for name, _ in pairs(UsedProperties) do
-            JobLinda:set(name, nil)
+            TaskLinda:set(name, nil)
             UsedProperties[name] = nil
         end
     end
 
-    -- Use Linda to receive Jobs from Queue
+    -- Use Linda to receive Tasks from Queue
     while true do
         ClearProperties()
-        local result, jobQueueEntry = JobQueueLinda:receive('jobs')
+        local result, taskQueueEntry = TaskQueueLinda:receive('tasks')
         if result == lanes.cancel_error then
             break
         end
-        local jobId     = jobQueueEntry.id
-        local arguments = jobQueueEntry.arguments
-        EmitEvent{ type = 'start job', jobId = jobId }
+        local taskId    = taskQueueEntry.id
+        local arguments = taskQueueEntry.arguments
+        EmitEvent{ type = 'start task', taskId = taskId }
 
         local success, result = pcall(ProcessorCb, unpack(arguments))
         local properties = CollectProperties()
         if success then
-            EmitEvent{ type = 'finish job',
-                       status = 'success',
+            EmitEvent{ type = 'finish task',
+                       status = 'complete',
                        properties = properties,
                        result = result }
         else
-            EmitEvent{ type = 'finish job',
+            EmitEvent{ type = 'finish task',
                        status = 'fail',
                        properties = properties,
                        errMsg = result }
@@ -82,7 +81,7 @@ local DefaultWorkerCount = 1
 -- @param[optional] workerCount
 -- @param[optional] laneLibraries
 -- @param[optional] laneOptions
-function JobManager.create( options )
+local function CreateManager( options )
     local typeName  = assert(options.typeName, 'typeName missing')
     local processor = assert(options.processor, 'processor missing')
     local minWorkerCount = options.minWorkerCount or 0
@@ -104,8 +103,8 @@ function JobManager.create( options )
         masterLinda = masterLinda, -- communication between master and worker
         workerGenerator = workerGenerator,
         workers = {},
-        jobs = {},
-        nextJobId = 1001
+        tasks = {},
+        nextTaskId = 1001
     }
     setmetatable(instance, ManagerMT)
 
@@ -131,7 +130,7 @@ function Manager:_startWorker()
         linda = linda,
         thread = thread,
         cachedProperties = {},
-        job = nil
+        task = nil
     }
     table.insert(self.workers, worker)
     return worker, #self.workers
@@ -152,7 +151,7 @@ end
 local function TryFindIdleWorkersIndex( manager )
     if #manager.workers > 0 then
         for i, worker in ipairs(manager.workers) do
-            if not worker.job then
+            if not worker.task then
                 return i
             end
         end
@@ -166,10 +165,10 @@ function Manager:_stopAWorker()
     worker.thread:cancel(-1, true)
 end
 
-function Manager:_getJobById( id )
-    for _, job in ipairs(self.jobs) do
-        if job.id == id then
-            return job
+function Manager:_getTaskById( id )
+    for _, task in ipairs(self.tasks) do
+        if task.id == id then
+            return task
         end
     end
 end
@@ -180,7 +179,7 @@ end
 
 function Manager:_adaptWorkerCount()
     local oldWorkerCount = #self.workers
-    local newWorkerCount = boundBy(#self.jobs,
+    local newWorkerCount = boundBy(#self.tasks,
                                    self.minWorkerCount,
                                    self.maxWorkerCount)
     if newWorkerCount > oldWorkerCount then
@@ -202,42 +201,39 @@ local function HandleThreadError( manager, worker )
     end
 end
 
-local function HandleJobEvent( worker, name, ... )
-    local job = assert(worker.job)
-    local fn = job.eventHandler[name]
-    if fn then
-        fn(job, ...)
-    end
-end
-
-
 local function HandleWorkerEvent( manager, worker, event )
-    if event.type == 'start job' then
-        assert(not worker.job)
-        local job = assert(manager:_getJobById(event.jobId))
-        assert(not job.worker, 'Job is already being worked on.')
-        worker.job = job
-        job.worker = worker
-        job.status = 'running'
-        HandleJobEvent(worker, 'start')
-    elseif event.type == 'finish job' then
-        assert(worker.job)
-        -- remove job from table:
-        for i, job in ipairs(manager.jobs) do
-            if job == worker.job then
-                table.remove(manager.jobs, i)
+    if event.type == 'start task' then
+        assert(not worker.task)
+        local task = assert(manager:_getTaskById(event.taskId))
+        assert(not task.worker, 'Task is already being worked on.')
+        worker.task = task
+        task.worker = worker
+        --task.status = 'running'
+        --task:fireEvent('start')
+    elseif event.type == 'finish task' then
+        local task = assert(worker.task)
+        -- remove task from table:
+        for i, task in ipairs(manager.tasks) do
+            if task == worker.task then
+                table.remove(manager.tasks, i)
             end
         end
-        worker.job.worker = nil
-        worker.job.status = 'finished'
-        worker.job.properties = event.properties
-        HandleJobEvent(worker, 'finish', worker.job.result, worker.job.errMsg)
-        worker.job = nil
+        task.worker = nil
+        task.properties = event.properties
+        worker.task = nil
         manager:_adaptWorkerCount()
+        if event.status == 'complete' then
+            task:complete(event.result)
+        elseif event.status == 'fail' then
+            task:fail(event.errMsg)
+        else
+            error('Unknown status '..event.status)
+        end
     elseif event.type == 'call' then
         local fnName    = event.fnName
         local arguments = event.arguments
-        HandleJobEvent(worker, fnName, unpack(arguments))
+        local task = assert(worker.task)
+        task:fireEvent(fnName, unpack(arguments))
     else
         error('Received unknown event from worker: '..event.type)
     end
@@ -264,7 +260,13 @@ function Manager:update()
     end
 end
 
-local function GetJobProperty( worker, name )
+function Manager:_genTaskId()
+    local id = self.nextTaskId
+    self.nextTaskId = id + 1
+    return id
+end
+
+local function GetTaskProperty( worker, name )
     local value = worker.cachedProperties[name]
     if not value then
         value = worker.linda:get(name)
@@ -273,55 +275,36 @@ local function GetJobProperty( worker, name )
     return value
 end
 
-function Manager:_genNextJobId()
-    local id = self.nextJobId
-    self.nextJobId = id + 1
-    return id
-end
+local TaskPropertiesMT = {}
 
-local Job = {}
-local JobMT = { __index = Job }
-local JobPropertiesMT = {}
-
-function JobPropertiesMT:__index( key )
-    local worker = self._job.worker
+function TaskPropertiesMT:__index( key )
+    local worker = self._task.worker
     if worker then
-        return GetJobProperty(worker, key)
+        return GetTaskProperty(worker, key)
     end
 end
 
-function JobPropertiesMT:__newindex()
+function TaskPropertiesMT:__newindex()
     error('Properties can not be changed.')
 end
 
-function Manager:createJob( arguments, eventHandler )
-    local instance =
-    {
-        typeName = self.typeName,
-        id = self:_genNextJobId(),
-        eventHandler = eventHandler or {},
-        status = 'waiting'
-    }
-    setmetatable(instance, JobMT)
-    table.insert(self.jobs, instance)
+function Manager:createTask( arguments, events )
+    local task = Task(events)
+    task.id = self:_genTaskId()
+    task.properties = setmetatable({ _task = task }, TaskPropertiesMT)
+
+    table.insert(self.tasks, task)
 
     self:_adaptWorkerCount()
 
-    local jobQueueEntry =
+    local taskQueueEntry =
     {
-        id = instance.id,
+        id = task.id,
         arguments = arguments
     }
-    self.masterLinda:send('jobs', jobQueueEntry)
+    self.masterLinda:send('tasks', taskQueueEntry)
 
-    instance.properties = setmetatable({ _job = instance }, JobPropertiesMT)
-
-    return instance
+    return task
 end
 
-function JobMT:__tostring()
-    return self.typeName
-end
-
-
-return JobManager
+return CreateManager

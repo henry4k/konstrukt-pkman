@@ -1,4 +1,4 @@
-local JobManager = require 'packagemanager/jobmanager'
+local WorkerManager = require 'packagemanager/WorkerManager'
 
 
 local function DownloadProcessor()
@@ -9,13 +9,13 @@ local function DownloadProcessor()
         __index =
         {
             onDownloadBegin = function( self, fileName, url, totalBytes )
-                SetJobProperty('fileName', fileName)
-                SetJobProperty('url', url)
-                SetJobProperty('totalBytes', totalBytes)
+                SetTaskProperty('fileName', fileName)
+                SetTaskProperty('url', url)
+                SetTaskProperty('totalBytes', totalBytes)
             end,
 
             onDownloadProgress = function( self, bytesWritten )
-                SetJobProperty('bytesWritten', bytesWritten)
+                SetTaskProperty('bytesWritten', bytesWritten)
             end,
 
             onDownloadEnd = function( self )
@@ -33,8 +33,8 @@ local function DownloadProcessor()
     end
 end
 
-local manager = JobManager.create{ typeName = 'download',
-                                   processor = DownloadProcessor }
+local manager = WorkerManager{ typeName = 'download',
+                               processor = DownloadProcessor }
 
 local DownloadManager = {}
 
@@ -48,11 +48,11 @@ function DownloadManager.update()
 end
 
 function DownloadManager.startDownload( fileName, url, unpackZip, eventHandler )
-    return manager:createJob({fileName, url, unpackZip}, eventHandler)
+    return manager:createTask({fileName, url, unpackZip}, eventHandler)
 end
 
 function DownloadManager.getActiveDownloads()
-    return manager.jobs
+    return manager.tasks
 end
 
 

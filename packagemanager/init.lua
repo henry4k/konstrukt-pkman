@@ -9,6 +9,7 @@ local Dependency = require 'packagemanager/dependency'
 local PackageDB = require 'packagemanager/packagedb'
 local Package = require 'packagemanager/package'
 local Version = require 'packagemanager/version'
+local Task = require 'packagemanager/Task'
 local FS = require 'packagemanager/fs'
 
 
@@ -45,12 +46,12 @@ function PackageManager.update()
 end
 
 function PackageManager.updateRepositoryIndices()
-    local jobs = {}
+    local tasks = {}
     for name, url in pairs(Config.repositories) do
-        local job = Repository.updateIndex(name, url)
-        table.insert(jobs, job)
+        local task = Repository.updateIndex(name, url)
+        table.insert(tasks, task)
     end
-    return jobs -- TODO: And then?
+    return tasks -- TODO: And then?
 end
 
 
@@ -130,69 +131,51 @@ function PackageManager.gatherChanges()
     return changes, errors
 end
 
-local function ResumeCoroutineAndPropagateErrors( coro, ... )
-    local returnValues = {coroutine.resume(coro, ...)}
-    local success = returnValues[1]
-    if not success then
-        error(returnValues[2])
-    else
-        return table.unpack(returnValues, 2)
-    end
-end
-
-local function SuspendCoroTillJobIsDone( job )
-    if job.status == 'waiting' or
-       job.status == 'running' then
-        local coro, isMainCoro = coroutine.running()
-        assert(not isMainCoro)
-        job.eventHandler.finish = function()
-            ResumeCoroutineAndPropagateErrors(coro)
-        end
-        coroutine.yield()
-   end
-end
-
-local ChangeCoroFunctions = {}
-function ChangeCoroFunctions.install( change )
+local ChangeTaskFunctions = {}
+function ChangeTaskFunctions.install( task, change )
     local package = change.package
     assert(package.downloadUrl, 'Package misses a download URL - maybe it\'s not available in a repository?')
 
     local installPath = assert(Config.searchPaths[1])
     local baseName = Package.buildBaseName(package.name, package.version)
     local fileName
-    local job
+    local downloadTask
 
     if package.type == 'native' then
         fileName = FS.path(installPath, baseName)
-        job = DownloadManager.startDownload(fileName, package.downloadUrl, true)
+        downloadTask = DownloadManager.startDownload(fileName, package.downloadUrl, true)
     else
         fileName = FS.path(installPath, baseName..'.zip')
-        job = DownloadManager.startDownload(fileName, package.downloadUrl, false)
+        downloadTask = DownloadManager.startDownload(fileName, package.downloadUrl, false)
     end
 
-    SuspendCoroTillJobIsDone(job)
+    task.downloadTask = downloadTask
+    assert(downloadTask:wait())
 
     package.localFileName = fileName
     Package.mergePackages(package, LocalPackage.readLocalPackage(fileName))
     LocalPackage.setup(package)
 end
 
-function ChangeCoroFunctions.uninstall( change )
-    -- TODO: Create job for this
+function ChangeTaskFunctions.uninstall( task, change )
+    -- TODO: Create task for this
     LocalPackage.remove(db, change.package)
 end
 
 
+
 -- Apply gathered changes.
--- TODO: This is an asynchronous operation and should therefore return a future
--- object, which can be used to query its completion status.
+-- As this is an asynchronous operation, it returns a task for each change.
+-- I. e. it returns a map, where each key-value pair is a change-task pair.
 function PackageManager.applyChanges( changes )
+    local tasks = {}
     for _, change in ipairs(changes) do
-        local coroFn = ChangeCoroFunctions[change.type]
-        assert(coroFn, 'Unknown change type.')
-        change.coro = coroutine.create(coroFn)
-        ResumeCoroutineAndPropagateErrors(change.coro, change)
+        local fn = ChangeTaskFunctions[change.type]
+        assert(fn, 'Unknown change type.')
+        local task = Task.fromFunction(fn, change)
+        tasks[change] = task
     end
+    return tasks
 end
 
 

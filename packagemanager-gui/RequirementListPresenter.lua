@@ -1,12 +1,14 @@
 local misc = require 'packagemanager/misc'
 local version = require 'packagemanager/version'
 local PackageManager = require 'packagemanager/init'
+local Event = require 'packagemanager-gui/Event'
 
 
 local RequirementListPresenter = {}
 RequirementListPresenter.__index = RequirementListPresenter
 
-local function ExecuteQuery( view, query )
+function RequirementListPresenter:executeQuery( query )
+    local view = self.view
     local requirements = PackageManager.getRequirements()
     local results = {}
     for _, requirement in ipairs(requirements) do
@@ -34,22 +36,24 @@ local function FindRequirement( requirement )
     end
 end
 
-local function TryRemoveRequirement( requirement )
+function RequirementListPresenter:tryRemoveRequirement( requirement )
     local index = FindRequirement(requirement)
     if index then
         local requirements = PackageManager.getRequirements()
         table.remove(requirements, index)
         PackageManager.setRequirements(requirements)
+        self.requirementsChanged()
     end
 end
 
-local function AddOrUpdateRequirement( requirement )
+function RequirementListPresenter:addOrUpdateRequirement( requirement )
     local requirements = PackageManager.getRequirements()
     local index = FindRequirement(requirement)
     if not index then
         table.insert(requirements, requirement)
     end
     PackageManager.setRequirements(requirements)
+    self.requirementsChanged()
 end
 
 local function CheckVersionRange( versionRangeExpr )
@@ -59,10 +63,10 @@ end
 return function( view )
     local self = setmetatable({}, RequirementListPresenter)
     self.view = view
+    self.requirementsChanged = Event()
 
     view.searchChangeEvent:addListener(function()
-        local query = view:getQuery()
-        ExecuteQuery(view, query)
+        self:executeQuery(view:getQuery())
     end)
 
     view.addRequirementEvent:addListener(function()
@@ -73,7 +77,7 @@ return function( view )
     end)
 
     view.removeRequirementEvent:addListener(function( requirement )
-        TryRemoveRequirement(requirement)
+        self:tryRemoveRequirement(requirement)
         view:freeze()
         view:removeRequirement(requirement)
         view:thaw()
@@ -94,13 +98,13 @@ return function( view )
         if #newPackageName > 0 and versionRangeOk then
             requirement.packageName = newPackageName
             requirement.versionRange = versionRangeOrErr
-            AddOrUpdateRequirement(requirement)
+            self:addOrUpdateRequirement(requirement)
         end
     end)
 
     view:freeze()
     view:setQuery('')
-    ExecuteQuery(view, '')
+    self:executeQuery('')
     view:thaw()
 
     return self

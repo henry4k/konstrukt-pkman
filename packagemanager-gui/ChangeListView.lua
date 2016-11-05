@@ -53,6 +53,12 @@ function ChangeListView:addInstallChange( packageName, packageVersion )
     return change
 end
 
+function ChangeListView:updateChange( change, bytesWritten, totalBytes )
+    print(type(bytesWritten), bytesWritten)
+    change.windows.progressBar:SetValue(bytesWritten / totalBytes * 100)
+    change.windows.progressText:SetLabel(string.format('%d / %d', bytesWritten/1000, totalBytes/1000))
+end
+
 function ChangeListView:removeChange( change )
     assert(self.changes[change])
     for _, window in pairs(change.windows) do
