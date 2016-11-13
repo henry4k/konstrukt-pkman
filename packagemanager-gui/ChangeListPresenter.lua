@@ -1,107 +1,194 @@
+local statemachine = require 'statemachine'
+local bind = require('packagemanager/misc').bind
 local PackageManager = require 'packagemanager/init'
+local xrc = require 'packagemanager-gui/xrc'
 
+
+local HighUpdateFrequency = 1/20
+local LowUpdateFrequency  = 1
 
 local ChangeListPresenter = {}
 ChangeListPresenter.__index = ChangeListPresenter
 
-function ChangeListPresenter:gatherChanges()
-    assert(not self.applyingChanges, 'Currently applying changes.')
-    self.changes = PackageManager.gatherChanges()
-    local view = self.view
-    view:clearChanges()
-    local handleMap = {}
-    self.changeHandleMap = handleMap
-    for _, change in ipairs(self.changes) do
-        local handle = view:addInstallChange(change.package.name, tostring(change.package.version))
-        handleMap[change] = handle
+function ChangeListPresenter:resetOrGatherChanges()
+    self.state:reset()
+    local changes = PackageManager.gatherChanges()
+    if next(changes) then
+        self.state:gatheredChanges(changes)
     end
 end
 
-function ChangeListPresenter:apply()
-    assert(not self.applyingChanges, 'Already applying changes.')
-    local tasks = PackageManager.applyChanges(self.changes)
-    self.changeTaskMap = tasks
-    --[[
-    for change, task in pairs(tasks) do
-        local viewHandle = assert(changeHandleMap[change])
-        print('STARTED', task.status)
-        task.events.complete = function()
-            print('COMPLETED')
-        end
-        task.events.fail = function()
-            print('FAILED')
+local function AllTasksAreComplete( tasks )
+    for _, task in pairs(tasks) do
+        if task.status ~= 'complete' then
+            return false
         end
     end
-    ]]
-    self.applyingChanges = true
-    self.view:enableButton('cancel')
+    return true
 end
 
-function ChangeListPresenter:cancel()
-    assert(self.applyingChanges, 'Not applying changes.')
-    error('Cancel isn\'t implemented currently.')
-    self:complete()
+function ChangeListPresenter:updateUpdateFrequency()
+    local frequency
+    if self.state:is('applying') then
+        if self.mainFrameView:getCurrentPageView() == self.view then
+            frequency = HighUpdateFrequency
+        else
+            frequency = LowUpdateFrequency
+        end
+    else
+        frequency = nil
+    end
+    self.updateTimer:requestMinFrequency(self, frequency)
 end
 
 function ChangeListPresenter:updateProgress()
     local view = self.view
-    if self.mainFrameView:getCurrentPageView() == view then
-        local changeHandleMap = self.changeHandleMap
-        for change, task in pairs(self.changeTaskMap) do
-            local viewHandle = assert(changeHandleMap[change])
-            local downloadTask = task.downloadTask
-            if downloadTask then
-                local properties = downloadTask.properties
-                local bytesWritten = properties.bytesWritten
-                local totalBytes   = properties.totalBytes
-                if bytesWritten then
-                    view:updateChange(viewHandle,
-                                      bytesWritten,
-                                      totalBytes)
-                end
+    local changeHandleMap = self.changeHandleMap
+    for change, task in pairs(self.changeTaskMap) do
+        local viewHandle = assert(changeHandleMap[change])
+        local downloadTask = task.downloadTask
+        if downloadTask then
+            local properties = downloadTask.properties
+            local bytesWritten = properties.bytesWritten
+            if bytesWritten then
+                view:updateChangeBytesWritten(viewHandle, bytesWritten)
             end
         end
     end
 end
 
-function ChangeListPresenter:_complete()
-    self.applyingChanges = false
-    self.changeTaskMap = {}
-    view:enableButton('apply')
-    self:gatherChanges()
+function ChangeListPresenter:destroy()
 end
 
-return function( view, requirementListPresenter, mainFrameView, timerEvent )
+function ChangeListPresenter:_onEmpty()
+    local view = self.view
+    view:enableButton(nil)
+    view:clearChanges()
+end
+
+function ChangeListPresenter:_onReady( changes )
+    local view = self.view
+
+    view:enableButton('apply')
+
+    local handleMap = {}
+    for _, change in ipairs(changes) do
+        local handle = view:addChange(change.type, change.package.name, tostring(change.package.version))
+        handleMap[change] = handle
+    end
+
+    self.changes = changes
+    self.changeHandleMap = handleMap
+end
+
+function ChangeListPresenter:_onApplying()
+    local view = self.view
+
+    view:enableButton('cancel')
+
+    local tasks = PackageManager.applyChanges(self.changes)
+    self.changeTaskMap = tasks
+    self.applyingChanges = true
+    self:updateUpdateFrequency()
+
+    local changeHandleMap = self.changeHandleMap
+    for change, task in pairs(tasks) do
+        local viewHandle = assert(changeHandleMap[change])
+        task.events.downloadStarted = function()
+            view:freeze()
+            view:setChangeTotalBytes(viewHandle, task.downloadTask.properties.totalBytes)
+            view:thaw()
+        end
+        task.events.complete = function()
+            view:freeze()
+            view:markChangeAsCompleted(viewHandle)
+            if AllTasksAreComplete(tasks) then
+                self.state:complete()
+            end
+            view:thaw()
+        end
+    end
+end
+
+function ChangeListPresenter:_onCancelApplying()
+    error('Cancel isn\'t implemented currently.')
+end
+
+function ChangeListPresenter:_onDone()
+    local view = self.view
+    view:enableButton('complete')
+    view:markAsCompleted()
+
+    self:updateProgress()
+
+    self.changeTaskMap = {}
+    self:updateUpdateFrequency()
+end
+
+return function( view, requirementListPresenter, mainFrameView, updateTimer )
     local self = setmetatable({}, ChangeListPresenter)
     self.view = view
     self.mainFrameView = mainFrameView
+    self.updateTimer = updateTimer
     self.requirementsChanged = false
-    self.applyingChanges = false
     self.changeHandleMap = {}
     self.changeTaskMap = {}
 
+    self.state = statemachine.create
+    {
+        initial = 'empty',
+        events =
+        {
+            {name = 'gatheredChanges', from = 'empty',    to = 'ready'},
+            {name = 'start',           from = 'ready',    to = 'applying'},
+            {name = 'cancel',          from = 'applying', to = 'done'},
+            {name = 'complete',        from = 'applying', to = 'done'},
+            {name = 'reset',           from = {'empty',
+                                               'ready',
+                                               'done'},   to = 'empty'}
+        },
+        callbacks =
+        {
+            onempty    = bind(self._onEmpty, self),
+            onready    = function( state, event, from, to, ... ) return self:_onReady(...) end,
+            onapplying = bind(self._onApplying, self),
+            oncancel   = bind(self._onCancel, self),
+            ondone     = bind(self._onDone, self),
+            onstatechange = function( state, event, from, to ) print(string.format('%s => %s', from, to)) end -- DEBUG
+        }
+    }
+
     view.applyButtonPressEvent:addListener(function()
         view:freeze()
-        self:apply()
+        self.state:start()
         view:thaw()
     end)
 
     view.cancelButtonPressEvent:addListener(function()
         view:freeze()
-        self:cancel()
+        self.state:cancel()
+        view:thaw()
+    end)
+
+    view.completeButtonPressEvent:addListener(function()
+        view:freeze()
+        self.state:reset()
         view:thaw()
     end)
 
     view.showUpgradeInfoEvent:addListener(function( packageName, packageVersion )
-        print('showUpgradeInfo', packageName, packageVersion)
+        local frame = xrc.createFrame('upgradeInfo', mainFrameView.frame)
+        frame:Show()
+        -- TODO
     end)
 
     requirementListPresenter.requirementsChanged:addListener(function()
         if mainFrameView:getCurrentPageView() == view then
-            -- TODO: dont do this while updating
-            view:freeze()
-            self:gatherChanges()
-            view:thaw()
+            if self.state:can('reset') then
+                view:freeze()
+                self:resetOrGatherChanges()
+                view:thaw()
+            end
         else
             -- page is currently not visible
             self.requirementsChanged = true
@@ -110,23 +197,33 @@ return function( view, requirementListPresenter, mainFrameView, timerEvent )
 
     mainFrameView.pageChanged:addListener(function( pageView )
         if pageView == view then
-            if self.requirementsChanged then
-                -- TODO: dont do this while updating
+            if self.requirementsChanged and
+               self.state:can('reset') then
                 view:freeze()
-                self:gatherChanges()
+                self:resetOrGatherChanges()
                 view:thaw()
                 self.requirementsChanged = false
             end
+            if self.state:is('applying') then
+                view:freeze()
+                self:updateProgress()
+                view:thaw()
+            end
+        end
+        self:updateUpdateFrequency()
+    end)
+
+    updateTimer.updateEvent:addListener(function()
+        if mainFrameView:getCurrentPageView() == view and
+           self.state:is('applying') then
+                view:freeze()
+                self:updateProgress()
+                view:thaw()
         end
     end)
 
-    timerEvent:addListener(function()
-        self:updateProgress()
-    end)
-
     view:freeze()
-    self:gatherChanges()
-    view:enableButton('apply')
+    self:resetOrGatherChanges()
     view:thaw()
 
     return self

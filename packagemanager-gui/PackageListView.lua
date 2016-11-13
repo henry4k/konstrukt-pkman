@@ -94,7 +94,7 @@ return function( rootWindow )
                             {'package-available',
                              'package-installed-updated',
                              'package-install',
-                             'package-remove'})
+                             'package-uninstall'})
     self.resultList = resultList
 
     local nameText = xrc.getWindow(rootWindow, 'nameText')

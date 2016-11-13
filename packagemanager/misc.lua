@@ -98,5 +98,36 @@ else
     Misc.os = 'unix'
 end
 
+function Misc.joinLists( ... )
+    local lists = {...}
+    local result = assert(lists[1], 'Needs at least one list.')
+    for i = 2, #lists do
+        local list = lists[i]
+        for _, value in ipairs(list) do
+            table.insert(result, value)
+        end
+    end
+    return result
+end
+
+local unpack = table.unpack or unpack
+
+function Misc.bind( fn, ... )
+    local staticArgCount = select('#', ...)
+    if staticArgCount == 1 then -- optimized implementation
+        local staticArg = ...
+        return function( ... )
+            return fn(staticArg, ...)
+        end
+    else -- generic implementation
+        local staticArgs = {...}
+        assert(#staticArgs == staticArgCount, 'Can\'t store var staticArgs in list - maybe passed a nil argument?')
+        return function( ... )
+            local args = Misc.joinLists(staticArgs, {...})
+            return fn(unpack(args))
+        end
+    end
+end
+
 
 return Misc

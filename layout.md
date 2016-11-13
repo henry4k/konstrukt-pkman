@@ -32,7 +32,7 @@ An actual installable package.
 {
     -- Required fields:
     name = ... -- Usually not needed in serialized form.
-    type = ... -- regular, scenario, native, executable
+    type = ... -- regular, scenario, native, engine, package-manager
 
     version = {...} -- optional for local packages
 

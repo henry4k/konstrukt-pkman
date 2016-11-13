@@ -13,7 +13,7 @@
 		<object class="wxNotebook" name="notebook">
 			<object class="notebookpage">
 				<label>Packages</label>
-				<selected>0</selected>
+				<selected>1</selected>
 				<bitmap stock_id="package-search" stock_client="wxART_TOOLBAR">undefined.png</bitmap>
 				<object class="wxPanel" name="packagesPanel">
 					<style>wxTAB_TRAVERSAL</style>
@@ -286,7 +286,7 @@
 			</object>
 			<object class="notebookpage">
 				<label>Changes</label>
-				<selected>1</selected>
+				<selected>0</selected>
 				<bitmap stock_id="changes" stock_client="wxART_TOOLBAR">undefined.png</bitmap>
 				<object class="wxPanel" name="changesPanel">
 					<style>wxTAB_TRAVERSAL</style>
@@ -312,28 +312,31 @@
 						</object>
 						<object class="sizeritem">
 							<option>0</option>
-							<flag>wxEXPAND|wxALL</flag>
+							<flag>wxALL|wxEXPAND</flag>
 							<border>5</border>
-							<object class="wxStaticBoxSizer">
-								<orient>wxHORIZONTAL</orient>
-								<label>Total progress</label>
-								<object class="sizeritem">
-									<option>1</option>
-									<flag>wxALL|wxALIGN_CENTER_VERTICAL</flag>
-									<border>5</border>
-									<object class="wxGauge" name="totalProgressGauge">
-										<style>wxGA_HORIZONTAL|wxGA_SMOOTH</style>
-										<range>100</range>
-										<value>10</value>
+							<object class="wxPanel" name="totalProgressWindow">
+								<style>wxTAB_TRAVERSAL</style>
+								<object class="wxStaticBoxSizer">
+									<orient>wxHORIZONTAL</orient>
+									<label>Total progress</label>
+									<object class="sizeritem">
+										<option>1</option>
+										<flag>wxALL|wxALIGN_CENTER_VERTICAL</flag>
+										<border>5</border>
+										<object class="wxGauge" name="totalProgressGauge">
+											<style>wxGA_HORIZONTAL|wxGA_SMOOTH</style>
+											<range>1</range>
+											<value>0</value>
+										</object>
 									</object>
-								</object>
-								<object class="sizeritem">
-									<option>0</option>
-									<flag>wxALL|wxALIGN_CENTER_VERTICAL</flag>
-									<border>5</border>
-									<object class="wxStaticText" name="totalProgressText">
-										<label>4 / 100 MiB</label>
-										<wrap>-1</wrap>
+									<object class="sizeritem">
+										<option>0</option>
+										<flag>wxALL|wxALIGN_CENTER_VERTICAL</flag>
+										<border>5</border>
+										<object class="wxStaticText" name="totalProgressText">
+											<label></label>
+											<wrap>-1</wrap>
+										</object>
 									</object>
 								</object>
 							</object>
@@ -344,15 +347,6 @@
 							<border>5</border>
 							<object class="wxBoxSizer">
 								<orient>wxHORIZONTAL</orient>
-								<object class="sizeritem">
-									<option>0</option>
-									<flag>wxALL|wxEXPAND</flag>
-									<border>5</border>
-									<object class="wxStaticText" name="differenceText">
-										<label>Size difference: 10 MiB</label>
-										<wrap>-1</wrap>
-									</object>
-								</object>
 								<object class="spacer">
 									<option>1</option>
 									<flag>wxEXPAND</flag>
@@ -364,6 +358,13 @@
 									<flag>wxEXPAND</flag>
 									<border>5</border>
 									<object class="wxStdDialogButtonSizer">
+										<object class="button">
+											<flag>wxALIGN_CENTER_HORIZONTAL|wxALL</flag>
+											<border>5</border>
+											<object class="wxButton" name="wxID_OK">
+												<label>&amp;OK</label>
+											</object>
+										</object>
 										<object class="button">
 											<flag>wxALIGN_CENTER_HORIZONTAL|wxALL</flag>
 											<border>5</border>

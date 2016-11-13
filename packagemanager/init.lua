@@ -51,7 +51,7 @@ function PackageManager.updateRepositoryIndices()
         local task = Repository.updateIndex(name, url)
         table.insert(tasks, task)
     end
-    return tasks -- TODO: And then?
+    return tasks
 end
 
 
@@ -68,9 +68,22 @@ end
 
 -- Query database {{{1
 
+---
+-- @param[type=table] comparators
+-- Each key value pair is a comparator.
+-- The key specifies the package property name and the value is either a constant value or a comparator function.
+-- They act as a filter.
+--
+-- @return
+-- A list of packages in no particular order.
+function PackageManager.search( comparators )
+    return PackageDB.gatherPackages(db, comparators)
+end
+
+---
+-- @see PackageManager.search
 function PackageManager.searchWithQueryString( query )
     local comparators = {}
-    local options = {}
 
     if query and #query > 0 then
         comparators.name = function( value )
@@ -78,24 +91,35 @@ function PackageManager.searchWithQueryString( query )
         end
     end
 
-    return PackageManager.search(comparators, options)
-end
-
---- ...
---
--- @param[type=table] comparators
--- TODO
---
--- @param[type=table] options
--- `local` controls whether installed packages are searched.  Defaults to `true`.
--- `remote` controls whether packages from repositories are searched.  Defaults to `true`.
---
-function PackageManager.search( comparators, options )
-    return PackageDB.gatherPackages(db, comparators)
+    return PackageManager.search(comparators)
 end
 
 
 -- Query and apply changes {{{1
+
+function PackageManager.gatherRequiredPackages()
+    local errors = {}
+    local requiredPackages = {}
+    for _, requirement in ipairs(Config.requirements) do
+        local dependencies = {}
+        dependencies[requirement.packageName] = requirement.versionRange
+        local success, packagesOrErr = pcall(Dependency.resolve, db, dependencies)
+        if success then
+            for _, package in pairs(packagesOrErr) do
+                if not package.virtual then
+                    requiredPackages[package] = true
+                end
+            end
+        else
+            table.insert(errors, packagesOrErr)
+        end
+    end
+    return requiredPackages, errors
+end
+
+local function NotNil( value )
+    return value ~= nil
+end
 
 -- Build change list.
 --
@@ -104,29 +128,23 @@ end
 -- message if something went wrong.
 -- Each change looks like this: `{ type = [install, uninstall], package = ... }`
 function PackageManager.gatherChanges()
-    local errors = {}
-    local neededPackages = {}
-    for _, requirement in ipairs(Config.requirements) do
-        local dependencies = {}
-        dependencies[requirement.packageName] = requirement.versionRange
-        local success, packagesOrErr = pcall(Dependency.resolve, db, dependencies)
-        if success then
-            for _, package in pairs(packagesOrErr) do
-                if not package.localFileName and not package.virtual then
-                    neededPackages[package] = true
-                end
-            end
-        else
-            table.insert(errors, packagesOrErr)
+    local requiredPackages, errors = PackageManager.gatherRequiredPackages()
+
+    local installedPackages = PackageManager.search{ localFileName = NotNil }
+
+    local changes = {}
+
+    for package, _ in pairs(requiredPackages) do
+        if not package.localFileName then
+            table.insert(changes, { type = 'install', package = package })
         end
     end
 
-    local changes = {}
-    for package, _ in pairs(neededPackages) do
-        table.insert(changes, { type = 'install', package = package })
+    for _, package in ipairs(installedPackages) do
+        if not requiredPackages[package] then
+            table.insert(changes, { type = 'uninstall', package = package })
+        end
     end
-
-    -- TODO: Gather obsolete packages too!
 
     return changes, errors
 end
@@ -149,6 +167,9 @@ function ChangeTaskFunctions.install( task, change )
         downloadTask = DownloadManager.startDownload(fileName, package.downloadUrl, false)
     end
 
+    downloadTask.events.started = function()
+        task:fireEvent('downloadStarted')
+    end
     task.downloadTask = downloadTask
     assert(downloadTask:wait())
 
@@ -161,8 +182,6 @@ function ChangeTaskFunctions.uninstall( task, change )
     -- TODO: Create task for this
     LocalPackage.remove(db, change.package)
 end
-
-
 
 -- Apply gathered changes.
 -- As this is an asynchronous operation, it returns a task for each change.

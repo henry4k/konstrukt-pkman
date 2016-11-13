@@ -95,7 +95,7 @@ local IconStacks =
         IconStack{Unix    = {{type = 'system', name = 'list-add'}},
                   Windows = {{type = 'bitmap', file = 'add?.png'}},
                   Mac     = {{type = 'bitmap', file = 'add?.png'}}},
-    ['package-remove'] =
+    ['package-uninstall'] =
         IconStack{Unix    = {{type = 'system', name = 'list-remove'}},
                   Windows = {{type = 'bitmap', file = 'remove?.png'}},
                   Mac     = {{type = 'bitmap', file = 'remove?.png'}}},

@@ -12,6 +12,7 @@ local function DownloadProcessor()
                 SetTaskProperty('fileName', fileName)
                 SetTaskProperty('url', url)
                 SetTaskProperty('totalBytes', totalBytes)
+                EmitTaskEvent('started')
             end,
 
             onDownloadProgress = function( self, bytesWritten )

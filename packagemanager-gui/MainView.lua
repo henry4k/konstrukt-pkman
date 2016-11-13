@@ -1,46 +1,47 @@
-local wx              = require 'wx'
-local xrc             = require 'packagemanager-gui/xrc'
-local utils           = require 'packagemanager-gui/utils'
-local Event           = require 'packagemanager-gui/Event'
-local PackageListView = require 'packagemanager-gui/PackageListView'
+local wx                  = require 'wx'
+local xrc                 = require 'packagemanager-gui/xrc'
+local utils               = require 'packagemanager-gui/utils'
+local Event               = require 'packagemanager-gui/Event'
+local StatusBarView       = require 'packagemanager-gui/StatusBarView'
+local PackageListView     = require 'packagemanager-gui/PackageListView'
 local RequirementListView = require 'packagemanager-gui/RequirementListView'
-local ChangeListView  = require 'packagemanager-gui/ChangeListView'
-local StatusBarView   = require 'packagemanager-gui/StatusBarView'
+local ChangeListView      = require 'packagemanager-gui/ChangeListView'
 
 
-local MainFrameView = {}
-MainFrameView.__index = MainFrameView
+local MainView = {}
+MainView.__index = MainView
 
-function MainFrameView:show()
+function MainView:show()
     self.frame:Show()
 end
 
-function MainFrameView:_addPage( page, view )
+function MainView:_addPage( page, view )
     self.pageViewsById[page:GetId()] = view
 end
 
-function MainFrameView:getCurrentPageView()
+function MainView:getCurrentPageView()
     local pageId = self.notebook:GetCurrentPage():GetId()
     return self.pageViewsById[pageId] -- can be nil
 end
 
-function MainFrameView:destroy()
+function MainView:destroy()
+    self.statusBarView:destroy()
     self.packageListView:destroy()
     self.requirementListView:destroy()
     self.changeListView:destroy()
-    self.statusBarView:destroy()
     self.frame:Destroy()
 end
 
 return function()
-    local self = setmetatable({}, MainFrameView)
+    local self = setmetatable({}, MainView)
 
     local frame = xrc.createFrame('mainFrame')
-    --frame:SetAcceleratorTable(...)
-    --frame:SetDropTarget(...)
     self.frame = frame
 
     self.pageViewsById = {}
+
+    local statusBar = xrc.getWindow(frame, 'statusBar')
+    self.statusBarView = StatusBarView(statusBar)
 
     local packagesPanel = xrc.getWindow(frame, 'packagesPanel')
     self.packageListView = PackageListView(packagesPanel)
@@ -53,9 +54,6 @@ return function()
     local changesPanel = xrc.getWindow(frame, 'changesPanel')
     self.changeListView = ChangeListView(changesPanel)
     self:_addPage(changesPanel, self.changeListView)
-
-    local statusBar = xrc.getWindow(frame, 'statusBar')
-    self.statusBarView = StatusBarView(statusBar)
 
     self.pageChanged = Event()
     local notebook = xrc.getWindow(frame, 'notebook')

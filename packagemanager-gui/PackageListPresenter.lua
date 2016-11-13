@@ -4,12 +4,12 @@ local PackageManager = require 'packagemanager/init'
 local PackageListPresenter = {}
 PackageListPresenter.__index = PackageListPresenter
 
-local function GetPackageStatus( package )
+local function GetPackageStatus( package, isRequired )
     if package.virtual then
         package = package.provider
     end
 
-    if package.required then
+    if isRequired then
         if package.localFileName then
             return 'package-installed-updated', 1
         else
@@ -17,7 +17,7 @@ local function GetPackageStatus( package )
         end
     else
         if package.localFileName then
-            return 'package-remove', 3
+            return 'package-uninstall', 3
         else
             return 'package-available', 4
         end
@@ -28,10 +28,12 @@ local function ExecuteQuery( view, query )
     local results = PackageManager.searchWithQueryString(query)
     local resultList = view.resultList
 
+    local requiredPackages = PackageManager.gatherRequiredPackages()
+
     resultList:freeze()
         resultList:clear()
         for _, package in ipairs(results) do
-            local statusIcon, statusSortValue = GetPackageStatus(package)
+            local statusIcon, statusSortValue = GetPackageStatus(package, requiredPackages[package])
             resultList:addRow(package,
                               {{ icon = statusIcon,
                                  value = statusSortValue },
@@ -47,13 +49,19 @@ local function ExecuteQuery( view, query )
     resultList:thaw()
 end
 
-return function( view )
+function PackageListPresenter:destroy()
+end
+
+return function( view, requirementListPresenter, mainFrameView )
     local self = setmetatable({}, PackageListPresenter)
     self.view = view
+    self.requirementsChanged = false
 
     view.searchChangeEvent:addListener(function()
+        view:freeze()
         local query = view:getQuery()
         ExecuteQuery(view, query)
+        view:thaw()
     end)
 
     local currentPackage
@@ -81,6 +89,29 @@ return function( view )
         assert(currentPackage)
         assert(currentPackage.type == 'scenario')
         PackageManager.launchScenario(currentPackage)
+    end)
+
+
+    requirementListPresenter.requirementsChanged:addListener(function()
+        if mainFrameView:getCurrentPageView() == view then
+            view:freeze()
+            local query = view:getQuery()
+            ExecuteQuery(view, query)
+            view:thaw()
+        else
+            -- page is currently not visible
+            self.requirementsChanged = true
+        end
+    end)
+
+    mainFrameView.pageChanged:addListener(function( pageView )
+        if pageView == view and self.requirementsChanged then
+            view:freeze()
+            local query = view:getQuery()
+            ExecuteQuery(view, query)
+            view:thaw()
+            self.requirementsChanged = false
+        end
     end)
 
     view:freeze()

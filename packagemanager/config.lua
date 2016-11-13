@@ -23,7 +23,7 @@ local function JsonToInternal( json, internal )
     internal.repositories = json.repositories or {}
     internal.repositoryCacheDir = json.repositoryCacheDir or 'repositories'
     internal.requirements = {}
-    for _, requirement in ipairs(json.requirements) do
+    for _, requirement in ipairs(json.requirements or {}) do
         local versionRangeExpr = requirement.versionRange
         local versionRange = Version.parseVersionRange(versionRangeExpr)
         table.insert(internal.requirements,

@@ -138,7 +138,7 @@ local function CreateLauncher( executableFileName )
 end
 
 function LocalPackage.setup( package )
-    if package.type == 'native' then
+    if package.type == 'package-manager' then
         for executable, attributes in pairs(package.executables or {}) do
             if attributes.install then
                 local fileName = FS.path(package.localFileName, executable)
@@ -149,7 +149,7 @@ function LocalPackage.setup( package )
 end
 
 function LocalPackage.teardown( package )
-    if package.type == 'native' then
+    if package.type == 'package-manager' then
         for executable, attributes in pairs(package.executables or {}) do
             if attributes.install then
                 local fileName = FS.path(package.localFileName, executable)

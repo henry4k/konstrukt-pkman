@@ -69,7 +69,7 @@ function PackageDB.removePackage( db, package )
                                                     package.name,
                                                     tostring(package.version))
     assert(alternatives, 'Package does not exist in db.')
-    local key = GetPackageKey(package, db)
+    local key = Package.genKey(package)
     assert(alternatives[key], 'Package alternative does not exist in db.')
     assert(alternatives[key] == package, 'Package differs from db.')
     alternatives[key] = nil

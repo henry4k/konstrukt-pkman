@@ -56,6 +56,9 @@ function RequirementListPresenter:addOrUpdateRequirement( requirement )
     self.requirementsChanged()
 end
 
+function RequirementListPresenter:destroy()
+end
+
 local function CheckVersionRange( versionRangeExpr )
     return pcall(version.parseVersionRange(versionRangeExpr))
 end
@@ -86,6 +89,7 @@ return function( view )
     view.changeRequirementEvent:addListener(function( requirement,
                                                       newPackageName,
                                                       newVersionRangeExpr )
+        view:freeze()
         local versionRangeOk, versionRangeOrErr =
             pcall(version.parseVersionRange, newVersionRangeExpr)
 
@@ -100,6 +104,7 @@ return function( view )
             requirement.versionRange = versionRangeOrErr
             self:addOrUpdateRequirement(requirement)
         end
+        view:thaw()
     end)
 
     view:freeze()

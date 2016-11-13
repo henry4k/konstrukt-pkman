@@ -4,18 +4,35 @@ local Event = require 'packagemanager-gui/Event'
 local xrc   = require 'packagemanager-gui/xrc'
 
 
+local Kibibyte = math.pow(2, 10)
+local Mebibyte = math.pow(2, 20)
+local function GetByteUnit( reference )
+    if reference >= Mebibyte then
+        return 'MiB', Mebibyte
+    elseif reference >= Kibibyte then
+        return 'KiB', Kibibyte
+    else
+        return 'bytes', 1
+    end
+end
+
+
 local ChangeListView = {}
 ChangeListView.__index = ChangeListView
 
 local ListGridColumns = 6
 
-function ChangeListView:addInstallChange( packageName, packageVersion )
+function ChangeListView:addChange( changeType,
+                                   packageName,
+                                   packageVersion )
     local change = {}
-    change.type = 'install'
+    change.type = changeType
+
+    local iconName = 'package-'..changeType
 
     local defaultSizerFlags = wx.wxALL + wx.wxALIGN_CENTER_VERTICAL
 
-    local icon = wx.wxStaticBitmap( self.listWindow, wx.wxID_ANY, wx.wxArtProvider.GetBitmap('package-install', wx.wxART_MENU ), wx.wxDefaultPosition, wx.wxDefaultSize, 0 )
+    local icon = wx.wxStaticBitmap( self.listWindow, wx.wxID_ANY, wx.wxArtProvider.GetBitmap(iconName, wx.wxART_MENU ), wx.wxDefaultPosition, wx.wxDefaultSize, 0 )
     self.listGridSizer:Add( icon, 0, defaultSizerFlags, 5 )
 
     local packageNameText = wx.wxStaticText( self.listWindow, wx.wxID_ANY, packageName, wx.wxDefaultPosition, wx.wxDefaultSize, 0 )
@@ -26,19 +43,28 @@ function ChangeListView:addInstallChange( packageName, packageVersion )
     packageVersionText:Wrap( -1 )
     self.listGridSizer:Add( packageVersionText, 0, defaultSizerFlags, 5 )
 
-    local progressBar = wx.wxGauge( self.listWindow, wx.wxID_ANY, 100, wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxGA_HORIZONTAL + wx.wxGA_SMOOTH )
-    progressBar:SetValue( 0 )
-    self.listGridSizer:Add( progressBar, 0, defaultSizerFlags + wx.wxEXPAND, 5 )
+    local progressBar
+    local progressText
+    local infoButton
+    if changeType == 'install' then
+        progressBar = wx.wxGauge( self.listWindow, wx.wxID_ANY, 1, wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxGA_HORIZONTAL + wx.wxGA_SMOOTH )
+        self.listGridSizer:Add( progressBar, 0, defaultSizerFlags + wx.wxEXPAND, 5 )
 
-    local progressText = wx.wxStaticText( self.listWindow, wx.wxID_ANY, "0 / 0 MiB", wx.wxDefaultPosition, wx.wxDefaultSize, 0 )
-    progressText:Wrap( -1 )
-    self.listGridSizer:Add( progressText, 0, defaultSizerFlags + wx.wxALIGN_RIGHT, 5 )
+        progressText = wx.wxStaticText( self.listWindow, wx.wxID_ANY, "", wx.wxDefaultPosition, wx.wxDefaultSize, 0 )
+        progressText:Wrap( -1 )
+        self.listGridSizer:Add( progressText, 0, defaultSizerFlags + wx.wxALIGN_RIGHT, 5 )
 
-    local infoButton = wx.wxBitmapButton( self.listWindow, wx.wxID_ANY, wx.wxArtProvider.GetBitmap( wx.wxART_INFORMATION, wx.wxART_MENU ), wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxBU_AUTODRAW )
-    self.listGridSizer:Add( infoButton, 0, defaultSizerFlags, 5 )
-    utils.connect(infoButton, 'command_button_clicked', function()
-        self.showUpgradeInfoEvent(packageName, packageVersion)
-    end)
+        infoButton = wx.wxBitmapButton( self.listWindow, wx.wxID_ANY, wx.wxArtProvider.GetBitmap( wx.wxART_INFORMATION, wx.wxART_MENU ), wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxBU_AUTODRAW )
+        self.listGridSizer:Add( infoButton, 0, defaultSizerFlags, 5 )
+        utils.connect(infoButton, 'command_button_clicked', function()
+            self.showUpgradeInfoEvent(packageName, packageVersion)
+        end)
+    else
+        -- add placeholders
+        for i = 1, 3 do
+            self.listGridSizer:Add(0, 0, 1, defaultSizerFlags, 5)
+        end
+    end
 
     change.windows = { icon = icon,
                        packageNameText = packageNameText,
@@ -53,10 +79,47 @@ function ChangeListView:addInstallChange( packageName, packageVersion )
     return change
 end
 
-function ChangeListView:updateChange( change, bytesWritten, totalBytes )
-    print(type(bytesWritten), bytesWritten)
-    change.windows.progressBar:SetValue(bytesWritten / totalBytes * 100)
-    change.windows.progressText:SetLabel(string.format('%d / %d', bytesWritten/1000, totalBytes/1000))
+function ChangeListView:setChangeTotalBytes( change, totalBytes )
+    change.totalBytes = totalBytes
+    if totalBytes then
+        change.windows.progressBar:SetRange(totalBytes)
+    end
+    self:updateChangeBytesWritten(change, change.bytesWritten or 0)
+    self:_updateTotalBytes()
+end
+
+local function BuildProgressString( bytesWritten, totalBytes )
+    if totalBytes then
+        local unitName, unitSize = GetByteUnit(totalBytes)
+        return string.format('%.1f / %.1f %s', bytesWritten/unitSize, totalBytes/unitSize, unitName)
+    else
+        local unitName, unitSize = GetByteUnit(bytesWritten)
+        return string.format('%.1f %s', bytesWritten/unitSize, unitName)
+    end
+end
+
+function ChangeListView:updateChangeBytesWritten( change, bytesWritten )
+    local totalBytes = change.totalBytes
+    if bytesWritten ~= change.bytesWritten then
+        change.bytesWritten = bytesWritten
+        if totalBytes then
+            change.windows.progressBar:SetValue(bytesWritten)
+        else
+            change.windows.progressBar:Pulse()
+        end
+        change.windows.progressText:SetLabel(BuildProgressString(bytesWritten, totalBytes))
+    end
+    self.listWindow:Layout()
+    self:_updateBytesWritten()
+end
+
+function ChangeListView:markChangeAsCompleted( change )
+    if not change.totalBytes then
+        local bytesWritten = change.bytesWritten
+        local progressBar = change.windows.progressBar
+        progressBar:SetRange(bytesWritten)
+        progressBar:SetValue(bytesWritten)
+    end
 end
 
 function ChangeListView:removeChange( change )
@@ -72,23 +135,82 @@ function ChangeListView:clearChanges()
     for change in pairs(self.changes) do
         self:removeChange(change)
     end
+
+    self.totalProgressGauge:SetValue(0)
+    self.totalProgressText:SetLabel('')
+    self.totalProgressWindow:Layout()
 end
 
 function ChangeListView:enableButton( name )
     if name == 'apply' then
         self.applyButton:Enable(true)
         self.cancelButton:Enable(false)
-    else
+        self.completeButton:Enable(false)
+    elseif name == 'cancel' then
         self.applyButton:Enable(false)
         self.cancelButton:Enable(true)
+        self.completeButton:Enable(false)
+    elseif name == 'complete' then
+        self.applyButton:Enable(false)
+        self.cancelButton:Enable(false)
+        self.completeButton:Enable(true)
+    elseif name == nil then
+        self.applyButton:Enable(false)
+        self.cancelButton:Enable(false)
+        self.completeButton:Enable(false)
+    else
+        error('Unknown button '..name)
     end
 end
 
-function ChangeListView:updateTotalProgress()
-    -- TODO
-    -- self.totalProgressGauge:SetRange(x)
-    self.totalProgressGauge:SetValue(0)
-    self.totalProgressText:SetValue('x / x MiB')
+function ChangeListView:_updateTotalBytes()
+    local totalBytes = 0
+    for change in pairs(self.changes) do
+        if change.totalBytes then
+            totalBytes = totalBytes + change.totalBytes
+        else
+            totalBytes = nil
+            break
+        end
+    end
+
+    if totalBytes then
+        self.totalProgressGauge:SetRange(totalBytes)
+    end
+
+    self._totalBytes = totalBytes
+
+    self:_updateBytesWritten()
+end
+
+function ChangeListView:_calcBytesWritten()
+    local bytesWritten = 0
+    for change in pairs(self.changes) do
+        bytesWritten = bytesWritten + (change.bytesWritten or 0)
+    end
+    return bytesWritten
+end
+
+function ChangeListView:_updateBytesWritten()
+    local bytesWritten = self:_calcBytesWritten()
+
+    local totalBytes = self._totalBytes
+    if totalBytes then
+        self.totalProgressGauge:SetValue(bytesWritten)
+    else
+        self.totalProgressGauge:Pulse()
+    end
+    self.totalProgressText:SetLabel(BuildProgressString(bytesWritten, totalBytes))
+
+    self.totalProgressWindow:Layout()
+end
+
+function ChangeListView:markAsCompleted()
+    if not self._totalBytes then
+        local bytesWritten = self:_calcBytesWritten()
+        self.totalProgressGauge:SetRange(bytesWritten)
+        self.totalProgressGauge:SetValue(bytesWritten)
+    end
 end
 
 function ChangeListView:freeze()
@@ -100,7 +222,7 @@ function ChangeListView:thaw()
 end
 
 function ChangeListView:destroy()
-    --  TODO
+    -- TODO
 end
 
 return function( rootWindow )
@@ -108,18 +230,23 @@ return function( rootWindow )
 
     self.applyButtonPressEvent = Event()
     self.cancelButtonPressEvent = Event()
+    self.completeButtonPressEvent = Event()
     self.showUpgradeInfoEvent = Event() -- packageName, packageVersion
 
     self.rootWindow = rootWindow
 
-    self.totalProgressGauge = xrc.getWindow(self.rootWindow, 'totalProgressGauge')
-    self.totalProgressText  = xrc.getWindow(self.rootWindow, 'totalProgressText')
+    self.totalProgressWindow = xrc.getWindow(self.rootWindow, 'totalProgressWindow')
+    self.totalProgressGauge  = xrc.getWindow(self.rootWindow, 'totalProgressGauge')
+    self.totalProgressText   = xrc.getWindow(self.rootWindow, 'totalProgressText')
 
     self.applyButton = xrc.getWindow(self.rootWindow, 'wxID_APPLY')
     utils.connect(self.applyButton, 'command_button_clicked', self.applyButtonPressEvent)
 
     self.cancelButton = xrc.getWindow(self.rootWindow, 'wxID_CANCEL')
     utils.connect(self.cancelButton, 'command_button_clicked', self.cancelButtonPressEvent)
+
+    self.completeButton = xrc.getWindow(self.rootWindow, 'wxID_OK')
+    utils.connect(self.completeButton, 'command_button_clicked', self.completeButtonPressEvent)
 
     self.listWindow = xrc.getWindow(self.rootWindow, 'changeWindow')
 

@@ -124,8 +124,8 @@ return function( rootWindow )
 
     self.requirementEntries = {}
 
-    self.searchChangeEvent = Event()
-    self.addRequirementEvent = Event()
+    self.searchChangeEvent      = Event()
+    self.addRequirementEvent    = Event()
     self.removeRequirementEvent = Event()
     self.changeRequirementEvent = Event()
 
