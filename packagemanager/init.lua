@@ -18,22 +18,9 @@ local db
 
 -- General stuff {{{1
 
-local function buildPackageDB( options )
-    local db = PackageDB.create()
-    if options.localPackages then
-        LocalPackage.gatherInstalledPackages(db, Config.searchPaths)
-    end
-    if options.remotePackages then
-        for repoName, _ in pairs(Config.repositories) do
-            Repository.loadIndex(db, repoName)
-        end
-    end
-    return db
-end
-
 function PackageManager.initialize( configFileName )
     Config.load(configFileName)
-    db = buildPackageDB{localPackages=true, remotePackages=true}
+    PackageManager.buildPackageDB()
 end
 
 function PackageManager.finalize()
@@ -45,13 +32,48 @@ function PackageManager.update()
     DownloadManager.update()
 end
 
+
+-- Read/edit repositories {{{1
+
+function PackageManager.getRepositories()
+    return Config.repositories
+end
+
+function PackageManager.setRepositories( repositories )
+    -- TODO: Check format
+    Config.repositories = repositories
+end
+
+--- Remove unused repository indices and update/download changed or new ones.
+-- @return download tasks
 function PackageManager.updateRepositoryIndices()
+    Repository.removeUnusedIndices()
+
     local tasks = {}
-    for name, url in pairs(Config.repositories) do
-        local task = Repository.updateIndex(name, url)
+    for _, url in ipairs(Config.repositories) do
+        local task = Repository.updateIndex(url)
         table.insert(tasks, task)
     end
+
     return tasks
+end
+
+--- Rebuild package database.
+--
+-- @param[type=table] options
+-- - localPackages: use search paths to find locally available packages
+-- - remotePackages: read package information from repository indices
+function PackageManager.buildPackageDB( options )
+    options = options or {localPackages=true, remotePackages=true}
+    db = PackageDB.create()
+    if options.localPackages then
+        LocalPackage.gatherInstalledPackages(db, Config.searchPaths)
+    end
+    if options.remotePackages then
+        for _, url in pairs(Config.repositories) do
+            Repository.loadIndex(db, url)
+        end
+    end
 end
 
 
@@ -62,6 +84,7 @@ function PackageManager.getRequirements()
 end
 
 function PackageManager.setRequirements( requirements )
+    -- TODO: Check format
     Config.requirements = requirements
 end
 

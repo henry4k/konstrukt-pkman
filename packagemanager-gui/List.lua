@@ -217,7 +217,7 @@ return function( listWindow, columns, icons )
 
     self.rowFocusChangeEvent = Event()
     utils.connect(listWindow, 'command_list_item_focused', function( e )
-        local rowIndex = e:GetIndex()+1
+        local rowIndex = e:GetData()
         local reference
         if rowIndex ~= 0 then
             reference = self.rows[rowIndex].reference

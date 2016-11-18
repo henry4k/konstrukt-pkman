@@ -405,146 +405,70 @@
 									<bitmap stock_id="repository" stock_client="wxART_MENU">undefined.png</bitmap>
 									<object class="wxPanel" name="repositoryPanel">
 										<style>wxTAB_TRAVERSAL</style>
-										<object class="wxFlexGridSizer">
-											<rows>0</rows>
-											<cols>2</cols>
-											<vgap>0</vgap>
-											<hgap>0</hgap>
-											<growablecols>0</growablecols>
-											<growablerows></growablerows>
-											<object class="sizeritem">
-												<option>1</option>
-												<flag>wxALL|wxEXPAND|wxALIGN_CENTER_VERTICAL</flag>
-												<border>5</border>
-												<object class="wxTextCtrl" name="m_textCtrl8">
-													<value></value>
-												</object>
-											</object>
-											<object class="sizeritem">
-												<option>0</option>
-												<flag>wxALL</flag>
-												<border>5</border>
-												<object class="wxBitmapButton" name="m_bpButton7">
-													<style>wxBU_AUTODRAW</style>
-													<bitmap stock_id="wxART_DELETE" stock_client="wxART_BUTTON">undefined.png</bitmap>
-													<default>0</default>
-												</object>
-											</object>
-											<object class="sizeritem">
-												<option>0</option>
-												<flag>wxALL|wxEXPAND|wxALIGN_CENTER_VERTICAL</flag>
-												<border>5</border>
-												<object class="wxTextCtrl" name="m_textCtrl9">
-													<value></value>
-												</object>
-											</object>
-											<object class="sizeritem">
-												<option>0</option>
-												<flag>wxALL</flag>
-												<border>5</border>
-												<object class="wxBitmapButton" name="m_bpButton8">
-													<style>wxBU_AUTODRAW</style>
-													<bitmap stock_id="wxART_DELETE" stock_client="wxART_BUTTON">undefined.png</bitmap>
-													<default>0</default>
-												</object>
-											</object>
-											<object class="spacer">
-												<option>1</option>
-												<flag>wxEXPAND</flag>
-												<border>5</border>
-												<size>0,0</size>
-											</object>
-											<object class="sizeritem">
-												<option>0</option>
-												<flag>wxALL</flag>
-												<border>5</border>
-												<object class="wxBitmapButton" name="m_bpButton9">
-													<style>wxBU_AUTODRAW</style>
-													<bitmap stock_id="wxART_NEW" stock_client="wxART_BUTTON">undefined.png</bitmap>
-													<default>0</default>
-												</object>
-											</object>
-										</object>
-									</object>
-								</object>
-								<object class="notebookpage">
-									<label>Paths</label>
-									<selected>0</selected>
-									<bitmap stock_id="wxART_MISSING_IMAGE" stock_client="wxART_MENU">undefined.png</bitmap>
-									<object class="wxPanel" name="pathPanel">
-										<style>wxTAB_TRAVERSAL</style>
-										<object class="wxFlexGridSizer">
-											<rows>0</rows>
-											<cols>3</cols>
-											<vgap>0</vgap>
-											<hgap>0</hgap>
-											<growablecols>1</growablecols>
-											<growablerows></growablerows>
-											<object class="sizeritem">
-												<option>0</option>
-												<flag>wxALL|wxALIGN_CENTER_VERTICAL|wxALIGN_RIGHT</flag>
-												<border>5</border>
-												<object class="wxStaticText" name="m_staticText7">
-													<label>Abc</label>
-													<wrap>-1</wrap>
-												</object>
-											</object>
-											<object class="sizeritem">
-												<option>1</option>
-												<flag>wxALL|wxALIGN_CENTER_VERTICAL|wxEXPAND</flag>
-												<border>5</border>
-												<object class="wxTextCtrl" name="m_textCtrl6">
-													<value></value>
-												</object>
-											</object>
-											<object class="sizeritem">
-												<option>0</option>
-												<flag>wxALL|wxALIGN_CENTER_VERTICAL</flag>
-												<border>5</border>
-												<object class="wxBitmapButton" name="m_bpButton5">
-													<style>wxBU_AUTODRAW</style>
-													<bitmap stock_id="wxART_FILE_OPEN" stock_client="wxART_BUTTON">undefined.png</bitmap>
-													<default>0</default>
-												</object>
-											</object>
-											<object class="sizeritem">
-												<option>0</option>
-												<flag>wxALL|wxALIGN_CENTER_VERTICAL|wxALIGN_RIGHT</flag>
-												<border>5</border>
-												<object class="wxStaticText" name="m_staticText8">
-													<label>MyLabel</label>
-													<wrap>-1</wrap>
-												</object>
-											</object>
-											<object class="sizeritem">
-												<option>1</option>
-												<flag>wxALL|wxALIGN_CENTER_VERTICAL|wxEXPAND</flag>
-												<border>5</border>
-												<object class="wxTextCtrl" name="m_textCtrl7">
-													<value></value>
-												</object>
-											</object>
-											<object class="sizeritem">
-												<option>0</option>
-												<flag>wxALL|wxALIGN_CENTER_VERTICAL</flag>
-												<border>5</border>
-												<object class="wxBitmapButton" name="m_bpButton6">
-													<style>wxBU_AUTODRAW</style>
-													<bitmap stock_id="wxART_FILE_OPEN" stock_client="wxART_BUTTON">undefined.png</bitmap>
-													<default>0</default>
-												</object>
-											</object>
-										</object>
-									</object>
-								</object>
-								<object class="notebookpage">
-									<label>Developer</label>
-									<selected>1</selected>
-									<bitmap stock_id="wxART_MISSING_IMAGE" stock_client="wxART_MENU">undefined.png</bitmap>
-									<object class="wxPanel" name="developerPanel">
-										<style>wxTAB_TRAVERSAL</style>
 										<object class="wxBoxSizer">
 											<orient>wxVERTICAL</orient>
+											<object class="sizeritem">
+												<option>1</option>
+												<flag>wxEXPAND | wxALL</flag>
+												<border>5</border>
+												<object class="wxScrolledWindow" name="listWindow">
+													<style>wxHSCROLL|wxVSCROLL</style>
+													<scrollrate>5,5</scrollrate>
+													<object class="wxFlexGridSizer">
+														<rows>0</rows>
+														<cols>2</cols>
+														<vgap>0</vgap>
+														<hgap>0</hgap>
+														<growablecols>0</growablecols>
+														<growablerows></growablerows>
+														<object class="sizeritem">
+															<option>0</option>
+															<flag>wxALL</flag>
+															<border>5</border>
+															<object class="wxStaticText" name="m_staticText92">
+																<label>URL</label>
+																<wrap>-1</wrap>
+															</object>
+														</object>
+														<object class="spacer">
+															<option>1</option>
+															<flag>wxEXPAND</flag>
+															<border>5</border>
+															<size>0,0</size>
+														</object>
+														<object class="spacer">
+															<option>1</option>
+															<flag>wxEXPAND</flag>
+															<border>5</border>
+															<size>0,0</size>
+														</object>
+														<object class="sizeritem">
+															<option>0</option>
+															<flag>wxALL</flag>
+															<border>5</border>
+															<object class="wxBitmapButton" name="addRepositoryButton">
+																<style>wxBU_AUTODRAW</style>
+																<bitmap stock_id="wxART_NEW" stock_client="wxART_BUTTON">undefined.png</bitmap>
+																<default>0</default>
+															</object>
+														</object>
+													</object>
+												</object>
+											</object>
+											<object class="sizeritem">
+												<option>0</option>
+												<flag>wxEXPAND</flag>
+												<border>5</border>
+												<object class="wxStdDialogButtonSizer">
+													<object class="button">
+														<flag>wxALIGN_CENTER_HORIZONTAL|wxALL</flag>
+														<border>5</border>
+														<object class="wxButton" name="wxID_APPLY">
+															<label>&amp;Apply</label>
+														</object>
+													</object>
+												</object>
+											</object>
 										</object>
 									</object>
 								</object>

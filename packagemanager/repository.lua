@@ -1,3 +1,5 @@
+local lfs = require 'lfs'
+local escapeUrl = require('socket.url').escape
 local semver = require 'semver'
 local LocalPackage = require 'packagemanager/localpackage'
 local DownloadManager = require 'packagemanager/downloadmanager'
@@ -10,12 +12,26 @@ local PackageDB    = require 'packagemanager/packagedb'
 
 local Repository = {}
 
-local function BuildRepoIndexFileName( repoName )
-    return FS.path(Config.repositoryCacheDir, repoName..'.json')
+local function BuildRepoIndexFileName( url )
+    return FS.path(Config.repositoryCacheDir, escapeUrl(url)..'.json')
 end
 
-function Repository.updateIndex( name, url, downloadEventHandler )
-    local fileName = BuildRepoIndexFileName(name)
+function Repository.removeUnusedIndices()
+    local usedIndexFileNameSet = {}
+    for _, url in ipairs(Config.repositories) do
+        usedIndexFileNameSet[BuildRepoIndexFileName(url)] = true
+    end
+
+    for entry in lfs.dir(Config.repositoryCacheDir) do
+        local entryPath = FS.path(Config.repositoryCacheDir, entry)
+        if not usedIndexFileNameSet[entryPath] then
+            os.remove(entryPath)
+        end
+    end
+end
+
+function Repository.updateIndex( url, downloadEventHandler )
+    local fileName = BuildRepoIndexFileName(url)
     return DownloadManager.startDownload(fileName, url, downloadEventHandler)
 end
 
@@ -57,9 +73,13 @@ function Repository.loadIndexFromFile( db, fileName )
     end
 end
 
-function Repository.loadIndex( db, repoName )
-    local fileName = BuildRepoIndexFileName(repoName)
-    return Repository.loadIndexFromFile(db, fileName)
+function Repository.loadIndex( db, url )
+    local fileName = BuildRepoIndexFileName(url)
+    if FS.fileExists(fileName) then
+        return Repository.loadIndexFromFile(db, fileName)
+    else
+        return nil, url..' has not been downloaded yet.'
+    end
 end
 
 local function AddPackageToRepoData( repoData, package )

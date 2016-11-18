@@ -52,10 +52,10 @@ end
 function PackageListPresenter:destroy()
 end
 
-return function( view, requirementListPresenter, mainFrameView )
+return function( view, requirementListPresenter, packageDbUpdated, mainFrameView )
     local self = setmetatable({}, PackageListPresenter)
     self.view = view
-    self.requirementsChanged = false
+    self.dirty = false
 
     view.searchChangeEvent:addListener(function()
         view:freeze()
@@ -91,26 +91,29 @@ return function( view, requirementListPresenter, mainFrameView )
         PackageManager.launchScenario(currentPackage)
     end)
 
+    local function Refresh()
+        view:freeze()
+        local query = view:getQuery()
+        ExecuteQuery(view, query)
+        view:thaw()
+        self.dirty = false
+    end
 
-    requirementListPresenter.requirementsChanged:addListener(function()
+    local function RefreshOrMarkDirty()
         if mainFrameView:getCurrentPageView() == view then
-            view:freeze()
-            local query = view:getQuery()
-            ExecuteQuery(view, query)
-            view:thaw()
+            Refresh()
         else
             -- page is currently not visible
-            self.requirementsChanged = true
+            self.dirty = true
         end
-    end)
+    end
+
+    requirementListPresenter.requirementsChanged:addListener(RefreshOrMarkDirty)
+    packageDbUpdated:addListener(RefreshOrMarkDirty)
 
     mainFrameView.pageChanged:addListener(function( pageView )
-        if pageView == view and self.requirementsChanged then
-            view:freeze()
-            local query = view:getQuery()
-            ExecuteQuery(view, query)
-            view:thaw()
-            self.requirementsChanged = false
+        if pageView == view and self.dirty then
+            Refresh()
         end
     end)
 

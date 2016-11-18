@@ -8,7 +8,6 @@ local UpdateTimer = {}
 UpdateTimer.__index = UpdateTimer
 
 function UpdateTimer:_setFrequency( seconds )
-    print('UpdateTimer set to '..tostring(seconds))
     if seconds then
         assert(seconds > 0)
         self.timer:Start(math.ceil(seconds*1000))

@@ -7,10 +7,7 @@
 {
     searchPaths = {...} -- Locations of where local packages can be found.
     -- Packages are installed to the first search path.
-    repositories =
-    {
-        <name> = <index url>
-    }
+    repositories = {...} -- Index URLs of repositories
     requirements =
     {
         { -- A requirement group consists of ...

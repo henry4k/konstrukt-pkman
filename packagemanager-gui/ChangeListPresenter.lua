@@ -55,6 +55,7 @@ function ChangeListPresenter:updateProgress()
             end
         end
     end
+    self.statusBarPresenter:setMessage('changes', string.format('... TODO ...'))
 end
 
 function ChangeListPresenter:destroy()
@@ -125,12 +126,18 @@ function ChangeListPresenter:_onDone()
     self:updateUpdateFrequency()
 end
 
-return function( view, requirementListPresenter, mainFrameView, updateTimer )
+return function( view,
+                 requirementListPresenter,
+                 packageDbUpdated,
+                 statusBarPresenter,
+                 mainFrameView,
+                 updateTimer )
     local self = setmetatable({}, ChangeListPresenter)
     self.view = view
+    self.statusBarPresenter = statusBarPresenter
     self.mainFrameView = mainFrameView
     self.updateTimer = updateTimer
-    self.requirementsChanged = false
+    self.dirty = false
     self.changeHandleMap = {}
     self.changeTaskMap = {}
 
@@ -154,7 +161,6 @@ return function( view, requirementListPresenter, mainFrameView, updateTimer )
             onapplying = bind(self._onApplying, self),
             oncancel   = bind(self._onCancel, self),
             ondone     = bind(self._onDone, self),
-            onstatechange = function( state, event, from, to ) print(string.format('%s => %s', from, to)) end -- DEBUG
         }
     }
 
@@ -182,27 +188,31 @@ return function( view, requirementListPresenter, mainFrameView, updateTimer )
         -- TODO
     end)
 
-    requirementListPresenter.requirementsChanged:addListener(function()
+    local function Refresh()
+        view:freeze()
+        self:resetOrGatherChanges()
+        view:thaw()
+        self.dirty = false
+    end
+
+    local function RefreshOrMarkDirty()
         if mainFrameView:getCurrentPageView() == view then
             if self.state:can('reset') then
-                view:freeze()
-                self:resetOrGatherChanges()
-                view:thaw()
+                Refresh()
             end
         else
             -- page is currently not visible
-            self.requirementsChanged = true
+            self.dirty = true
         end
-    end)
+    end
+
+    requirementListPresenter.requirementsChanged:addListener(RefreshOrMarkDirty)
+    packageDbUpdated:addListener(RefreshOrMarkDirty)
 
     mainFrameView.pageChanged:addListener(function( pageView )
         if pageView == view then
-            if self.requirementsChanged and
-               self.state:can('reset') then
-                view:freeze()
-                self:resetOrGatherChanges()
-                view:thaw()
-                self.requirementsChanged = false
+            if self.dirty and self.state:can('reset') then
+                Refresh()
             end
             if self.state:is('applying') then
                 view:freeze()
@@ -214,11 +224,10 @@ return function( view, requirementListPresenter, mainFrameView, updateTimer )
     end)
 
     updateTimer.updateEvent:addListener(function()
-        if mainFrameView:getCurrentPageView() == view and
-           self.state:is('applying') then
-                view:freeze()
-                self:updateProgress()
-                view:thaw()
+        if mainFrameView:getCurrentPageView() == view and self.state:is('applying') then
+            view:freeze()
+            self:updateProgress()
+            view:thaw()
         end
     end)
 

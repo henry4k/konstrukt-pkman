@@ -1,36 +1,19 @@
+local wx = require 'wx'
+
+
 local StatusBarView = {}
 StatusBarView.__index = StatusBarView
 
-function StatusBarView:addField( text )
-    local field = {}
-    field.index = #self.fieldList+1
-    field.text = text
-
-    self.fields[field] = field
-    self.fieldList[field.index] = field
-
-    self:_updateFieldsByFieldList()
-    return field
+function StatusBarView:setText( text )
+    self.window:SetStatusText(text, 0)
 end
 
-function StatusBarView:_updateFieldsByFieldList()
-    self.window:SetFieldsCount(#self.fieldList)
-    for i, field in ipairs(self.fieldList) do
-        self.window:SetStatusText(field.text, i-1)
-    end
+function StatusBarView:freeze()
+    self.window:Freeze()
 end
 
-function StatusBarView:removeField( field )
-    assert(self.fields[field])
-    self.fields[field] = nil
-    table.remove(self.fieldList, field.index)
-    self:_updateFieldsByFieldList()
-end
-
-function StatusBarView:setFieldText( field, text )
-    assert(self.fields[field])
-    field.text = text
-    self.window:SetStatusText(text, field.index-1)
+function StatusBarView:thaw()
+    self.window:Thaw()
 end
 
 function StatusBarView:destroy()
@@ -39,7 +22,6 @@ end
 return function( window )
     local self = setmetatable({}, StatusBarView)
     self.window = window
-    self.fields = {}
-    self.fieldList = {}
+    window:SetFieldsCount(1)
     return self
 end

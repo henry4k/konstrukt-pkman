@@ -10,8 +10,8 @@ local MaxRedirections = 1
 
 local function HttpHttpsRequest( options )
     if options.url:match('^https') then
-        options.protocol = 'sslv23'
-        options.options = 'all'
+       options.protocol = 'sslv23'
+       options.options = 'all'
         -- TODO: Certificate validation is currently disabled, as I'm not sure
         --       where/how to store the certificates yet.
         --options.verify = {'peer', 'client_once'}

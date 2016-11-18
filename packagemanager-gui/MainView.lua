@@ -6,6 +6,7 @@ local StatusBarView       = require 'packagemanager-gui/StatusBarView'
 local PackageListView     = require 'packagemanager-gui/PackageListView'
 local RequirementListView = require 'packagemanager-gui/RequirementListView'
 local ChangeListView      = require 'packagemanager-gui/ChangeListView'
+local RepositoryListView  = require 'packagemanager-gui/RepositoryListView'
 
 
 local MainView = {}
@@ -29,6 +30,7 @@ function MainView:destroy()
     self.packageListView:destroy()
     self.requirementListView:destroy()
     self.changeListView:destroy()
+    self.repositoryListView:destroy()
     self.frame:Destroy()
 end
 
@@ -54,6 +56,9 @@ return function()
     local changesPanel = xrc.getWindow(frame, 'changesPanel')
     self.changeListView = ChangeListView(changesPanel)
     self:_addPage(changesPanel, self.changeListView)
+
+    local repositoryPanel = xrc.getWindow(frame, 'repositoryPanel')
+    self.repositoryListView = RepositoryListView(repositoryPanel)
 
     self.pageChanged = Event()
     local notebook = xrc.getWindow(frame, 'notebook')
