@@ -4,19 +4,6 @@ local Event = require 'packagemanager-gui/Event'
 local xrc   = require 'packagemanager-gui/xrc'
 
 
-local Kibibyte = math.pow(2, 10)
-local Mebibyte = math.pow(2, 20)
-local function GetByteUnit( reference )
-    if reference >= Mebibyte then
-        return 'MiB', Mebibyte
-    elseif reference >= Kibibyte then
-        return 'KiB', Kibibyte
-    else
-        return 'bytes', 1
-    end
-end
-
-
 local ChangeListView = {}
 ChangeListView.__index = ChangeListView
 
@@ -88,15 +75,6 @@ function ChangeListView:setChangeTotalBytes( change, totalBytes )
     self:_updateTotalBytes()
 end
 
-local function BuildProgressString( bytesWritten, totalBytes )
-    if totalBytes then
-        local unitName, unitSize = GetByteUnit(totalBytes)
-        return string.format('%.1f / %.1f %s', bytesWritten/unitSize, totalBytes/unitSize, unitName)
-    else
-        local unitName, unitSize = GetByteUnit(bytesWritten)
-        return string.format('%.1f %s', bytesWritten/unitSize, unitName)
-    end
-end
 
 function ChangeListView:updateChangeBytesWritten( change, bytesWritten )
     local totalBytes = change.totalBytes
@@ -107,7 +85,7 @@ function ChangeListView:updateChangeBytesWritten( change, bytesWritten )
         else
             change.windows.progressBar:Pulse()
         end
-        change.windows.progressText:SetLabel(BuildProgressString(bytesWritten, totalBytes))
+        change.windows.progressText:SetLabel(utils.buildProgressString(bytesWritten, totalBytes))
     end
     self.listWindow:Layout()
     self:_updateBytesWritten()
@@ -139,6 +117,8 @@ function ChangeListView:clearChanges()
     self.totalProgressGauge:SetValue(0)
     self.totalProgressText:SetLabel('')
     self.totalProgressWindow:Layout()
+
+    self.statusBarPresenter:setMessage('changes', nil) -- Its a hack. See constructor of ChangeListPresenter.
 end
 
 function ChangeListView:enableButton( name )
@@ -200,9 +180,14 @@ function ChangeListView:_updateBytesWritten()
     else
         self.totalProgressGauge:Pulse()
     end
-    self.totalProgressText:SetLabel(BuildProgressString(bytesWritten, totalBytes))
+    self.totalProgressText:SetLabel(utils.buildProgressString(bytesWritten, totalBytes))
 
     self.totalProgressWindow:Layout()
+
+
+    local message = string.format('Downloaded %s packages ...',
+                                  utils.buildProgressString(bytesWritten, totalBytes))
+    self.statusBarPresenter:setMessage('changes', message) -- Its a hack. See constructor of ChangeListPresenter.
 end
 
 function ChangeListView:markAsCompleted()
@@ -228,10 +213,10 @@ end
 return function( rootWindow )
     local self = setmetatable({}, ChangeListView)
 
-    self.applyButtonPressEvent = Event()
-    self.cancelButtonPressEvent = Event()
+    self.applyButtonPressEvent    = Event()
+    self.cancelButtonPressEvent   = Event()
     self.completeButtonPressEvent = Event()
-    self.showUpgradeInfoEvent = Event() -- packageName, packageVersion
+    self.showUpgradeInfoEvent     = Event() -- packageName, packageVersion
 
     self.rootWindow = rootWindow
 

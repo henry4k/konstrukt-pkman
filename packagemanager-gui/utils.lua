@@ -19,9 +19,14 @@ function utils.wrapCallbackForWx( callback )
     end
 end
 
-function utils.connect( eventHandler, eventName, callback )
+function utils.connect( eventHandler, eventName, callback, id )
     local eventId = assert(wx['wxEVT_'..string.upper(eventName)], 'Unknown event type')
-    eventHandler:Connect(eventId, utils.wrapCallbackForWx(callback))
+    local wrappedCallback = utils.wrapCallbackForWx(callback)
+    if id then
+        eventHandler:Connect(id, eventId, wrappedCallback)
+    else
+        eventHandler:Connect(eventId, wrappedCallback)
+    end
 end
 
 function utils.updateWindow( window )
@@ -78,6 +83,35 @@ end
 function utils.getUiSubsystem() -- gtk, msw, cocoa
     local platformInfo = wx.wxPlatformInfo.Get()
     return platformInfo:GetPortIdShortName()
+end
+
+local Kibibyte = math.pow(2, 10)
+local Mebibyte = math.pow(2, 20)
+function utils.getByteUnit( reference )
+    if reference >= Mebibyte then
+        return 'MiB', Mebibyte
+    elseif reference >= Kibibyte then
+        return 'KiB', Kibibyte
+    else
+        return 'bytes', 1
+    end
+end
+
+function utils.buildProgressString( bytesWritten, totalBytes )
+    if totalBytes then
+        local unitName, unitSize = utils.getByteUnit(totalBytes)
+        return string.format('%.1f / %.1f %s', bytesWritten/unitSize, totalBytes/unitSize, unitName)
+    else
+        local unitName, unitSize = utils.getByteUnit(bytesWritten)
+        return string.format('%.1f %s', bytesWritten/unitSize, unitName)
+    end
+end
+
+local nextId = 1
+function utils.generateUniqueId()
+    local id = nextId
+    nextId = nextId + 1
+    return id
 end
 
 return utils

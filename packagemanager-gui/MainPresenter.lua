@@ -3,6 +3,7 @@ local xrc                      = require 'packagemanager-gui/xrc'
 local utils                    = require 'packagemanager-gui/utils'
 local Event                    = require 'packagemanager-gui/Event'
 local MainView                 = require 'packagemanager-gui/MainView'
+local Timer                    = require 'packagemanager-gui/Timer'
 local UpdateTimer              = require 'packagemanager-gui/UpdateTimer'
 local StatusBarPresenter       = require 'packagemanager-gui/StatusBarPresenter'
 local PackageListPresenter     = require 'packagemanager-gui/PackageListPresenter'
@@ -63,22 +64,25 @@ return function( view )
     local self = setmetatable({}, MainPresenter)
     self.view = view
 
+    Timer.defaultWindow = view.frame
+
     self.packageDbUpdated = Event()
-    self.updateTimer = UpdateTimer(view.frame)
+    self.updateTimer = UpdateTimer()
 
     self.statusBarPresenter       = StatusBarPresenter(view.statusBarView)
     self.requirementListPresenter = RequirementListPresenter(view.requirementListView)
     self.repositoryListPresenter  = RepositoryListPresenter(view.repositoryListView, self)
-    self.packageListPresenter     = PackageListPresenter(view.packageListView,
-                                                         self.requirementListPresenter,
-                                                         self.packageDbUpdated,
-                                                         view)
     self.changeListPresenter      = ChangeListPresenter(view.changeListView,
                                                         self.requirementListPresenter,
                                                         self.packageDbUpdated,
                                                         self.statusBarPresenter,
                                                         view,
                                                         self.updateTimer)
+    self.packageListPresenter     = PackageListPresenter(view.packageListView,
+                                                         self.requirementListPresenter,
+                                                         self.changeListPresenter,
+                                                         self.packageDbUpdated,
+                                                         view)
 
     self:updateRepositoryIndices()
 

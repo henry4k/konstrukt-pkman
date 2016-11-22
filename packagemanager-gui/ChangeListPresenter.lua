@@ -1,11 +1,13 @@
 local statemachine = require 'statemachine'
 local bind = require('packagemanager/misc').bind
 local PackageManager = require 'packagemanager/init'
+local Event = require 'packagemanager-gui/Event'
+local utils = require 'packagemanager-gui/utils'
 local xrc = require 'packagemanager-gui/xrc'
 
 
 local HighUpdateFrequency = 1/20
-local LowUpdateFrequency  = 1
+local LowUpdateFrequency  = 1/5
 
 local ChangeListPresenter = {}
 ChangeListPresenter.__index = ChangeListPresenter
@@ -55,7 +57,6 @@ function ChangeListPresenter:updateProgress()
             end
         end
     end
-    self.statusBarPresenter:setMessage('changes', string.format('... TODO ...'))
 end
 
 function ChangeListPresenter:destroy()
@@ -103,6 +104,7 @@ function ChangeListPresenter:_onApplying()
         task.events.complete = function()
             view:freeze()
             view:markChangeAsCompleted(viewHandle)
+            self.packageStatusChanged({change.package})
             if AllTasksAreComplete(tasks) then
                 self.state:complete()
             end
@@ -134,12 +136,14 @@ return function( view,
                  updateTimer )
     local self = setmetatable({}, ChangeListPresenter)
     self.view = view
-    self.statusBarPresenter = statusBarPresenter
+    view.statusBarPresenter = statusBarPresenter -- Its a hack.  See _updateBytesWritten of ChangeListView.
     self.mainFrameView = mainFrameView
     self.updateTimer = updateTimer
     self.dirty = false
     self.changeHandleMap = {}
     self.changeTaskMap = {}
+
+    self.packageStatusChanged = Event() -- packages
 
     self.state = statemachine.create
     {
@@ -224,11 +228,11 @@ return function( view,
     end)
 
     updateTimer.updateEvent:addListener(function()
-        if mainFrameView:getCurrentPageView() == view and self.state:is('applying') then
+        --if mainFrameView:getCurrentPageView() == view and self.state:is('applying') then
             view:freeze()
             self:updateProgress()
             view:thaw()
-        end
+        --end
     end)
 
     view:freeze()

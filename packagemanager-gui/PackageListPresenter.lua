@@ -52,7 +52,11 @@ end
 function PackageListPresenter:destroy()
 end
 
-return function( view, requirementListPresenter, packageDbUpdated, mainFrameView )
+return function( view,
+                 requirementListPresenter,
+                 changeListPresenter,
+                 packageDbUpdated,
+                 mainFrameView )
     local self = setmetatable({}, PackageListPresenter)
     self.view = view
     self.dirty = false
@@ -110,6 +114,7 @@ return function( view, requirementListPresenter, packageDbUpdated, mainFrameView
 
     requirementListPresenter.requirementsChanged:addListener(RefreshOrMarkDirty)
     packageDbUpdated:addListener(RefreshOrMarkDirty)
+    changeListPresenter.packageStatusChanged:addListener(RefreshOrMarkDirty)
 
     mainFrameView.pageChanged:addListener(function( pageView )
         if pageView == view and self.dirty then

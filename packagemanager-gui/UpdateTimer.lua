@@ -1,7 +1,6 @@
-local wx             = require 'wx'
 local PackageManager = require 'packagemanager/init'
-local utils          = require 'packagemanager-gui/utils'
 local Event          = require 'packagemanager-gui/Event'
+local Timer          = require 'packagemanager-gui/Timer'
 
 
 local UpdateTimer = {}
@@ -10,9 +9,9 @@ UpdateTimer.__index = UpdateTimer
 function UpdateTimer:_setFrequency( seconds )
     if seconds then
         assert(seconds > 0)
-        self.timer:Start(math.ceil(seconds*1000))
+        self.timer:start(seconds)
     else
-        self.timer:Stop()
+        self.timer:stop()
     end
 end
 
@@ -30,21 +29,20 @@ function UpdateTimer:requestMinFrequency( module, seconds )
 end
 
 function UpdateTimer:destroy()
+    self.timer:destroy()
 end
 
 return function( window )
     local self = setmetatable({}, UpdateTimer)
 
     self.moduleFrequencies = {}
-
     self.updateEvent = Event()
 
-    local timer = wx.wxTimer(window)
-    self.timer = timer
-    utils.connect(window, 'timer', function()
+    local function callback()
         PackageManager.update()
         self.updateEvent()
-    end)
+    end
+    self.timer = Timer(callback, window)
 
     return self
 end
