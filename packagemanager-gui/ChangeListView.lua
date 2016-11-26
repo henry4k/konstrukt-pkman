@@ -15,12 +15,12 @@ function ChangeListView:addChange( changeType,
     local change = {}
     change.type = changeType
 
-    local iconName = 'package-'..changeType
+    local typeIconName = 'package-'..changeType
 
     local defaultSizerFlags = wx.wxALL + wx.wxALIGN_CENTER_VERTICAL
 
-    local icon = wx.wxStaticBitmap( self.listWindow, wx.wxID_ANY, wx.wxArtProvider.GetBitmap(iconName, wx.wxART_MENU ), wx.wxDefaultPosition, wx.wxDefaultSize, 0 )
-    self.listGridSizer:Add( icon, 0, defaultSizerFlags, 5 )
+    local typeIcon = wx.wxStaticBitmap( self.listWindow, wx.wxID_ANY, wx.wxArtProvider.GetBitmap(typeIconName, wx.wxART_MENU ), wx.wxDefaultPosition, wx.wxDefaultSize, 0 )
+    self.listGridSizer:Add( typeIcon, 0, defaultSizerFlags, 5 )
 
     local packageNameText = wx.wxStaticText( self.listWindow, wx.wxID_ANY, packageName, wx.wxDefaultPosition, wx.wxDefaultSize, 0 )
     packageNameText:Wrap( -1 )
@@ -30,30 +30,23 @@ function ChangeListView:addChange( changeType,
     packageVersionText:Wrap( -1 )
     self.listGridSizer:Add( packageVersionText, 0, defaultSizerFlags, 5 )
 
-    local progressBar
-    local progressText
-    local infoButton
-    if changeType == 'install' then
-        progressBar = wx.wxGauge( self.listWindow, wx.wxID_ANY, 1, wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxGA_HORIZONTAL + wx.wxGA_SMOOTH )
-        self.listGridSizer:Add( progressBar, 0, defaultSizerFlags + wx.wxEXPAND, 5 )
+    local progressBar = wx.wxGauge( self.listWindow, wx.wxID_ANY, 1, wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxGA_HORIZONTAL + wx.wxGA_SMOOTH )
+    self.listGridSizer:Add( progressBar, 0, defaultSizerFlags + wx.wxEXPAND, 5 )
 
-        progressText = wx.wxStaticText( self.listWindow, wx.wxID_ANY, "", wx.wxDefaultPosition, wx.wxDefaultSize, 0 )
-        progressText:Wrap( -1 )
-        self.listGridSizer:Add( progressText, 0, defaultSizerFlags + wx.wxALIGN_RIGHT, 5 )
+    local progressText = wx.wxStaticText( self.listWindow, wx.wxID_ANY, '', wx.wxDefaultPosition, wx.wxDefaultSize, 0 )
+    progressText:Wrap( -1 )
+    self.listGridSizer:Add( progressText, 0, defaultSizerFlags + wx.wxALIGN_RIGHT, 5 )
 
-        infoButton = wx.wxBitmapButton( self.listWindow, wx.wxID_ANY, wx.wxArtProvider.GetBitmap( wx.wxART_INFORMATION, wx.wxART_MENU ), wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxBU_AUTODRAW )
-        self.listGridSizer:Add( infoButton, 0, defaultSizerFlags, 5 )
-        utils.connect(infoButton, 'command_button_clicked', function()
-            self.showUpgradeInfoEvent(packageName, packageVersion)
-        end)
-    else
-        -- add placeholders
-        for i = 1, 3 do
-            self.listGridSizer:Add(0, 0, 1, defaultSizerFlags, 5)
-        end
+    local infoButton = wx.wxBitmapButton( self.listWindow, wx.wxID_ANY, wx.wxArtProvider.GetBitmap( wx.wxART_INFORMATION, wx.wxART_MENU ), wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxBU_AUTODRAW )
+    self.listGridSizer:Add( infoButton, 0, defaultSizerFlags, 5 )
+    utils.connect(infoButton, 'command_button_clicked', function()
+        self.showUpgradeInfoEvent(packageName, packageVersion)
+    end)
+    if changeType ~= 'install' then
+        infoButton:Enable(false)
     end
 
-    change.windows = { icon = icon,
+    change.windows = { typeIcon = typeIcon,
                        packageNameText = packageNameText,
                        packageVersionText = packageVersionText,
                        progressBar = progressBar,
@@ -92,11 +85,19 @@ function ChangeListView:updateChangeBytesWritten( change, bytesWritten )
 end
 
 function ChangeListView:markChangeAsCompleted( change )
-    if not change.totalBytes then
-        local bytesWritten = change.bytesWritten
+    if change.type == 'install' then
+        if change.totalBytes then
+            assert(change.bytesWritten == change.totalBytes)
+        else
+            local bytesWritten = change.bytesWritten
+            local progressBar = change.windows.progressBar
+            progressBar:SetRange(bytesWritten)
+            progressBar:SetValue(bytesWritten)
+        end
+    else
         local progressBar = change.windows.progressBar
-        progressBar:SetRange(bytesWritten)
-        progressBar:SetValue(bytesWritten)
+        progressBar:SetRange(1)
+        progressBar:SetValue(1)
     end
 end
 
@@ -119,6 +120,8 @@ function ChangeListView:clearChanges()
     self.totalProgressWindow:Layout()
 
     self.statusBarPresenter:setMessage('changes', nil) -- Its a hack. See constructor of ChangeListPresenter.
+
+    self._totalBytes = nil
 end
 
 function ChangeListView:enableButton( name )
@@ -163,16 +166,18 @@ function ChangeListView:_updateTotalBytes()
     self:_updateBytesWritten()
 end
 
-function ChangeListView:_calcBytesWritten()
-    local bytesWritten = 0
+function ChangeListView:_calcBytesWritten() -- may be nil
+    local bytesWritten
     for change in pairs(self.changes) do
-        bytesWritten = bytesWritten + (change.bytesWritten or 0)
+        if change.bytesWritten then
+            bytesWritten = (bytesWritten or 0) + change.bytesWritten
+        end
     end
     return bytesWritten
 end
 
 function ChangeListView:_updateBytesWritten()
-    local bytesWritten = self:_calcBytesWritten()
+    local bytesWritten = self:_calcBytesWritten() or 0
 
     local totalBytes = self._totalBytes
     if totalBytes then
@@ -185,16 +190,20 @@ function ChangeListView:_updateBytesWritten()
     self.totalProgressWindow:Layout()
 
 
-    local message = string.format('Downloaded %s packages ...',
-                                  utils.buildProgressString(bytesWritten, totalBytes))
-    self.statusBarPresenter:setMessage('changes', message) -- Its a hack. See constructor of ChangeListPresenter.
+    if bytesWritten > 0 then
+        local message = string.format('Downloaded %s packages ...',
+                                      utils.buildProgressString(bytesWritten, totalBytes))
+        self.statusBarPresenter:setMessage('changes', message) -- Its a hack. See constructor of ChangeListPresenter.
+    end
 end
 
 function ChangeListView:markAsCompleted()
-    if not self._totalBytes then
-        local bytesWritten = self:_calcBytesWritten()
-        self.totalProgressGauge:SetRange(bytesWritten)
-        self.totalProgressGauge:SetValue(bytesWritten)
+    local bytesWritten = self:_calcBytesWritten()
+    if self._totalBytes then
+        assert(bytesWritten == self._totalBytes)
+    else
+        self.totalProgressGauge:SetRange(bytesWritten or 1)
+        self.totalProgressGauge:SetValue(bytesWritten or 1)
     end
 end
 

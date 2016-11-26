@@ -184,15 +184,16 @@ function ChangeTaskFunctions.install( task, change )
 
     if package.type == 'native' then
         fileName = FS.path(installPath, baseName)
-        downloadTask = DownloadManager.startDownload(fileName, package.downloadUrl, true)
+        downloadTask = DownloadManager.createDownload(package.downloadUrl, fileName, true)
     else
         fileName = FS.path(installPath, baseName..'.zip')
-        downloadTask = DownloadManager.startDownload(fileName, package.downloadUrl, false)
+        downloadTask = DownloadManager.createDownload(package.downloadUrl, fileName, false)
     end
 
-    downloadTask.events.started = function()
+    downloadTask.events.downloadStarted = function()
         task:fireEvent('downloadStarted')
     end
+    downloadTask:start()
     task.downloadTask = downloadTask
     assert(downloadTask:wait())
 
@@ -202,7 +203,6 @@ function ChangeTaskFunctions.install( task, change )
 end
 
 function ChangeTaskFunctions.uninstall( task, change )
-    -- TODO: Create task for this
     LocalPackage.remove(db, change.package)
 end
 

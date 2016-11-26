@@ -1,9 +1,16 @@
-local misc = require 'packagemanager/misc'
 local unpack = unpack or table.unpack -- backward compatibility to 5.1
 
 
 local Task = {}
 Task.__index = Task
+
+function Task:start()
+    assert(self.status == 'unstarted')
+    local startParameter = self.startParameter
+    self.startParameter = nil
+    self.status = 'running'
+    assert(self:fireEvent('start', startParameter))
+end
 
 --- Signal successful completion with the given result value.
 -- Used by the owner.
@@ -47,10 +54,9 @@ end
 --This overrides the completion and failure event handlers.
 --
 --@return
---On successful completion it returns `true` and the tasks result. 
+--On successful completion it returns `true` and the tasks result.
 --On failure it returns `false` and the error object.
 function Task:wait()
-    print('at the beginning of Task:wait() self = '..tostring(self))
     if self.status == 'running' then
         local coro = coroutine.running()
         local function resumeFn( task )
@@ -79,18 +85,24 @@ local function DefaultFailureHandler( task )
     error(task.error, 0)
 end
 
-local function CreateTask( events )
+local function CreateTask( startParameter )
     local self = setmetatable({}, Task)
-    self.status = 'running'
-    events = misc.copyTable(events or {})
-    events.complete = events.complete or DefaultCompletionHandler
-    events.fail     = events.fail     or DefaultFailureHandler
-    self.events = events
+    self.status = 'unstarted'
+    self.events = { complete = DefaultCompletionHandler,
+                    fail     = DefaultFailureHandler }
+    self.startParameter = startParameter
     return self
+end
+
+local function OnCoroTaskStart( task, startParameter )
+    ResumeCoroutineAndPropagateErrors(startParameter.coro,
+                                      task,
+                                      unpack(startParameter.args))
 end
 
 local function CreateTaskFromFunction( fn, ... )
     local task = CreateTask()
+
     local function wrapperFn(...)
         local success, resultOrErr = xpcall(fn, debug.traceback, ...)
         if success then
@@ -100,7 +112,9 @@ local function CreateTaskFromFunction( fn, ... )
         end
     end
     local coro = coroutine.create(wrapperFn)
-    ResumeCoroutineAndPropagateErrors(coro, task, ...)
+
+    task.startParameter = { args = {...}, coro = coro }
+    task.events.start = OnCoroTaskStart
     return task
 end
 

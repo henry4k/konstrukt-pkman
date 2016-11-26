@@ -30,9 +30,9 @@ function Repository.removeUnusedIndices()
     end
 end
 
-function Repository.updateIndex( url, downloadEventHandler )
+function Repository.updateIndex( url )
     local fileName = BuildRepoIndexFileName(url)
-    return DownloadManager.startDownload(fileName, url, downloadEventHandler)
+    return DownloadManager.createDownload(url, fileName)
 end
 
 local function PreprocessLoadedPackageEntry( package, packageName )

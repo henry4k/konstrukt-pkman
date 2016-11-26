@@ -72,7 +72,7 @@ local function ParseHttpDate( date )
     return utcTime + GetUtcOffset()
 end
 
-local function GetResourceHeaders( url )
+local function GetRawResourceHeaders( url )
     -- luacheck: ignore
     local response, statusCode, headers =
         assert(Network.request{method='HEAD', url=url})
@@ -96,30 +96,38 @@ local function FileProcessSink( file, eventHandler )
     end
 end
 
-function Network.downloadFile( fileName, url, eventHandler )
+function Network.getResourceHeaders( url )
+    local rawHeaders = GetRawResourceHeaders(url)
+    local headers = {}
+    if rawHeaders['last-modified'] then
+        headers.modificationTime = ParseHttpDate(rawHeaders['last-modified'])
+    end
+    if rawHeaders['content-length'] then
+        headers.size = tonumber(rawHeaders['content-length'])
+    end
+    return headers
+end
+
+function Network.downloadFile( url, fileName, eventHandler )
     -- 1. obtain file modification timestamp
     local fileModificationTime = lfs.attributes(fileName, 'modification')
     -- 2. HEAD request to obtain url modification timestamp
-    local resourceHeaders = GetResourceHeaders(url)
-    local resourceModificationTime
-    if resourceHeaders['last-modified'] then
-        resourceModificationTime =
-            ParseHttpDate(resourceHeaders['last-modified'])
-    end
+    local resourceHeaders = Network.getResourceHeaders(url)
+    local resourceModificationTime = resourceHeaders.modificationTime
     -- 3. download url to file
     if not fileModificationTime or
        not resourceModificationTime or
        resourceModificationTime > fileModificationTime then
         local file = assert(io.open(fileName, 'wb'))
         local sink = FileProcessSink(file, eventHandler)
-        local size = tonumber(resourceHeaders['content-length'])
+        local size = resourceHeaders.size
         eventHandler:onDownloadBegin(fileName, url, size)
         assert(Network.request{url=url, sink=sink})
         eventHandler:onDownloadEnd()
     end
 end
 
-function Network.downloadAndUnpackZipFile( directory, url, eventHandler )
+function Network.downloadAndUnpackZipFile( url, directory, eventHandler )
     local tmpFileName = directory..'.zip.tmp'
     Network.downloadFile(tmpFileName, url, eventHandler)
     assert(lfs.mkdir(directory))

@@ -1,13 +1,11 @@
 local statemachine = require 'statemachine'
 local bind = require('packagemanager/misc').bind
+local DownloadManager = require 'packagemanager/downloadmanager'
 local PackageManager = require 'packagemanager/init'
 local Event = require 'packagemanager-gui/Event'
 local utils = require 'packagemanager-gui/utils'
 local xrc = require 'packagemanager-gui/xrc'
 
-
-local HighUpdateFrequency = 1/20
-local LowUpdateFrequency  = 1/5
 
 local ChangeListPresenter = {}
 ChangeListPresenter.__index = ChangeListPresenter
@@ -29,27 +27,13 @@ local function AllTasksAreComplete( tasks )
     return true
 end
 
-function ChangeListPresenter:updateUpdateFrequency()
-    local frequency
-    if self.state:is('applying') then
-        if self.mainFrameView:getCurrentPageView() == self.view then
-            frequency = HighUpdateFrequency
-        else
-            frequency = LowUpdateFrequency
-        end
-    else
-        frequency = nil
-    end
-    self.updateTimer:requestMinFrequency(self, frequency)
-end
-
 function ChangeListPresenter:updateProgress()
     local view = self.view
     local changeHandleMap = self.changeHandleMap
     for change, task in pairs(self.changeTaskMap) do
         local viewHandle = assert(changeHandleMap[change])
         local downloadTask = task.downloadTask
-        if downloadTask then
+        if downloadTask and downloadTask.status == 'running' then
             local properties = downloadTask.properties
             local bytesWritten = properties.bytesWritten
             if bytesWritten then
@@ -68,6 +52,33 @@ function ChangeListPresenter:_onEmpty()
     view:clearChanges()
 end
 
+function ChangeListPresenter:_retrieveChangeTotalBytes( change, viewHandle )
+    local view = self.view
+    local url = change.package.downloadUrl
+    local size = self.urlSizeMap[url]
+    if size then
+        view:setChangeTotalBytes(viewHandle, size)
+    else
+        local task = DownloadManager.createDownload(url)
+        task.events.complete = function()
+            local size = task.properties.headers.size
+            if size then
+                self.urlSizeMap[url] = size
+                view:freeze()
+                view:setChangeTotalBytes(viewHandle, size)
+                view:thaw()
+            end
+            self.updateTimer:removeUser()
+        end
+        task.events.fail = function()
+            self.updateTimer:removeUser()
+            error(task.error, 0)
+        end
+        self.updateTimer:addUser()
+        task:start()
+    end
+end
+
 function ChangeListPresenter:_onReady( changes )
     local view = self.view
 
@@ -77,6 +88,9 @@ function ChangeListPresenter:_onReady( changes )
     for _, change in ipairs(changes) do
         local handle = view:addChange(change.type, change.package.name, tostring(change.package.version))
         handleMap[change] = handle
+        if change.type == 'install' then
+            self:_retrieveChangeTotalBytes(change, handle)
+        end
     end
 
     self.changes = changes
@@ -91,25 +105,38 @@ function ChangeListPresenter:_onApplying()
     local tasks = PackageManager.applyChanges(self.changes)
     self.changeTaskMap = tasks
     self.applyingChanges = true
-    self:updateUpdateFrequency()
 
     local changeHandleMap = self.changeHandleMap
     for change, task in pairs(tasks) do
         local viewHandle = assert(changeHandleMap[change])
         task.events.downloadStarted = function()
-            view:freeze()
-            view:setChangeTotalBytes(viewHandle, task.downloadTask.properties.totalBytes)
-            view:thaw()
+            local totalBytes = task.downloadTask.properties.totalBytes
+            if totalBytes then
+                view:freeze()
+                view:setChangeTotalBytes(viewHandle, totalBytes)
+                view:thaw()
+            end
         end
+
         task.events.complete = function()
             view:freeze()
+            if task.downloadTask then
+                view:updateChangeBytesWritten(viewHandle, task.downloadTask.properties.bytesWritten)
+            end
             view:markChangeAsCompleted(viewHandle)
             self.packageStatusChanged({change.package})
             if AllTasksAreComplete(tasks) then
                 self.state:complete()
             end
             view:thaw()
+            self.updateTimer:removeUser()
         end
+        task.events.fail = function()
+            self.updateTimer:removeUser()
+            error(task.error, 0)
+        end
+        self.updateTimer:addUser()
+        task:start()
     end
 end
 
@@ -125,7 +152,6 @@ function ChangeListPresenter:_onDone()
     self:updateProgress()
 
     self.changeTaskMap = {}
-    self:updateUpdateFrequency()
 end
 
 return function( view,
@@ -142,6 +168,7 @@ return function( view,
     self.dirty = false
     self.changeHandleMap = {}
     self.changeTaskMap = {}
+    self.urlSizeMap = {}
 
     self.packageStatusChanged = Event() -- packages
 
@@ -224,7 +251,6 @@ return function( view,
                 view:thaw()
             end
         end
-        self:updateUpdateFrequency()
     end)
 
     updateTimer.updateEvent:addListener(function()

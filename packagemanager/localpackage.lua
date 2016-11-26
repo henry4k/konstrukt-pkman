@@ -59,6 +59,7 @@ function LocalPackageMT.__index( package, key )
 end
 
 function LocalPackage.readLocalPackage( fileName )
+    -- See 
     local packageInfo = assert(FS.parsePackageFileName(fileName))
     local package =
     {
@@ -163,7 +164,15 @@ function LocalPackage.remove( db, package )
     assert(package.localFileName, 'File name missing - maybe package is not an installed package?')
     LocalPackage.teardown(package)
     assert(FS.recursiveDelete(package.localFileName))
-    PackageDB.removePackage(db, package)
+
+    -- Remove any evidence that this was a local package once:
+    assert(getmetatable(package) == LocalPackageMT)
+    setmetatable(package, nil)
+    package.localFileName = nil
+    package._metadataLoaded = nil
+    -- This seems to be all we can do here.
+    -- The only accurate alternative seems to be
+    -- rebuilding the database completly.
 end
 
 

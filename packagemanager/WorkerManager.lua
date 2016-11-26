@@ -288,21 +288,28 @@ function TaskPropertiesMT:__newindex()
     error('Properties can not be changed.')
 end
 
-function Manager:createTask( arguments, events )
-    local task = Task(events)
+local function OnWorkerTaskStart( task, startParameter )
+    local manager = startParameter.workerManager
+    manager:_adaptWorkerCount()
+
+    local taskQueueEntry =
+    {
+        id = task.id,
+        arguments = startParameter.arguments
+    }
+    manager.masterLinda:send('tasks', taskQueueEntry)
+end
+
+function Manager:createTask( arguments )
+    local task = Task()
     task.id = self:_genTaskId()
     task.properties = setmetatable({ _task = task }, TaskPropertiesMT)
 
     table.insert(self.tasks, task)
 
-    self:_adaptWorkerCount()
-
-    local taskQueueEntry =
-    {
-        id = task.id,
-        arguments = arguments
-    }
-    self.masterLinda:send('tasks', taskQueueEntry)
+    task.startParameter = { workerManager = self,
+                            arguments = arguments }
+    task.events.start = OnWorkerTaskStart
 
     return task
 end

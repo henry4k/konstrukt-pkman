@@ -6,26 +6,28 @@ local Timer          = require 'packagemanager-gui/Timer'
 local UpdateTimer = {}
 UpdateTimer.__index = UpdateTimer
 
-function UpdateTimer:_setFrequency( seconds )
-    if seconds then
-        assert(seconds > 0)
-        self.timer:start(seconds)
+function UpdateTimer:_update()
+    if self.userCount > 0 then
+        self.timer:start(self.frequency)
     else
         self.timer:stop()
     end
 end
 
-function UpdateTimer:requestMinFrequency( module, seconds )
-    self.moduleFrequencies[module] = seconds
-    local minSeconds
-    for _, seconds in pairs(self.moduleFrequencies) do
-        if not minSeconds then
-            minSeconds = seconds
-        else
-            minSeconds = math.min(minSeconds, seconds)
-        end
-    end
-    self:_setFrequency(minSeconds)
+function UpdateTimer:setFrequency( seconds )
+    assert(seconds > 0, 'Seconds must be a positive number.')
+    self.frequency = seconds
+    self:_update()
+end
+
+function UpdateTimer:addUser()
+    self.userCount = self.userCount + 1
+    self:_update()
+end
+
+function UpdateTimer:removeUser()
+    self.userCount = self.userCount - 1
+    self:_update()
 end
 
 function UpdateTimer:destroy()
@@ -35,7 +37,8 @@ end
 return function( window )
     local self = setmetatable({}, UpdateTimer)
 
-    self.moduleFrequencies = {}
+    self.frequency = 1/20
+    self.userCount = 0
     self.updateEvent = Event()
 
     local function callback()

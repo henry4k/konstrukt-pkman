@@ -30,20 +30,32 @@ function MainPresenter:updateRepositoryIndices()
                                                          completedTaskCount,
                                                          #tasks))
         if completedTaskCount == #tasks then
-            self.updateTimer:requestMinFrequency(self, nil)
             self.statusBarPresenter:setMessage('indices', nil)
             PackageManager.buildPackageDB()
             self.packageDbUpdated()
         end
     end
+
+    local function completeAndUpdate()
+        self.updateTimer:removeUser()
+        update()
+    end
+
+    local function failAndUpdate( task )
+        self.updateTimer:removeUser()
+        update()
+        error(task.error, 0)
+    end
+
     if #tasks > 0 then
         for _, task in ipairs(tasks) do
-            task.events.started  = update
-            task.events.fail     = update
-            task.events.complete = update
+            self.updateTimer:addUser()
+            task.events.downloadStarted = update
+            task.events.complete        = completeAndUpdate
+            task.events.fail            = failAndUpdate
+            task:start()
         end
         update()
-        self.updateTimer:requestMinFrequency(self, 1/20)
     else
         PackageManager.buildPackageDB()
         self.packageDbUpdated()

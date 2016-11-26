@@ -8,11 +8,11 @@ local function DownloadProcessor()
     {
         __index =
         {
-            onDownloadBegin = function( self, fileName, url, totalBytes )
-                SetTaskProperty('fileName', fileName)
+            onDownloadBegin = function( self, url, fileName, totalBytes )
                 SetTaskProperty('url', url)
+                SetTaskProperty('fileName', fileName)
                 SetTaskProperty('totalBytes', totalBytes)
-                EmitTaskEvent('started')
+                EmitTaskEvent('downloadStarted')
             end,
 
             onDownloadProgress = function( self, bytesWritten )
@@ -24,12 +24,16 @@ local function DownloadProcessor()
         }
     }
 
-    return function( fileName, url, unpackZip )
-        local eventHandler = setmetatable({}, EventHandlerMT)
-        if unpackZip then
-            Network.downloadAndUnpackZipFile(fileName, url, eventHandler)
+    return function( url, fileName, unpackZip )
+        if fileName then
+            local eventHandler = setmetatable({}, EventHandlerMT)
+            if unpackZip then
+                Network.downloadAndUnpackZipFile(url, fileName, eventHandler)
+            else
+                Network.downloadFile(url, fileName, eventHandler)
+            end
         else
-            Network.downloadFile(fileName, url, eventHandler)
+            SetTaskProperty('headers', Network.getResourceHeaders(url))
         end
     end
 end
@@ -48,8 +52,8 @@ function DownloadManager.update()
     manager:update()
 end
 
-function DownloadManager.startDownload( fileName, url, unpackZip, eventHandler )
-    return manager:createTask({fileName, url, unpackZip}, eventHandler)
+function DownloadManager.createDownload( url, fileName, unpackZip )
+    return manager:createTask({url, fileName, unpackZip})
 end
 
 function DownloadManager.getActiveDownloads()
