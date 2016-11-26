@@ -15,10 +15,10 @@ CONTENTS += packagemanager-gui
 CONTENTS += $(GENERATED)
 CONTENTS += $(DEPENDENCIES)/*
 
-build.zip: build
+package.zip: package
 	zip -r $@ $<
 
-build: $(CONTENTS)
+package: $(CONTENTS)
 	rm -rf $@
 	mkdir $@
 ifeq ($(SYMLINK),0)
