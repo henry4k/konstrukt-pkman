@@ -120,23 +120,84 @@ end
 
 -- Query and apply changes {{{1
 
+local function GetCurrentPackageManager()
+    local source = debug.getinfo(1, 'S').source
+    local sourceFileName = source:match('^@(.+)$')
+    assert(sourceFileName, 'Can\'t retrieve own file name.')
+    local packageFileName = sourceFileName:match('^(.+)[/\\]packagemanager[/\\]init.lua$')
+    assert(packageFileName, 'init.lua isn\'t where it\'s expected to be.')
+    return assert(FS.parsePackageFileName(packageFileName))
+    -- Alternatively one could load the package metadata file.
+end
+
+local CurrentPackageManagerRequirement
+do
+    local success, result = pcall(GetCurrentPackageManager)
+    if success then
+        CurrentPackageManagerRequirement =
+        {
+            packageName = result.package,
+            versionRange = Version.versionToVersionRange(result.version)
+        }
+    else
+        io.stderr:write('Can\'t protect current package manager, as its name ',
+                        'and version cannot be found:\n', result, '\n')
+    end
+end
+
 function PackageManager.gatherRequiredPackages()
     local errors = {}
     local requiredPackages = {}
-    for _, requirement in ipairs(Config.requirements) do
-        local dependencies = {}
-        dependencies[requirement.packageName] = requirement.versionRange
-        local success, packagesOrErr = pcall(Dependency.resolve, db, dependencies)
-        if success then
-            for _, package in pairs(packagesOrErr) do
-                if not package.virtual then
-                    requiredPackages[package] = true
-                end
+
+    local function addPackages( packages )
+        for _, package in pairs(packages) do
+            if not package.virtual then
+                requiredPackages[package] = true
             end
-        else
-            table.insert(errors, packagesOrErr)
         end
     end
+
+    local function resolveRequirement( requirement )
+        local dependencies = {}
+        dependencies[requirement.packageName] = requirement.versionRange
+        local success, result = xpcall(Dependency.resolve, debug.traceback, db, dependencies)
+        if success then
+            return result
+        else
+            table.insert(errors, result)
+            return nil, result
+        end
+    end
+
+    -- Add requirement selected by the user:
+    for _, requirement in ipairs(Config.requirements) do
+        local packages = resolveRequirement(requirement)
+        if packages then
+            addPackages(packages)
+        end
+    end
+
+    -- Let the package manager upgrade itself:
+    do
+        local packages = resolveRequirement(Config.manager)
+        if packages then
+            addPackages(packages)
+            for _, package in pairs(packages) do
+                if package.name == Config.manager.packageName then
+                    LocalPackage.allowLauncherFor(package)
+                end
+            end
+        end
+    end
+
+    -- Protect the currently running package manager and its dependencies:
+    if CurrentPackageManagerRequirement then
+        local packages = resolveRequirement(CurrentPackageManagerRequirement)
+        if packages then
+            addPackages(packages)
+        end
+    end
+
     return requiredPackages, errors
 end
 

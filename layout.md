@@ -16,6 +16,11 @@
         },
         ...
     }
+    manager = -- defines which package manager shall be used
+    {
+        name = <package name>
+        versionRange = <version range>
+    }
     repositoryCacheDir = ... -- defaults to 'repositories'
 }
 ```

@@ -2,6 +2,10 @@ local FS = require 'packagemanager/fs'
 local Version = require 'packagemanager/version'
 
 
+local DefaultPackageManager = { packageName = 'packagemanager',
+                                versionRange = Version.parseVersionRange('*') }
+
+
 local Config = {}
 
 local ConfigMT = {}
@@ -30,6 +34,12 @@ local function JsonToInternal( json, internal )
                      { packageName = requirement.packageName,
                        versionRange = versionRange })
     end
+    if json.manager then
+        internal.manager = { packageName = json.manager.packageName,
+                             versionRange = Version.parseVersionRange(json.manager.versionRange) }
+    else
+        internal.manager = DefaultPackageManager
+    end
 end
 
 local function InternalToJson( internal, json )
@@ -42,6 +52,8 @@ local function InternalToJson( internal, json )
                      { packageName = requirement.packageName,
                        versionRange = tostring(requirement.versionRange) })
     end
+    json.manager = { packageName = internal.manager.packageName,
+                     versionRange = tostring(internal.manager.versionRange) }
 end
 
 function Config.load( fileName )

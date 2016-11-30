@@ -138,8 +138,15 @@ local function CreateLauncher( executableFileName )
     end
 end
 
+local LauncherEnabledPackage
+
+function LocalPackage.allowLauncherFor( package )
+    LauncherEnabledPackage = package
+end
+
 function LocalPackage.setup( package )
-    if package.type == 'package-manager' then
+    if package == LauncherEnabledPackage then
+        assert(package.type == 'package-manager')
         for executable, attributes in pairs(package.executables or {}) do
             if attributes.install then
                 local fileName = FS.path(package.localFileName, executable)
@@ -150,6 +157,9 @@ function LocalPackage.setup( package )
 end
 
 function LocalPackage.teardown( package )
+    -- Temporarily disabled as it is unknown which package owns the launcher.
+    -- TODO: How to obtain the owner?
+    --[[
     if package.type == 'package-manager' then
         for executable, attributes in pairs(package.executables or {}) do
             if attributes.install then
@@ -158,6 +168,7 @@ function LocalPackage.teardown( package )
             end
         end
     end
+    ]]
 end
 
 function LocalPackage.remove( db, package )
