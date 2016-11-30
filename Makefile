@@ -1,6 +1,6 @@
 include config.mk
 
-#VERSION = $(shell sed -n -e 's/.*"version": "\(.*\)".*/\1/p' meta.json)
+#VERSION = $(shell sed -n -e 's/.*"version": "\(.*\)".*/\1/p' package.json)
 SYMLINK = 0
 
 GENERATED += pkman$(EXECUTABLE_POSTFIX)
@@ -8,7 +8,7 @@ GENERATED += pkman-gui$(EXECUTABLE_POSTFIX)
 
 CONTENTS += README.md
 CONTENTS += LICENSE
-CONTENTS += meta.json
+CONTENTS += package.json
 CONTENTS += packagemanager
 CONTENTS += packagemanager-cli
 CONTENTS += packagemanager-gui

@@ -17,10 +17,10 @@ local function ExtractPackageMetadata( fileName )
     if not fileType then
         error('File not found.')
     elseif fileType == 'directory' then
-        return assert(FS.readJsonFile(FS.path(fileName, 'meta.json')))
+        return assert(FS.readJsonFile(FS.path(fileName, 'package.json')))
     else
         if fileName:match('%.zip$') then
-            return cjson.decode(assert(Zip.readFile(fileName, 'meta.json')))
+            return cjson.decode(assert(Zip.readFile(fileName, 'package.json')))
         else
             error('Not a package: '..fileName)
         end
