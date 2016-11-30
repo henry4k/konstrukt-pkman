@@ -472,6 +472,101 @@
 										</object>
 									</object>
 								</object>
+								<object class="notebookpage">
+									<label>Advanced</label>
+									<selected>0</selected>
+									<bitmap stock_id="wxART_ERROR" stock_client="wxART_MENU">undefined.png</bitmap>
+									<object class="wxPanel" name="advancedPanel">
+										<style>wxTAB_TRAVERSAL</style>
+										<enabled>0</enabled>
+										<hidden>1</hidden>
+										<object class="wxBoxSizer">
+											<orient>wxVERTICAL</orient>
+											<object class="sizeritem">
+												<option>1</option>
+												<flag>wxEXPAND | wxALL</flag>
+												<border>5</border>
+												<object class="wxScrolledWindow" name="m_scrolledWindow6">
+													<style>wxHSCROLL|wxVSCROLL</style>
+													<scrollrate>5,5</scrollrate>
+													<object class="wxBoxSizer">
+														<orient>wxVERTICAL</orient>
+														<object class="sizeritem">
+															<option>0</option>
+															<flag>wxALL|wxEXPAND</flag>
+															<border>5</border>
+															<object class="wxStaticBoxSizer">
+																<orient>wxHORIZONTAL</orient>
+																<label>Package Manager</label>
+																<object class="sizeritem">
+																	<option>1</option>
+																	<flag>wxEXPAND</flag>
+																	<border>5</border>
+																	<object class="wxFlexGridSizer">
+																		<rows>0</rows>
+																		<cols>2</cols>
+																		<vgap>0</vgap>
+																		<hgap>0</hgap>
+																		<growablecols>0,1</growablecols>
+																		<growablerows></growablerows>
+																		<object class="sizeritem">
+																			<option>0</option>
+																			<flag>wxALL</flag>
+																			<border>5</border>
+																			<object class="wxStaticText" name="m_staticText8">
+																				<label>Name</label>
+																				<wrap>-1</wrap>
+																			</object>
+																		</object>
+																		<object class="sizeritem">
+																			<option>0</option>
+																			<flag>wxALL</flag>
+																			<border>5</border>
+																			<object class="wxStaticText" name="m_staticText93">
+																				<label>Version Range</label>
+																				<wrap>-1</wrap>
+																			</object>
+																		</object>
+																		<object class="sizeritem">
+																			<option>0</option>
+																			<flag>wxALL|wxEXPAND</flag>
+																			<border>5</border>
+																			<object class="wxTextCtrl" name="m_textCtrl10">
+																				<value></value>
+																			</object>
+																		</object>
+																		<object class="sizeritem">
+																			<option>0</option>
+																			<flag>wxALL|wxEXPAND</flag>
+																			<border>5</border>
+																			<object class="wxTextCtrl" name="m_textCtrl11">
+																				<value></value>
+																			</object>
+																		</object>
+																	</object>
+																</object>
+															</object>
+														</object>
+													</object>
+												</object>
+											</object>
+											<object class="sizeritem">
+												<option>0</option>
+												<flag>wxEXPAND</flag>
+												<border>5</border>
+												<object class="wxStdDialogButtonSizer">
+													<object class="button">
+														<flag>wxALIGN_CENTER_HORIZONTAL|wxALL</flag>
+														<border>5</border>
+														<object class="wxButton" name="wxID_APPLY">
+															<label>&amp;Apply</label>
+														</object>
+													</object>
+												</object>
+											</object>
+										</object>
+									</object>
+								</object>
 							</object>
 						</object>
 					</object>
