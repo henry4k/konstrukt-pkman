@@ -1,9 +1,8 @@
 local argparse = require 'argparse'
 local utils = require 'packagemanager-cli/utils'
-local Config = require 'packagemanager/config'
+local PackageManager = require 'packagemanager/init'
 local Repository = require 'packagemanager/repository'
-local PackageDB = require 'packagemanager/packagedb'
-local Dependency = require 'packagemanager/dependency'
+
 
 local function Run( commands )
     local parser = argparse()
@@ -16,45 +15,85 @@ local function Run( commands )
         end
     end
     local arguments = parser:parse()
-    Config.load(arguments.config)
+    PackageManager.initialize(arguments.config)
     commands[arguments.command].execute(arguments)
+    PackageManager.finalize()
 end
 
 local commands = {}
-commands.list =
+commands.version =
 {
-    description = 'Print packages.',
+    description = 'Show package manager version.',
 
-    execute = function()
-        local db = utils.buildPackageDB{localPackages=true, remotePackages=true}
-        utils.markUserRequirements(db)
-        for package in PackageDB.packages(db) do
+    execute = function( arguments )
+        local info, err = PackageManager.getInfo()
+        if info then
+            print(string.format('%s %s',
+                                info.packageName,
+                                tostring(info.packageVersion)))
+        else
+            io.stderr:write('Unable to obtain version information: ', err, '\n')
+        end
+    end
+}
+commands.query =
+{
+    description = 'Search and print packages.',
+
+    setupParser = function( parser )
+        parser:argument('query', '', '')
+            :args(1)
+    end,
+
+    execute = function( arguments )
+        local packages = PackageManager.searchWithQueryString(arguments.query)
+        for _, package in pairs(packages) do
             local status = utils.getPackageInstallationStatus(package)
             print(string.format('%s %s %s', package.name, tostring(package.version), status))
         end
     end
 }
-commands.update =
+commands.sync =
 {
-    description = 'Synchronize package lists, install stuff.',
+    description = 'Synchronize package indices.',
 
     execute = function()
-        utils.updateRepos()
-        local db = utils.buildPackageDB{localPackages=true, remotePackages=true}
-        utils.installRequirements(db)
+        local tasks = PackageManager.updateRepositoryIndices()
+        error('TODO: Run tasks')
     end
 }
-commands.clean =
+commands['list-changes'] =
 {
-    description = 'Remove packages that aren\'t referenced by any group.',
+    description = 'Show changes.',
 
     execute = function()
-        local db = utils.buildPackageDB{localPackages=true, remotePackages=true}
-        utils.markUserRequirements(db)
-        utils.removeObsoletePackages(db)
+        local changes = PackageManager.gatherChanges()
+        for _, change in pairs(changes) do
+            local package = change.package
+            local changeType
+            if change.type == 'install' then
+                changeType = '+'
+            else
+                changeType = '-'
+            end
+            print(string.format('%s %s %s',
+                                changeType,
+                                package.name,
+                                tostring(package.version)))
+        end
     end
 }
-commands.index =
+commands.upgrade =
+{
+    description = 'Install and remove packages.',
+
+    execute = function()
+        local changes = PackageManager.gatherChanges()
+        local tasks = PackageManager.applyChanges(changes)
+        error('TODO: Run tasks')
+    end
+}
+commands['generate-index'] =
 {
     description = 'Generate a package index.  Needed for repositories.',
 
@@ -66,45 +105,28 @@ commands.index =
     end,
 
     execute = function( arguments )
-        local db = utils.buildPackageDB{localPackages=true}
+        PackageManager.buildPackageDB{localPackages=true}
+        local db = PackageManager.getPackageDB()
         Repository.saveIndexToFile(db, arguments.file, arguments.baseUrl)
     end
 }
+--[[
 commands.run =
 {
-    description = 'Start an appropriate engine with the given scenario.',
+    description = 'Start the given scenario using an appropriate engine.',
 
     setupParser = function( parser )
         parser:argument('scenario', '')
             :args(1)
-        parser:argument('package', 'Additional packages.')
-            :args('*')
+        --parser:argument('package', 'Additional packages.')
+        --    :args('*')
     end,
 
     execute = function( arguments )
-        local requirements = {}
-
-        local scenarioName, scenarioVersionRange =
-            utils.parseRequirement(arguments.scenario)
-        requirements[scenarioName] = scenarioVersionRange
-
-        for _, requirementExpr in ipairs(arguments.package) do
-            local packageName, packageVersionRange =
-                utils.parseRequirement(requirementExpr)
-            if requirements[packageName] then
-                print('"'..packageName..'" was mentioned already.  Using newest occurence.')
-            end
-            requirements[packageName] = packageVersionRange
-        end
-
-        local db = utils.buildPackageDB{localPackages=true}
-        local packages = Dependency.resolve(db, requirements)
-        if packages[scenarioName].type ~= 'scenario' then
-            error('You\'re trying to start "'..scenarioName..'", but it isn\'t a scenario.')
-        end
-
-        print('TODO: Find and start engine with appropriate arguments.')
+        local scenarioName = arguments.scenario
+        PackageManager.launchScenario(scenario)
     end
 }
+]]
 
 Run(commands)

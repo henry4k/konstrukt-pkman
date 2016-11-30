@@ -32,6 +32,30 @@ function PackageManager.update()
     DownloadManager.update()
 end
 
+local function GetCurrentPackageManager()
+    local source = debug.getinfo(1, 'S').source
+    local sourceFileName = source:match('^@(.+)$')
+    assert(sourceFileName, 'Can\'t retrieve own file name.')
+    local packageFileName = sourceFileName:match('^(.+)[/\\]packagemanager[/\\]init.lua$')
+    assert(packageFileName, 'init.lua isn\'t where it\'s expected to be.')
+    return assert(FS.parsePackageFileName(packageFileName))
+    -- Alternatively one could load the package metadata file.
+end
+
+function PackageManager.getInfo()
+    local success, result = pcall(GetCurrentPackageManager)
+    if success then
+        return { packageName    = result.package,
+                 packageVersion = result.version }
+    else
+        return nil, result
+    end
+end
+
+function PackageManager.getPackageDB()
+    return db
+end
+
 
 -- Read/edit repositories {{{1
 
@@ -120,18 +144,13 @@ end
 
 -- Query and apply changes {{{1
 
-local function GetCurrentPackageManager()
-    local source = debug.getinfo(1, 'S').source
-    local sourceFileName = source:match('^@(.+)$')
-    assert(sourceFileName, 'Can\'t retrieve own file name.')
-    local packageFileName = sourceFileName:match('^(.+)[/\\]packagemanager[/\\]init.lua$')
-    assert(packageFileName, 'init.lua isn\'t where it\'s expected to be.')
-    return assert(FS.parsePackageFileName(packageFileName))
-    -- Alternatively one could load the package metadata file.
-end
-
 local CurrentPackageManagerRequirement
-do
+
+local function GetCurrentPackageManagerRequirement()
+    if CurrentPackageManagerRequirement then
+        return CurrentPackageManagerRequirement
+    end
+
     local success, result = pcall(GetCurrentPackageManager)
     if success then
         CurrentPackageManagerRequirement =
@@ -192,7 +211,7 @@ function PackageManager.gatherRequiredPackages()
 
     -- Protect the currently running package manager and its dependencies:
     if CurrentPackageManagerRequirement then
-        local packages = resolveRequirement(CurrentPackageManagerRequirement)
+        local packages = resolveRequirement(GetCurrentPackageManagerRequirement())
         if packages then
             addPackages(packages)
         end
@@ -284,11 +303,12 @@ end
 
 -- Launch scenarios {{{1
 
-function PackageManager.launchScenario( package )
-    assert(package.type == 'scenario', 'Package is not a scenario.')
+function PackageManager.launchScenario( scenario )
+    assert(scenario.type == 'scenario', 'Package is not a scenario.')
 
     local dependencies = {}
-    dependencies[package.name] = Version.versionToVersionRange(package.version)
+    dependencies[scenario.name] = Version.versionToVersionRange(scenario.version)
+
     local packages = Dependency.resolve(db, dependencies)
 
     local engine
