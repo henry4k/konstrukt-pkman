@@ -38,12 +38,12 @@ function PackageDB.addPackage( db, package )
     local alternatives = Misc.createTableHierachy(db,
                                                   package.name,
                                                   tostring(package.version))
-    local key = Package.genKey(package)
-    local destPackage = alternatives[key]
+    local id = Package.genId(package)
+    local destPackage = alternatives[id]
     if destPackage then
         Package.mergePackages(destPackage, package)
     else
-        alternatives[key] = package
+        alternatives[id] = package
     end
 
     if package.provides then
@@ -69,10 +69,10 @@ function PackageDB.removePackage( db, package )
                                                     package.name,
                                                     tostring(package.version))
     assert(alternatives, 'Package does not exist in db.')
-    local key = Package.genKey(package)
-    assert(alternatives[key], 'Package alternative does not exist in db.')
-    assert(alternatives[key] == package, 'Package differs from db.')
-    alternatives[key] = nil
+    local id = Package.genId(package)
+    assert(alternatives[id], 'Package alternative does not exist in db.')
+    assert(alternatives[id] == package, 'Package differs from db.')
+    alternatives[id] = nil
 
     if package.provides then
         for providedPackage in PackageDB.packages(db, {provider = package}) do

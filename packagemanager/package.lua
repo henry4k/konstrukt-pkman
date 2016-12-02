@@ -36,7 +36,7 @@ function Package.buildBaseName( name, version )
     return string.format('%s.%s', name, tostring(version))
 end
 
-function Package.genKey( package )
+function Package.genId( package )
     if package.virtual then
         package = package.provider
     end
