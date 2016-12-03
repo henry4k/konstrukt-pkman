@@ -303,6 +303,8 @@ end
 
 -- Launch scenarios {{{1
 
+local function Falsy(v) return not v end
+
 function PackageManager.launchScenario( scenario )
     assert(scenario.type == 'scenario', 'Package is not a scenario.')
 
@@ -322,6 +324,7 @@ function PackageManager.launchScenario( scenario )
     assert(engine, 'Scenario has no engine as (indirect) dependency.')
 
     print('TODO: launch '..engine.localFileName)
+    --LocalPackage.launchScenario(engine, {headless = Falsy}, scenario, ...)
 end
 
 

@@ -54,13 +54,14 @@ An actual installable package.
     operatingSystem = ... -- windows, linux, macosx, ...
     architecture = ... -- x86, x86_64, ...
 
-    -- Specific to executable packages:
-    executables
+    -- Specific to engine and package-manager packages:
+    mainExecutables = -- these are the "entry points" to the engine or package manager
     {
         <file name> =
         {
-            install = true -- install executable
-        },
+            headless = true -- does not need a gui (defaults to false)
+            debug    = true -- executable has debug symbols (defaults to false)
+        }
         ...
     }
 
