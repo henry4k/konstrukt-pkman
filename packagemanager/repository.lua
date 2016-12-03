@@ -92,6 +92,7 @@ local function AddPackageToRepoData( repoData, package )
     local preparedPackage = {}
     preparedPackage.type = package.type
     preparedPackage.version = tostring(package.version)
+    preparedPackage.description = package.description
 
     if package.dependencies then
         local preparedDependencies = {}
