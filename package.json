@@ -1,11 +1,13 @@
 {
-   "type": "native",
-   "version": "0.0.0",
-   "executables":
-   {
-       "pkman":
-       {
-           "install": true
-       }
-   }
+    "name": "pkman",
+    "version": "0.0.0",
+    "description": "The package manager.",
+    "type": "package-manager",
+    "operatingSystem": "windows",
+    "architecture": "x86_64",
+    "mainExecutables":
+    {
+        "pkman.exe": { "headless": true },
+        "pkman-gui.exe": {}
+    }
 }

@@ -1,6 +1,8 @@
 include config.mk
 
-#VERSION = $(shell sed -n -e 's/.*"version": "\(.*\)".*/\1/p' package.json)
+NAME    = $(shell sed -n -e 's/.*"name": "\(.*\)".*/\1/p'    package.json)
+VERSION = $(shell sed -n -e 's/.*"version": "\(.*\)".*/\1/p' package.json)
+ARCHIVE ?= $(NAME).$(VERSION).zip
 SYMLINK = 0
 
 GENERATED += pkman$(EXECUTABLE_POSTFIX)
@@ -15,8 +17,11 @@ CONTENTS += packagemanager-gui
 CONTENTS += $(GENERATED)
 CONTENTS += $(DEPENDENCIES)/*
 
-package.zip: package
-	zip -r $@ $<
+
+all: $(ARCHIVE)
+
+$(ARCHIVE): package
+	cd package && zip --compression-method deflate -9 -r ../$@ *
 
 package: $(CONTENTS)
 	rm -rf $@
@@ -35,4 +40,4 @@ endif
 clean:
 	rm -rf build $(GENERATED)
 
-.PHONY: clean
+.PHONY: all clean
