@@ -262,7 +262,9 @@ function ChangeTaskFunctions.install( task, change )
     local fileName
     local downloadTask
 
-    if package.type == 'native' then
+    if package.type == 'native' or
+       package.type == 'engine' or
+       package.type == 'package-manager' then
         fileName = FS.path(installPath, baseName)
         downloadTask = DownloadManager.createDownload(package.downloadUrl, fileName, true)
     else
