@@ -30,7 +30,7 @@ commands.version =
         if info then
             print(string.format('%s %s',
                                 info.packageName,
-                                tostring(info.packageVersion)))
+                                tostring(info.packageVersion or '')))
         else
             io.stderr:write('Unable to obtain version information: ', err, '\n')
         end
