@@ -110,9 +110,9 @@ local function PropertyMatchesComparator( property, comparator )
     end
 end
 
-local function ExecutableMatchesComparators( executable, comparators )
+local function ExecutableMatchesComparators( attributes, comparators )
     for propertyName, comparator in pairs(comparators) do
-        local property = executable[propertyName]
+        local property = attributes[propertyName]
         if not PropertyMatchesComparator(property, comparator) then
             return false
         end
@@ -122,7 +122,7 @@ end
 
 function LocalPackage.getMainExecutable( package, comparators )
     for executable, attributes in pairs(package.mainExecutables or {}) do
-        if ExecutableMatchesComparators(executable, comparators) then
+        if ExecutableMatchesComparators(attributes, comparators) then
             return executable
         end
     end
@@ -171,7 +171,7 @@ end
 local function UpdateLauncher( name, package, executable )
     local launcherFileName = GetLauncherFileName(name)
     if executable then
-        local executableFileName = FS.path(package.localFileName, exectuable)
+        local executableFileName = FS.path(package.localFileName, executable)
         CreateLauncher(launcherFileName, executableFileName)
     else
         os.remove(launcherFileName)

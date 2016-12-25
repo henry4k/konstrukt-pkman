@@ -129,7 +129,7 @@ end
 
 function Network.downloadAndUnpackZipFile( url, directory, eventHandler )
     local tmpFileName = directory..'.zip.tmp'
-    Network.downloadFile(tmpFileName, url, eventHandler)
+    Network.downloadFile(url, tmpFileName, eventHandler)
     assert(lfs.mkdir(directory))
     Zip.unpack(tmpFileName, directory)
     assert(os.remove(tmpFileName))
