@@ -38,6 +38,6 @@ endif
 	lua5.1 build-tools/wxluafreeze.lua $(DEPENDENCIES)/wxLuaFreeze$(EXECUTABLE_POSTFIX) $< $@
 
 clean:
-	rm -rf build $(GENERATED)
+	rm -rf $(GENERATED) package $(ARCHIVE)
 
 .PHONY: all clean

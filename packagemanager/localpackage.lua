@@ -74,7 +74,7 @@ end
 local function IsLocalPackage( fileName )
     local mode = lfs.attributes(fileName, 'mode')
     if mode == 'directory' then
-        local metaFileName = FS.path(fileName, 'meta.json')
+        local metaFileName = FS.path(fileName, 'package.json')
         return lfs.attributes(metaFileName, 'mode') == 'file'
     elseif mode == 'file' then
         return fileName:match('%.zip$')

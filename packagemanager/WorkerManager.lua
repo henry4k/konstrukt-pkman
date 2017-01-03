@@ -72,6 +72,8 @@ local function WorkerFn( ThreadName, TaskQueueLinda, TaskLinda, Processor )
                        errMsg = result }
         end
     end
+
+    return 'ok'
 end
 local DefaultWorkerCount = 1
 
@@ -196,8 +198,7 @@ end
 local function HandleThreadError( manager, worker )
     local thread = worker.thread
     if thread.status == 'error' then
-        local _, err = thread:join()
-        error(string.format('Error in %s worker: %s', manager.typeName, err))
+        local value = thread[1] -- the value will never be assigned
     end
 end
 

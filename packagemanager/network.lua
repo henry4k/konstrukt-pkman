@@ -1,6 +1,6 @@
 local lfs = require 'lfs'
 local http = require 'socket.http'
-local https = require 'ssl.https'
+local hasHttps, https = pcall(require, 'ssl.https')
 local Zip = require 'packagemanager/zip'
 
 
@@ -10,8 +10,9 @@ local MaxRedirections = 1
 
 local function HttpHttpsRequest( options )
     if options.url:match('^https') then
-       options.protocol = 'sslv23'
-       options.options = 'all'
+        assert(hasHttps, 'https not supported: '..https)
+        options.protocol = 'sslv23'
+        options.options = 'all'
         -- TODO: Certificate validation is currently disabled, as I'm not sure
         --       where/how to store the certificates yet.
         --options.verify = {'peer', 'client_once'}
