@@ -143,7 +143,7 @@ local UnixLauncherTemplate = [[
 
 local WindowsLauncherTemplate = [[
 @echo off
-'%s' --config '%s' %%*
+"%s" --config "%s" %%*
 ]]
 
 local function CreateLauncher( launcherFileName, executableFileName )

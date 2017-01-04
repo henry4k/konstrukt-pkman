@@ -47,7 +47,7 @@ local function ExtractFile( stat, destination, zipFile, i )
 
     local destFileName = FS.path(destination, stat.name)
     local sourceFile = assert(zipFile:open(i))
-    local destFile = assert(io.open(destFileName, 'w'))
+    local destFile = assert(io.open(destFileName, 'wb'))
     while true do
         local chunk = sourceFile:read(1024)
         if chunk and #chunk > 0 then
