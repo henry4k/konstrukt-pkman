@@ -1,3 +1,1 @@
-DEPENDENCIES= dependencies
-OS = windows
-EXECUTABLE_POSTFIX = .exe
+DEPENDENCIES = dependencies

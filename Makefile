@@ -1,10 +1,11 @@
 include config.mk
+include $(DEPENDENCIES)/config.mk
 
-NAME    = $(shell sed -n -e 's/.*"name": "\(.*\)".*/\1/p'    package.json)
-VERSION = $(shell sed -n -e 's/.*"version": "\(.*\)".*/\1/p' package.json)
-ARCHIVE ?= $(NAME).$(VERSION).zip
+VERSION = 0.0.0
+ARCHIVE ?= pkman-$(SYSTEM_NAME)-$(ARCHITECTURE).$(VERSION).zip
 SYMLINK = 0
 
+GENERATED += package.json
 GENERATED += pkman$(EXECUTABLE_POSTFIX)
 GENERATED += pkman-gui$(EXECUTABLE_POSTFIX)
 
@@ -17,11 +18,17 @@ CONTENTS += packagemanager-gui
 CONTENTS += $(GENERATED)
 CONTENTS += $(DEPENDENCIES)/*
 
-
 all: $(ARCHIVE)
 
 $(ARCHIVE): package
 	cd package && zip --compression-method deflate -9 -r ../$@ *
+
+export VERSION
+export SYSTEM_NAME
+export ARCHITECTURE
+export EXECUTABLE_POSTFIX
+package.json:
+	./gen-package.json.sh
 
 package: $(CONTENTS)
 	rm -rf $@
