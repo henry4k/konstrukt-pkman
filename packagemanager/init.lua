@@ -38,18 +38,11 @@ local function GetCurrentPackageManager()
     assert(sourceFileName, 'Can\'t retrieve own file name.')
     local packageFileName = sourceFileName:match('^(.+)[/\\]packagemanager[/\\]init.lua$')
     assert(packageFileName, 'init.lua isn\'t where it\'s expected to be.')
-    return assert(FS.parsePackageFileName(packageFileName))
-    -- Alternatively one could load the package metadata file.
+    return LocalPackage.readLocalPackage(packageFileName)
 end
 
 function PackageManager.getInfo()
-    local success, result = pcall(GetCurrentPackageManager)
-    if success then
-        return { packageName    = result.package,
-                 packageVersion = result.version }
-    else
-        return nil, result
-    end
+    return pcall(GetCurrentPackageManager)
 end
 
 function PackageManager.getPackageDB()

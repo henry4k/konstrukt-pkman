@@ -29,8 +29,8 @@ commands.version =
         local info, err = PackageManager.getInfo()
         if info then
             print(string.format('%s %s',
-                                info.packageName,
-                                tostring(info.packageVersion or '')))
+                                info.name,
+                                tostring(info.version or '')))
         else
             io.stderr:write('Unable to obtain version information: ', err, '\n')
         end
