@@ -60,6 +60,42 @@ local function TryParseSingle( expr )
     end
 end
 
+---
+-- From [NPM](https://docs.npmjs.com/misc/semver#tilde-ranges-123-12-1): 
+-- Allows patch-level changes if a minor version is specified on the comparator.
+-- Allows minor-level changes if not.
+local function TryParseTilde( expr )
+    local version = expr:match('^~([0-9.]+)$')
+    if version then
+        local range = { min = ParseVersion(version, 0),
+                        max = ParseVersion(version, math.huge) }
+        range.max.patch = math.huge
+        return range
+    end
+end
+
+---
+-- From [NPM](https://docs.npmjs.com/misc/semver#caret-ranges-123-025-004): 
+-- Allows changes that do not modify the left-most non-zero digit in the
+-- [major, minor, patch] tuple. In other words, this allows patch and minor
+-- updates for versions 1.0.0 and above, patch updates for versions 0.X
+-- >=0.1.0, and *no* updates for versions 0.0.X.
+local function TryParseCaret( expr )
+    local version = expr:match('^%^([0-9.]+)$')
+    if version then
+        local min = ParseVersion(version, 0)
+        local max
+        if min.major > 0 then
+            max = semver(min.major, math.huge, math.huge)
+        elseif min.minor > 0 then
+            max = semver(min.major, min.minor, math.huge)
+        else
+            max = min
+        end
+        return { min = min, max = max }
+    end
+end
+
 local function TryParseRange( expr )
     local minVersion, maxVersion = expr:match('^([0-9.]+)%s*-%s*([0-9.]+)$')
     if minVersion then
@@ -90,6 +126,7 @@ end
 local RangeMT = { __tostring = function( range ) return range.expression end }
 
 function Version.parseVersionRange( rangeExpr )
+    -- *       =>  0.0.0 - INF.INF.INF
     -- a.b.c - x.y.z
     -- a.b.c   =>  a.b.c - a.b.c
     -- a.b     =>  a.b.0 - a.b.INF
@@ -98,9 +135,13 @@ function Version.parseVersionRange( rangeExpr )
     -- >=a.b.c =>  a.b.c - INF.INF.INF
     -- <a.b.c  =>  0.0.0 - a.b.c-1
     -- <=a.b.c =>  0.0.0 - a.b.c
+    -- ~a.b.c  =>  a.b.c - a.b.INF
+    -- ^a.b.c  =>  a.b.c - a.INF.INF
     rangeExpr = Misc.trim(rangeExpr)
     local range = TryParseAny(rangeExpr) or
                   TryParseSingle(rangeExpr) or
+                  TryParseTilde(rangeExpr) or
+                  TryParseCaret(rangeExpr) or
                   TryParseRange(rangeExpr) or
                   TryParseComparator(rangeExpr)
     assert(range, 'Malformatted range expression.')

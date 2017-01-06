@@ -3,7 +3,7 @@
 require 'Test.More'
 local Version = require 'packagemanager/version'
 
-plan(42)
+plan(114)
 
 local function canParse( rangeExpr, min, max )
     local range = Version.parseVersionRange(rangeExpr)
@@ -15,24 +15,24 @@ local function canParse( rangeExpr, min, max )
     is(range.max.patch, max[3], 'can parse '..rangeExpr..': max.patch')
 end
 
-local function canCompose( rangeExpr )
-    local range = Version.parseVersionRange(rangeExpr)
-    is(tostring(range), rangeExpr, 'can compose '..rangeExpr)
-end
+local i = math.huge
 
-local inf = math.huge
-
-canParse('42',     {42,0,0}, {42,inf,inf})
-canParse('42-43',  {42,0,0}, {43,inf,inf})
-canParse('>42',    {42,0,1}, {inf,inf,inf})
-canParse('>=42',   {42,0,0}, {inf,inf,inf})
-canParse('<42',    {0,0,0},  {41,inf,inf})
-canParse('<=42.0', {0,0,0},  {42,0,inf})
-
-canCompose('42')
-canCompose('42 - 43')
-canCompose('> 42')
-canCompose('>= 42')
-canCompose('< 42')
-canCompose('<= 42')
-
+canParse('*',      {0,0,0}, {i,i,i})
+canParse('1',      {1,0,0}, {1,i,i})
+canParse('1.2',    {1,2,0}, {1,2,i})
+canParse('1.2.3',  {1,2,3}, {1,2,3})
+canParse('~1.2.3', {1,2,3}, {1,2,i})
+canParse('~1.2',   {1,2,0}, {1,2,i})
+canParse('~1',     {1,0,0}, {1,i,i})
+canParse('^1.2.3', {1,2,3}, {1,i,i})
+canParse('^1.2',   {1,2,0}, {1,i,i})
+canParse('^1.0.0', {1,0,0}, {1,i,i})
+canParse('^0.1.2', {0,1,2}, {0,1,i})
+canParse('^0.1',   {0,1,0}, {0,1,i})
+canParse('^0.0.1', {0,0,1}, {0,0,1})
+canParse('^0.0.0', {0,0,0}, {0,0,0})
+canParse('2-3',    {2,0,0}, {3,i,i})
+canParse('>2',     {2,0,1}, {i,i,i})
+canParse('>=2',    {2,0,0}, {i,i,i})
+canParse('<3',     {0,0,0}, {2,i,i})
+canParse('<=3.0',  {0,0,0}, {3,0,i})
