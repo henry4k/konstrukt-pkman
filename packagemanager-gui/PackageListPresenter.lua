@@ -1,15 +1,17 @@
+local PackageDB = require 'packagemanager/packagedb'
 local PackageManager = require 'packagemanager/init'
 
 
 local PackageListPresenter = {}
 PackageListPresenter.__index = PackageListPresenter
 
-local function GetPackageStatus( package, isRequired )
+local function GetPackageStatus( package, requiredPackages )
     if package.virtual then
-        package = package.provider
+        package = assert(PackageDB.getPackageById(PackageManager.getPackageDB(),
+                                                  package.providerId))
     end
 
-    if isRequired then
+    if requiredPackages[package] then -- if required
         if package.localFileName then
             return 'package-installed-updated', 1
         else
@@ -33,7 +35,7 @@ local function ExecuteQuery( view, query )
     resultList:freeze()
         resultList:clear()
         for _, package in ipairs(results) do
-            local statusIcon, statusSortValue = GetPackageStatus(package, requiredPackages[package])
+            local statusIcon, statusSortValue = GetPackageStatus(package, requiredPackages)
             resultList:addRow(package,
                               {{ icon = statusIcon,
                                  value = statusSortValue },

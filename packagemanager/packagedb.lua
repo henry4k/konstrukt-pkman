@@ -26,9 +26,10 @@ local function CreateVirtualPackage( name, version, providingPackage )
     local versionRange = Version.versionToVersionRange(providingPackage.version)
     return { name = name,
              version = version,
+             type = providingPackage.type,
              virtual = true,
              dependencies = { [providingPackage.name] = versionRange },
-             provider = providingPackage }
+             providerId = Package.genId(providingPackage) }
 end
 
 function PackageDB.addPackage( db, package )
@@ -38,12 +39,12 @@ function PackageDB.addPackage( db, package )
     local alternatives = Misc.createTableHierachy(db,
                                                   package.name,
                                                   tostring(package.version))
-    local id = Package.genId(package)
-    local destPackage = alternatives[id]
+    local providerId = package.providerId or ''
+    local destPackage = alternatives[providerId]
     if destPackage then
         Package.mergePackages(destPackage, package)
     else
-        alternatives[id] = package
+        alternatives[providerId] = package
     end
 
     if package.provides then
@@ -75,9 +76,24 @@ function PackageDB.removePackage( db, package )
     alternatives[id] = nil
 
     if package.provides then
-        for providedPackage in PackageDB.packages(db, {provider = package}) do
+        for providedPackage in PackageDB.packages(db, {providerId = id}) do
+            assert(providedPackage.virtual)
             PackageDB.removePackage(db, providedPackage)
         end
+    end
+end
+
+function PackageDB.getPackageById( db, id )
+    local name, version, providerId = Package.parseId(id)
+    if name then
+        local package = Misc.traverseTableHierachy(db, name, version, providerId)
+        if package then
+            return package
+        else
+            return nil, 'No package for this ID: '..id
+        end
+    else
+        return nil, 'Can\'t parse ID: '..id
     end
 end
 

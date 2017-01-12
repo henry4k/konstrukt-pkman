@@ -37,10 +37,14 @@ function Package.buildBaseName( name, version )
 end
 
 function Package.genId( package )
-    if package.virtual then
-        package = package.provider
-    end
-    return string.format('%s.%s', package.name, package.version)
+    return string.format('%s/%s/%s', package.name, package.version, package.providerId or '')
+end
+
+---
+-- @return It returns `name`, `version` and `providerId`. The provider id may be an emtpy string.
+-- Returns `nil` if parsing failed.
+function Package.parseId( id )
+    return id:match('^(.-)/(.-)/(.*)$')
 end
 
 

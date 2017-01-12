@@ -120,7 +120,9 @@ function Repository.saveIndexToFile( db, fileName, baseUrl )
         packages = {}
     }
     for package in PackageDB.packages(db) do
-        AddPackageToRepoData(repoData, package)
+        if not package.virtual then
+            AddPackageToRepoData(repoData, package)
+        end
     end
     FS.writeJsonFile(fileName, repoData)
 end
