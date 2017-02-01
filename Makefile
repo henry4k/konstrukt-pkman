@@ -47,4 +47,10 @@ endif
 clean:
 	rm -rf $(GENERATED) package $(ARCHIVE)
 
-.PHONY: all clean
+test:
+	rm -f luacov.stats.out
+	prove test
+	luacov-console ./packagemanager
+	luacov-console -s
+
+.PHONY: all clean test

@@ -1,6 +1,6 @@
 #!/usr/bin/env lua
 -- vim: set filetype=lua:
-require 'Test.More'
+dofile 'test/common.lua'
 local Mock = require 'test.mock.Mock'
 local FakeRequire = require 'test/FakeRequire'
 

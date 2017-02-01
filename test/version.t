@@ -1,6 +1,6 @@
 #!/usr/bin/env lua
 -- vim: set filetype=lua:
-require 'Test.More'
+dofile 'test/common.lua'
 local Version = require 'packagemanager/version'
 
 plan(114)

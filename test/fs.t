@@ -1,6 +1,6 @@
 #!/usr/bin/env lua
 -- vim: set filetype=lua:
-require 'Test.More'
+dofile 'test/common.lua'
 local FS = require 'packagemanager/fs'
 
 plan(24)
