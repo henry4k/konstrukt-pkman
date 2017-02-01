@@ -48,18 +48,11 @@ local function ExtractFile( stat, destination, zipFile, i )
     local destFileName = FS.path(destination, stat.name)
     local sourceFile = assert(zipFile:open(i))
     local destFile = assert(io.open(destFileName, 'wb'))
-    while true do
-        local chunk = sourceFile:read(1024)
-        if chunk and #chunk > 0 then
-            destFile:write(chunk)
-        else
-            break
-        end
-    end
+    Misc.writeFile(destFile, sourceFile)
     sourceFile:close()
     destFile:close()
 
-    if Misc.os == 'unix' then
+    if Misc.operatingSystem == 'unix' then
         -- Test if executable bit is set for the user:
         local attributes = zipFile:get_external_attributes(i)
         if bit32.btest(attributes, 2^22) then

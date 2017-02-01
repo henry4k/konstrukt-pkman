@@ -1,14 +1,14 @@
+local fs = require 'packagemanager/fs'
 local wx = require 'wx'
 local xmlRes = wx.wxXmlResource.Get()
 local utils = require 'packagemanager-gui/utils'
-local here  = require 'packagemanager-gui/here'
 
 
 local xrc = {}
 
 function xrc.initialize()
     xmlRes:InitAllHandlers()
-    xmlRes:Load(here('layout.xrc'))
+    xmlRes:Load(fs.here('layout.xrc'))
 end
 
 function xrc.createFrame( name, parent )

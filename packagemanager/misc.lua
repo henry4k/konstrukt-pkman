@@ -93,9 +93,26 @@ function Misc.readProcess( program )
 end
 
 if package.config:sub(1,1) == '\\' then
-    Misc.os = 'windows'
+    Misc.operatingSystem = 'windows'
 else
-    Misc.os = 'unix'
+    Misc.operatingSystem = 'unix'
+end
+
+local ProcessorArchitecture
+function Misc.getProcessorArchitecture()
+    if not ProcessorArchitecture then
+        if Misc.operatingSystem == 'windows' then
+            local out = Misc.readProcess('reg query "HKLM\\System\\CurrentControlSet\\Control\\Session Manager\\Environment" /v PROCESSOR_ARCHITECTURE')
+            local winArch = (out or ''):match('PROCESSOR_ARCHITECTURE%s+REG_SZ%s+([^%s]+)')
+            local mapping = {AMD64 = 'x86_64',
+                             x64   = 'x86_64',
+                             x86   = 'i686'}
+            ProcessorArchitecture = assert(mapping[winArch], 'Unknown processor architecture.')
+        else
+            ProcessorArchitecture = Misc.readProcess('uname -m')
+        end
+    end
+    return ProcessorArchitecture
 end
 
 function Misc.joinLists( ... )
@@ -125,6 +142,17 @@ function Misc.bind( fn, ... )
         return function( ... )
             local args = Misc.joinLists(staticArgs, {...})
             return fn(unpack(args))
+        end
+    end
+end
+
+function Misc.writeFile( destFile, sourceFile )
+    while true do
+        local chunk = sourceFile:read(1024)
+        if chunk and #chunk > 0 then
+            destFile:write(chunk)
+        else
+            break
         end
     end
 end

@@ -194,11 +194,6 @@ function PackageManager.gatherRequiredPackages()
         local packages = resolveRequirement(Config.manager)
         if packages then
             addPackages(packages)
-            for _, package in pairs(packages) do
-                if package.name == Config.manager.packageName then
-                    LocalPackage.allowLauncherFor(package)
-                end
-            end
         end
     end
 

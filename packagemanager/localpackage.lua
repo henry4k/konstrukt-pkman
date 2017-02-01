@@ -123,16 +123,21 @@ end
 function LocalPackage.getMainExecutable( package, comparators )
     for executable, attributes in pairs(package.mainExecutables or {}) do
         if ExecutableMatchesComparators(attributes, comparators) then
-            return executable
+            return executable, attributes
         end
     end
 end
 
-local function GetLauncherFileName( launcherBaseName )
-    if Misc.os == 'windows' then
-        return FS.path(Config.baseDir, launcherBaseName)..'.bat'
+local function GetLauncherFileName( launcherBaseName, headless )
+    local basePath = FS.path(Config.baseDir, launcherBaseName)
+    if Misc.operatingSystem == 'windows' then
+        if headless then
+            return basePath..'.bat'
+        else
+            return basePath..'.exe'
+        end
     else
-        return FS.path(Config.baseDir, launcherBaseName)
+        return basePath
     end
 end
 
@@ -141,38 +146,60 @@ local UnixLauncherTemplate = [[
 '%s' --config '%s' $@
 ]]
 
-local WindowsLauncherTemplate = [[
+local WindowsHeadlessLauncherTemplate = [[
 @echo off
 "%s" --config "%s" %%*
 ]]
 
-local function CreateLauncher( launcherFileName, executableFileName )
+local function CreateUnixLauncher( launcherFileName, executableFileName )
     local launcherFile = assert(io.open(launcherFileName, 'w'))
-    if Misc.os == 'windows' then
-        launcherFile:write(string.format(WindowsLauncherTemplate,
-                                         executableFileName,
-                                         Config.fileName))
-        launcherFile:close()
+    launcherFile:write(string.format(UnixLauncherTemplate,
+                                     executableFileName,
+                                     Config.fileName))
+    launcherFile:close()
+    os.execute(string.format('chmod +x "%s"', launcherFileName))
+end
+
+local function CreateWindowsHeadlessLauncher( launcherFileName, executableFileName )
+    local launcherFile = assert(io.open(launcherFileName, 'wt'))
+    launcherFile:write(string.format(WindowsHeadlessLauncherTemplate,
+                                     executableFileName,
+                                     Config.fileName))
+    launcherFile:close()
+end
+
+local function CreateWindowsGuiLauncher( launcherFileName, executableFileName )
+    local launcherFile = assert(io.open(launcherFileName, 'wb'))
+
+    local launcherTemplateFile = assert(io.open(fs.here('../launcher.exe'), 'rb'))
+    Misc.writeFile(launcherFile, launcherTemplateFile)
+    launcherTemplateFile:close()
+
+    local payload = executableFileName
+    local tag = string.format('<launcher:%03d>', #payload)
+    launcherFile:write(payload, tag)
+
+    launcherFile:close()
+end
+
+local function CreateLauncher( launcherFileName, executableFileName, headless )
+    if Misc.operatingSystem == 'windows' then
+        if headless then
+            CreateWindowHeadlessLauncher(launcherFileName, executableFileName)
+        else
+            CreateWindowGuiLauncher(launcherFileName, executableFileName)
+        end
     else
-        launcherFile:write(string.format(UnixLauncherTemplate,
-                                         executableFileName,
-                                         Config.fileName))
-        launcherFile:close()
-        os.execute(string.format('chmod +x "%s"', launcherFileName))
+        CreateUnixLauncher(launcherFileName, executableFileName)
     end
 end
 
-local LauncherEnabledPackage
-
-function LocalPackage.allowLauncherFor( package )
-    LauncherEnabledPackage = package
-end
-
-local function UpdateLauncher( name, package, executable )
-    local launcherFileName = GetLauncherFileName(name)
+local function UpdateLauncher( name, package, executable, executableAttributes )
+    local headless = executableAttributes.headless
+    local launcherFileName = GetLauncherFileName(name, headless)
     if executable then
         local executableFileName = FS.path(package.localFileName, executable)
-        CreateLauncher(launcherFileName, executableFileName)
+        CreateLauncher(launcherFileName, executableFileName, headless)
     else
         os.remove(launcherFileName)
     end
@@ -181,8 +208,7 @@ end
 local function Falsy(v) return not v end
 
 function LocalPackage.setup( package )
-    if package == LauncherEnabledPackage then
-        assert(package.type == 'package-manager')
+    if package.type == 'package-manager' then
         UpdateLauncher('pkman',     package, LocalPackage.getMainExecutable(package, {headless = true}))
         UpdateLauncher('pkman-gui', package, LocalPackage.getMainExecutable(package, {headless = Falsy}))
     end

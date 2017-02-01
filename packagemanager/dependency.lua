@@ -16,6 +16,7 @@ local function CopyContext( ctx )
     return
     {
         db = ctx.db,
+        comparators = ctx.comparators,
         selectedPackages = Misc.copyTable(ctx.selectedPackages),
         openRequirements = Misc.copyTable(ctx.openRequirements),
         closedRequirements = Misc.copyTable(ctx.closedRequirements)
@@ -33,8 +34,8 @@ local function GetAvailablePackages( ctx, requirement )
         return {selectedPackage}
     else
         -- we didn't select a package yet, so all packages are possible
-        local packages =
-            PackageDB.gatherPackages(ctx.db, { name = requirement.packageName })
+        ctx.comparators.name = requirement.packageName
+        local packages = PackageDB.gatherPackages(ctx.db, ctx.comparators)
         if not packages or #packages == 0 then
             error(string.format('No package statisfies requirement: %s %s', requirement.packageName, requirement.versionRange))
         end
@@ -102,6 +103,12 @@ local function ResolveRequirement( ctx )
     end
 end
 
+local function nilOr( value )
+    return function(v)
+        return not v or v == value
+    end
+end
+
 --- Compute list, which statisfies all dependencies.
 --
 -- @param dependencies
@@ -116,9 +123,11 @@ function Dependency.resolve( db, dependencies )
     local ctx =
     {
         db = db,
+        comparators        = { operatingSystem = nilOr(Misc.operatingSystem),
+                               architecture    = nilOr(Misc.getProcessorArchitecture()) },
         selectedPackages   = {},
         openRequirements   = {},
-        closedRequirements = {}
+        closedRequirements = {},
     }
     AddDependenciesAsRequirements(ctx, dependencies)
     return assert(ResolveRequirement(ctx), '???')

@@ -1,6 +1,5 @@
 local wx = require 'wx'
 local utils = require 'packagemanager-gui/utils'
-local here  = require 'packagemanager-gui/here'
 local fs    = require 'packagemanager/fs'
 
 
@@ -184,7 +183,7 @@ function ArtProvider:CreateBitmap( id, client, size )
                 end
                 local size = wx.wxArtProvider.GetSizeHint(client, true)
                 local baseName = iconSource.file:gsub('%?', size:GetWidth())
-                local fileName = here(fs.path('icons', baseName))
+                local fileName = fs.here(fs.path('icons', baseName))
                 result = wx.wxBitmap(fileName)
             else
                 error(id..': Unknown icon source '..iconSource.type..'.')

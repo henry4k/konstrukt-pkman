@@ -123,7 +123,14 @@ local function TryParseComparator( expr )
     end
 end
 
-local RangeMT = { __tostring = function( range ) return range.expression end }
+local RangeMT = {}
+function RangeMT:__tostring()
+    return self.expression
+end
+function RangeMT:__eq( other )
+    return self.min == other.min and
+           self.max == other.max
+end
 
 function Version.parseVersionRange( rangeExpr )
     -- *       =>  0.0.0 - INF.INF.INF
