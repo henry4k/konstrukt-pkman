@@ -8,7 +8,6 @@ local NativePath   = require('packagemanager/path').native
 local Version      = require 'packagemanager/version'
 local Package      = require 'packagemanager/package'
 local Config       = require 'packagemanager/config'
-local PackageDB    = require 'packagemanager/packagedb'
 
 
 local Repository = {}
@@ -69,7 +68,7 @@ function Repository.loadIndexFromFile( db, fileName )
             PreprocessLoadedPackageEntry(package, packageName)
             package.downloadUrl =
                 BuildPackageDownloadUrl(baseUrl, packageName, package.version)
-            PackageDB.addPackage(db, package)
+            db:addPackage(package)
         end
     end
 end
@@ -120,7 +119,7 @@ function Repository.saveIndexToFile( db, fileName, baseUrl )
         baseUrl = baseUrl,
         packages = {}
     }
-    for package in PackageDB.packages(db) do
+    for package in db:packages() do
         if not package.virtual then
             AddPackageToRepoData(repoData, package)
         end

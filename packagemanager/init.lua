@@ -6,7 +6,7 @@ local Repository = require 'packagemanager/repository'
 local DownloadManager = require 'packagemanager/downloadmanager'
 local LocalPackage = require 'packagemanager/localpackage'
 local Dependency = require 'packagemanager/dependency'
-local PackageDB = require 'packagemanager/packagedb'
+local PackageDB = require 'packagemanager/PackageDB'
 local Package = require 'packagemanager/package'
 local Version = require 'packagemanager/version'
 local Task = require 'packagemanager/Task'
@@ -82,7 +82,7 @@ end
 -- - remotePackages: read package information from repository indices
 function PackageManager.buildPackageDB( options )
     options = options or {localPackages=true, remotePackages=true}
-    db = PackageDB.create()
+    db = PackageDB()
     if options.localPackages then
         LocalPackage.gatherInstalledPackages(db, Config.searchPaths)
     end
@@ -117,7 +117,7 @@ end
 -- @return
 -- A list of packages in no particular order.
 function PackageManager.search( comparators )
-    return PackageDB.gatherPackages(db, comparators)
+    return db:gatherPackages(comparators)
 end
 
 ---

@@ -1,4 +1,3 @@
-local PackageDB = require 'packagemanager/packagedb'
 local Documentation = require 'packagemanager/documentation/init'
 local PackageManager = require 'packagemanager/init'
 
@@ -8,8 +7,8 @@ PackageListPresenter.__index = PackageListPresenter
 
 local function GetPackageStatus( package, requiredPackages )
     if package.virtual then
-        package = assert(PackageDB.getPackageById(PackageManager.getPackageDB(),
-                                                  package.providerId))
+        local db = PackageManager.getPackageDB()
+        package = assert(db:getPackageById(package.providerId))
     end
 
     if requiredPackages[package] then -- if required

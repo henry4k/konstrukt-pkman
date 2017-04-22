@@ -4,7 +4,6 @@ local Config    = require 'packagemanager/config'
 local NativePath = require('packagemanager/path').native
 local PackageManager = require 'packagemanager/init'
 local Package   = require 'packagemanager/package'
-local PackageDB = require 'packagemanager/packagedb'
 local TreeView  = require 'packagemanager/TreeView'
 local Utils     = require 'packagemanager/documentation/utils'
 local Markdown  = require 'packagemanager/documentation/markdown'
@@ -71,7 +70,7 @@ end
 local function ResolveVirtualPackage( package )
     if package.providerId then
         local db = PackageManager.getPackageDB()
-        package = assert(PackageDB.getPackageById(db, package.providerId))
+        package = assert(db:getPackageById(package.providerId))
     end
     return package
 end

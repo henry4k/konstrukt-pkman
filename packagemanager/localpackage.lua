@@ -6,7 +6,6 @@ local FS        = require 'packagemanager/fs'
 local NativePath = require('packagemanager/path').native
 local Zip       = require 'packagemanager/zip'
 local Version   = require 'packagemanager/version'
-local PackageDB = require 'packagemanager/packagedb'
 local Config    = require 'packagemanager/config'
 local Package   = require 'packagemanager/package'
 
@@ -128,7 +127,7 @@ function LocalPackage.gatherInstalledPackages( db, searchPaths )
     end
 
     for _, package in pairs(packages) do
-        PackageDB.addPackage(db, package)
+        db:addPackage(package)
     end
 end
 

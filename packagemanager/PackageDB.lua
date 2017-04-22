@@ -4,23 +4,7 @@ local Version = require 'packagemanager/version'
 
 
 local PackageDB = {}
-
-function PackageDB.create()
-    return {}
-end
-
-local function RemovePackageAlternative( db,
-                                         providedName,
-                                         providedVersion,
-                                         package )
-    local alternatives = Misc.traverseTableHierachy(db,
-                                                    providedName,
-                                                    tostring(providedVersion))
-    assert(alternatives, 'Package does not exist in db.')
-    assert(alternatives[package.name], 'Package alternative does not exist in db.')
-    assert(alternatives[package.name] == package, 'Package differs from db.')
-    alternatives[package.name] = nil
-end
+PackageDB.__index = PackageDB
 
 local function CreateVirtualPackage( name, version, providingPackage )
     local versionRange = Version.versionToVersionRange(providingPackage.version)
@@ -32,11 +16,11 @@ local function CreateVirtualPackage( name, version, providingPackage )
              providerId = Package.genId(providingPackage) }
 end
 
-function PackageDB.addPackage( db, package )
+function PackageDB:addPackage( package )
     assert(package.name,    'Package has no name.')
     assert(package.version, 'Package has no version.')
 
-    local alternatives = Misc.createTableHierachy(db,
+    local alternatives = Misc.createTableHierachy(self._packages,
                                                   package.name,
                                                   tostring(package.version))
     local providerId = package.providerId or ''
@@ -52,41 +36,41 @@ function PackageDB.addPackage( db, package )
             local virtualPackage = CreateVirtualPackage(providedName,
                                                         providedVersion,
                                                         package)
-            PackageDB.addPackage(db, virtualPackage)
+            self:addPackage(virtualPackage)
         end
     end
 end
 
-function PackageDB.mergeIndices( destination, source )
-    for _, versions in pairs(source) do
+function PackageDB:mergeIndices( source )
+    for _, versions in pairs(source._packages) do
         for _, package in pairs(versions) do
-            PackageDB.addPackage(destination, package)
+            self:addPackage(package)
         end
     end
 end
 
-function PackageDB.removePackage( db, package )
-    local alternatives = Misc.traverseTableHierachy(db,
+function PackageDB:removePackage( package )
+    local alternatives = Misc.traverseTableHierachy(self._packages,
                                                     package.name,
                                                     tostring(package.version))
-    assert(alternatives, 'Package does not exist in db.')
+    assert(alternatives, 'Package does not exist in DB.')
     local id = Package.genId(package)
-    assert(alternatives[id], 'Package alternative does not exist in db.')
-    assert(alternatives[id] == package, 'Package differs from db.')
+    assert(alternatives[id], 'Package alternative does not exist in DB.')
+    assert(alternatives[id] == package, 'Package differs from DB.')
     alternatives[id] = nil
 
     if package.provides then
-        for providedPackage in PackageDB.packages(db, {providerId = id}) do
+        for providedPackage in self:packages{providerId = id} do
             assert(providedPackage.virtual)
-            PackageDB.removePackage(db, providedPackage)
+            self:removePackage(providedPackage)
         end
     end
 end
 
-function PackageDB.getPackageById( db, id )
+function PackageDB:getPackageById( id )
     local name, version, providerId = Package.parseId(id)
     if name then
-        local package = Misc.traverseTableHierachy(db, name, version, providerId)
+        local package = Misc.traverseTableHierachy(self._packages, name, version, providerId)
         if package then
             return package
         else
@@ -115,12 +99,12 @@ local function PackageMatchesComparators( package, comparators )
     return true
 end
 
-local function DBQueryCoro( db, comparators )
+local function DBQueryCoro( self, comparators )
     comparators = comparators or {}
 
     if type(comparators.name) == 'string' then
         -- Optimized search:
-        local versions = db[comparators.name]
+        local versions = self._packages[comparators.name]
         if versions then
             for _, alternatives in pairs(versions) do
                 for _, package in pairs(alternatives) do
@@ -132,7 +116,7 @@ local function DBQueryCoro( db, comparators )
         end
     else
         -- Generic search:
-        for packageName, versions in pairs(db) do
+        for packageName, versions in pairs(self._packages) do
             for _, alternatives in pairs(versions) do
                 for _, package in pairs(alternatives) do
                     if PackageMatchesComparators(package, comparators) then
@@ -144,17 +128,19 @@ local function DBQueryCoro( db, comparators )
     end
 end
 
-function PackageDB.packages( db, comparators )
-    return coroutine.wrap(function() DBQueryCoro(db, comparators) end)
+function PackageDB:packages( comparators )
+    return coroutine.wrap(function() DBQueryCoro(self, comparators) end)
 end
 
-function PackageDB.gatherPackages( db, comparators )
+function PackageDB:gatherPackages( comparators )
     local result = {}
-    for package in PackageDB.packages(db, comparators) do
+    for package in self:packages(comparators) do
         table.insert(result, package)
     end
     return result
 end
 
 
-return PackageDB
+return function()
+    return setmetatable({ _packages = {} }, PackageDB)
+end

@@ -1,6 +1,5 @@
 local Misc    = require 'packagemanager/misc'
 local Version = require 'packagemanager/version'
-local PackageDB = require 'packagemanager/packagedb'
 
 
 -- Requirement:
@@ -35,7 +34,7 @@ local function GetAvailablePackages( ctx, requirement )
     else
         -- we didn't select a package yet, so all packages are possible
         ctx.comparators.name = requirement.packageName
-        local packages = PackageDB.gatherPackages(ctx.db, ctx.comparators)
+        local packages = ctx.db:gatherPackages(ctx.comparators)
         if not packages or #packages == 0 then
             error(string.format('No package statisfies requirement: %s %s', requirement.packageName, requirement.versionRange))
         end
