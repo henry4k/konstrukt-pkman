@@ -44,6 +44,6 @@ end
 
 
 plan(19)
-testResolver('simple',  'test/simple.json',  {A='1'}, {A='1', B='2', C='2'})
-testResolver('cyclic',  'test/cyclic.json',  {A='1'}, {A='1', B='2', C='2'})
-testResolver('virtual', 'test/virtual.json', {A='1'}, {A='1', B='2'})
+testResolver('simple',  'test/dependency/simple.json',  {A='1'}, {A='1', B='2', C='2'})
+testResolver('cyclic',  'test/dependency/cyclic.json',  {A='1'}, {A='1', B='2', C='2'})
+testResolver('virtual', 'test/dependency/virtual.json', {A='1'}, {A='1', B='2'})
