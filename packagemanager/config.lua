@@ -1,4 +1,5 @@
 local FS = require 'packagemanager/fs'
+local NativePath = require('packagemanager/path').native
 local Version = require 'packagemanager/version'
 
 
@@ -26,6 +27,7 @@ local function JsonToInternal( json, internal )
     internal.searchPaths = json.searchPaths or {}
     internal.repositories = json.repositories or {}
     internal.repositoryCacheDir = json.repositoryCacheDir or 'repositories'
+    internal.documentationCacheDir = json.documentationCacheDir or 'documentation'
     internal.requirements = {}
     for _, requirement in ipairs(json.requirements or {}) do
         local versionRangeExpr = requirement.versionRange
@@ -46,6 +48,7 @@ local function InternalToJson( internal, json )
     json.searchPaths = internal.searchPaths
     json.repositories = internal.repositories
     json.repositoryCacheDir = internal.repositoryCacheDir
+    json.documentationCacheDir = internal.documentationCacheDir
     json.requirements = {}
     for _, requirement in ipairs(internal.requirements) do
         table.insert(json.requirements,
@@ -63,7 +66,7 @@ function Config.load( fileName )
     assert(not Config.content, 'Reloading is not supported.')
 
     fileName = FS.makeAbsolutePath(fileName)
-    local baseDir = FS.dirName(fileName)
+    local baseDir = NativePath.dirName(fileName)
     Config.fileName = fileName
     Config.baseDir = baseDir
     Config.dirty = false

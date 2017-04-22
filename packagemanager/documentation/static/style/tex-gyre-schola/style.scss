@@ -1,0 +1,33 @@
+$here: 'style/tex-gyre-schola';
+
+@font-face
+{
+    font-family: 'TeX Gyre Schola';
+    src: url("#{$here}/regular.woff");
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face
+{
+    font-family: 'TeX Gyre Schola';
+    src: url("#{$here}/bold.woff");
+    font-weight: bold;
+    font-style: normal;
+}
+
+@font-face
+{
+    font-family: 'TeX Gyre Schola';
+    src: url("#{$here}/italic.woff");
+    font-weight: normal;
+    font-style: italic;
+}
+
+@font-face
+{
+    font-family: 'TeX Gyre Schola';
+    src: url("#{$here}/bolditalic.woff");
+    font-weight: bold;
+    font-style: italic;
+}

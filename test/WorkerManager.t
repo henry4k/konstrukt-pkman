@@ -1,7 +1,7 @@
 #!/usr/bin/env lua
 -- vim: set filetype=lua:
 dofile 'test/common.lua'
-local JobManager = require 'packagemanager/jobmanager'
+local WorkerManager = require 'packagemanager/WorkerManager'
 local lanes = require 'lanes'
 
 
@@ -11,32 +11,36 @@ local function processor()
     local lanes = require 'lanes'
 
     return function( work )
+        SetTaskProperty('work', 1337)
         while work > 0 do
             local chunk = math.min(work, 1)
             work = work - chunk
             lanes.sleep(chunk)
-            SetJobProperty('work', work)
+            SetTaskProperty('work', work)
         end
     end
 end
 
-local manager = JobManager.create{typeName = 'test',
-                                  processor = processor,
-                                  minWorkerCount = 2,
-                                  maxWorkerCount = 4}
-local jobs = {}
+local manager = WorkerManager{typeName = 'test',
+                              processor = processor,
+                              --[[minWorkerCount = 2,
+                              maxWorkerCount = 4]]}
+local tasks = {}
 for i = 1, 5 do
-    local job = manager:createJob({3}, {})
-    table.insert(jobs, job)
+    local task = manager:createTask({3})
+    task:start()
+    table.insert(tasks, task)
 end
 
 while true do
-    lanes.sleep(1)
+    lanes.sleep(0.5)
     manager:update()
-    local runningJobs = 0
+    local runningTasks = 0
     --io.stdout:write('\r')
-    for i, job in ipairs(jobs) do
-        local work = job.properties.work
+    for i, task in ipairs(tasks) do
+        local work = task.properties.work
+        print(type(work), work)
+        --[[
         local status
         if work then
             status = string.format('% 1d', work)
@@ -44,12 +48,13 @@ while true do
             status = '  '
         end
         io.stdout:write(tostring(i), ':', status, '  ')
-        if job.status == 'running' then
-            runningJobs = runningJobs + 1
+        if task.status == 'running' then
+            runningTasks = runningTasks + 1
         end
+        ]]
     end
     io.stdout:write('\n')
-    if runningJobs == 0 then
+    if runningTasks == 0 then
         --io.stdout:write('\n')
         break
     else

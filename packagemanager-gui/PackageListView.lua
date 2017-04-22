@@ -44,6 +44,10 @@ function PackageListView:enableSaveButton( enabled )
     self.saveButton:Enable(enabled)
 end
 
+function PackageListView:enableDocumentationButton( enabled )
+    self.documentationButton:Enable(enabled)
+end
+
 function PackageListView:enableLaunchButton( enabled )
     self.launchButton:Enable(enabled)
 end
@@ -73,6 +77,7 @@ return function( rootWindow )
     self.deleteEvent         = Event()
     self.reloadEvent         = Event()
     self.saveEvent           = Event()
+    self.documentationEvent  = Event()
     self.launchEvent         = Event()
 
     self.rootWindow = rootWindow
@@ -116,6 +121,10 @@ return function( rootWindow )
     local saveButton = xrc.getWindow(rootWindow, 'saveButton')
     self.saveButton = saveButton
     utils.connect(saveButton, 'command_button_clicked', self.saveEvent)
+
+    local documentationButton = xrc.getWindow(rootWindow, 'documentationButton')
+    self.documentationButton = documentationButton
+    utils.connect(documentationButton, 'command_button_clicked', self.documentationEvent)
 
     local launchButton = xrc.getWindow(rootWindow, 'launchButton')
     self.launchButton = launchButton

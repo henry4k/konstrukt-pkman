@@ -23,7 +23,8 @@ local function showError( message, level, parentWindow )
     end
 
     local report = debug.traceback(message, level+1)
-
+    print(report)
+--[[
     messageText:SetLabel(message)
     reportText:SetValue(report)
 
@@ -55,6 +56,7 @@ local function showError( message, level, parentWindow )
     showReport(false)
     frame:ClearBackground()
     frame:Show()
+    ]]
 end
 
 return showError

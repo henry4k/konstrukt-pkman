@@ -1,57 +1,18 @@
 local lfs = require 'lfs'
 local cjson = require 'cjson'
-local semver = require 'semver'
-local Misc = require 'packagemanager/misc'
+local Path = require('packagemanager/path').native
 
 
 local FS = {}
 
-FS.dirSep = package.config:sub(1,1)
-if not FS.dirSep:match('[/\\]') then
-    FS.dirSep = '/'
-    io.stderr:write('Failed to get directory separator.  Assuming "/"')
-end
-
-function FS.path( ... )
-    local elements = {...}
-    for i = 2, #elements do
-        assert(FS.isRelativePath(elements[i]))
-    end
-    return table.concat(elements, FS.dirSep)
-end
-
-function FS.isAbsolutePath( filePath )
-    return filePath:match('^/') or filePath:match('^.:\\')
-end
-
-function FS.isRelativePath( filePath )
-    return not FS.isAbsolutePath(filePath)
-end
-
 function FS.makeAbsolutePath( filePath, baseDir )
-    if FS.isRelativePath(filePath) then
+    if Path.isRelative(filePath) then
         baseDir = baseDir or FS.getCurrentDirectory()
-        assert(FS.isAbsolutePath(baseDir))
-        return FS.path(baseDir, filePath)
+        assert(Path.isAbsolute(baseDir))
+        return Path.join(baseDir, filePath)
     else
         return filePath
     end
-end
-
-function FS.dirName( filePath )
-    return filePath:match('^(.+)[/\\]') or '.'
-end
-
-function FS.baseName( filePath )
-    return filePath:match('([^/\\]+)$')
-end
-
-function FS.extension( filePath )
-    return filePath:match('%.([^./\\]+)$')
-end
-
-function FS.stripExtension( filePath )
-    return filePath:match('(.+)%.[^./\\]*$') or filePath
 end
 
 function FS.fileExists( fileName )
@@ -79,50 +40,12 @@ function FS.writeJsonFile( fileName, value )
     return FS.writeFile(fileName, cjson.encode(value))
 end
 
-function FS.parseFileName( fileName )
-    local path, pathEnd = fileName:match('^(.*)[/\\]()')
-    pathEnd = pathEnd or 1
-    local extensionStart, extension = fileName:match('()%.([^.]*)$', pathEnd)
-    extensionStart = extensionStart or 0
-    local baseName = fileName:sub(pathEnd, extensionStart-1)
-    return {path=path, baseName=baseName, extension=extension}
-end
-
-function FS.parsePackageFileName( fileName )
-    local result, err = FS.parseFileName(fileName)
-    if not result then
-        return nil, err
-    end
-
-    local baseName = result.baseName
-    if not baseName or #baseName == 0 then
-        return nil, 'No base name.'
-    end
-
-    local package, packageEnd = baseName:match('^([^.]+)()')
-    if not package then
-        return nil, 'No package name.'
-    end
-    result.package = package
-
-    local version = baseName:match('^%.(.+)', packageEnd)
-    if version then
-        local success, resultOrErr = pcall(semver, version)
-        if not success then
-            return nil, resultOrErr
-        end
-        result.version = resultOrErr
-    end
-
-    return result
-end
-
 function FS.recursiveDelete( filePath )
     if lfs.symlinkattributes(filePath, 'mode') == 'directory' then
         for entry in lfs.dir(filePath) do
             if entry ~= '.' and
                entry ~= '..' then
-                FS.recursiveDelete(FS.path(filePath, entry))
+                FS.recursiveDelete(Path.join(filePath, entry))
             end
         end
     end
@@ -141,14 +64,14 @@ local function MakeDirIfNotExists( path )
 end
 
 function FS.makeDirectoryPath( base, path )
-    for seperatorPos in path:gmatch('()[/\\]') do
+    for seperatorPos in path:gmatch('()['..Path.directorySeparators..']') do
         local subPath = path:sub(1, seperatorPos-1)
-        local success, errMsg = MakeDirIfNotExists(FS.path(base, subPath))
+        local success, errMsg = MakeDirIfNotExists(Path.join(base, subPath))
         if not success then
             return false, errMsg
         end
     end
-    return MakeDirIfNotExists(FS.path(base, path))
+    return MakeDirIfNotExists(Path.join(base, path))
 end
 
 function FS.changeDirectory( path )
@@ -168,10 +91,11 @@ local function GetSourcePath( stackIndex )
     end
 end
 
+local SourceDirPattern = '^(.*)['..Path.directorySeparators..']'
 local function GetSourceDir( stackIndex )
     local sourcePath = GetSourcePath(stackIndex+1)
     if sourcePath then
-        return sourcePath:match('^(.*)[/\\]')
+        return sourcePath:match(SourceDirPattern)
     end
 end
 
@@ -180,7 +104,7 @@ function FS.here( subPath )
     local path = GetSourceDir(2)
     if path then
         if subPath then
-            return string.format('%s%s%s', path, FS.dirSep, subPath)
+            return Path.join(path, subPath)
         else
             return path
         end

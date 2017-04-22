@@ -3,6 +3,8 @@ local zip = require 'brimworks.zip'
 local bit32 = require 'bit32'
 local Misc = require 'packagemanager/misc'
 local FS = require 'packagemanager/fs'
+local NativePath = require('packagemanager/path').native
+local ZipPath = require('packagemanager/path').windows
 
 
 local Zip = {}
@@ -30,7 +32,7 @@ function Zip.readFile( zipFileName, entryName )
 end
 
 local function IsDirectory( name )
-    return name:sub(-1) == FS.dirSep
+    return name:match('['..ZipPath.directorySeparators..']$')
 end
 
 local function ExtractDirectory( stat, destination )
@@ -40,12 +42,13 @@ local function ExtractDirectory( stat, destination )
 end
 
 local function ExtractFile( stat, destination, zipFile, i )
-    local entryDirName = FS.dirName(stat.name)
+    local entryDirName = ZipPath.dirName(stat.name)
     if entryDirName then
         assert(FS.makeDirectoryPath(destination, entryDirName))
     end
 
-    local destFileName = FS.path(destination, stat.name)
+    local nativeName = ZipPath.convert(stat.name, NativePath)
+    local destFileName = NativePath.join(destination, nativeName)
     local sourceFile = assert(zipFile:open(i))
     local destFile = assert(io.open(destFileName, 'wb'))
     Misc.writeFile(destFile, sourceFile)
@@ -65,7 +68,6 @@ function Zip.unpack( zipFileName, destination )
     local zipFile = assert(zip.open(zipFileName))
     for i = 1, zipFile:get_num_files() do
         local stat = assert(zipFile:stat(i))
-        stat.name = stat.name:gsub('[/\\]', FS.dirSep) -- normalize directory separators
         if IsDirectory(stat.name) then
             ExtractDirectory(stat, destination)
         else

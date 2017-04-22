@@ -2,12 +2,13 @@ local crypto = require 'crypto'
 local basexx = require 'basexx'
 local Config = require 'packagemanager/config'
 local FS = require 'packagemanager/fs'
+local NativePath = require('packagemanager/path').native
 
 
 local Security = {}
 
 local function GetPublicKeyFileName( identity )
-    return FS.path(Config.publicKeyDir, identity..'.pub')
+    return NativePath.join(Config.publicKeyDir, identity..'.pub')
 end
 
 local function ReadSignature( fileName )

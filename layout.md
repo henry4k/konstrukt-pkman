@@ -22,6 +22,7 @@
         versionRange = <version range>
     }
     repositoryCacheDir = ... -- defaults to 'repositories'
+    documentationCacheDir = ... -- defaults to 'documentation'
 }
 ```
 
@@ -75,7 +76,7 @@ An actual installable package.
 ```
 
 
-## Job
+## Task
 
 ```
 {

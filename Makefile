@@ -1,5 +1,6 @@
 include config.mk
 include $(DEPENDENCIES)/config.mk
+include packagemanager/documentation/static/makefile.mk
 
 VERSION = 0.0.0
 ARCHIVE ?= pkman-$(SYSTEM_NAME)-$(ARCHITECTURE).$(VERSION).zip

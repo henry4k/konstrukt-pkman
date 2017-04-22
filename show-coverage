@@ -1,0 +1,5 @@
+#!/bin/sh
+rm -f luacov.stats.out
+prove test
+luacov-console ./packagemanager
+luacov-console -s

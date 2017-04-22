@@ -1,0 +1,103 @@
+$break-small: 990px;
+$box-padding: 10px;
+
+@viewport
+{
+    width: device-width;
+    user-zoom: fixed;
+}
+
+body
+{
+    margin: 0;
+}
+
+.limited-width
+{
+    margin: auto;
+    padding-left:  $box-padding;
+    padding-right: $box-padding;
+    @media (min-width: $break-small) { max-width: $break-small; }
+}
+
+header
+{
+    nav > *
+    {
+        display: inline-block;
+        margin-top:    0.5em;
+        margin-bottom: 0.5em;
+        margin-left:   0;
+        margin-right:  1em;
+    }
+
+    h1
+    {
+        display: inline;
+        margin: 0;
+    }
+}
+
+main
+{
+    padding-top: $box-padding;
+
+    display: flex;
+    align-items: flex-start;
+    align-content: flex-start;
+
+    flex-direction: column;
+    @media (min-width: $break-small)
+    {
+        flex-direction: row;
+    }
+}
+
+main nav
+{
+    flex: 0 0 auto;
+    min-width: 200px;
+    @media (min-width: $break-small)
+    {
+        position: sticky;
+        top: $box-padding;
+    }
+
+    padding-top:    $box-padding;
+    padding-bottom: $box-padding;
+    padding-left:   $box-padding;
+    padding-right:  0;
+
+    ul
+    {
+        margin: 0;
+        padding-left: 1em;
+    }
+
+    a
+    {
+        box-sizing: border-box;
+        display: inline-block;
+        width: 100%;
+    }
+}
+
+article
+{
+    flex: 1 0 0;
+
+    padding-left: $box-padding;
+
+    img
+    {
+        max-width: 100%;
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+    }
+}
+
+pre
+{
+    padding: $box-padding;
+}

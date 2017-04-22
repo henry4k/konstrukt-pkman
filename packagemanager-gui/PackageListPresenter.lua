@@ -1,4 +1,5 @@
 local PackageDB = require 'packagemanager/packagedb'
+local Documentation = require 'packagemanager/documentation/init'
 local PackageManager = require 'packagemanager/init'
 
 
@@ -81,6 +82,7 @@ return function( view,
             view:enableDeleteButton(false) -- There are no user created packages yet
             view:enableReloadButton(false) -- dito
             view:enableSaveButton(false) -- dito
+            view:enableDocumentationButton(Documentation.canGenerate(package))
             view:enableDetailsPanel(true)
         else
             view:setName('')
@@ -89,6 +91,12 @@ return function( view,
         end
         view:thaw()
         currentPackage = package
+    end)
+
+    view.documentationEvent:addListener(function()
+        assert(currentPackage)
+        assert(Documentation.canGenerate(currentPackage))
+        print(Documentation.generate(currentPackage))
     end)
 
     view.launchEvent:addListener(function()

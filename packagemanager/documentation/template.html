@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8"/>
+        <title>{{title}}</title>
+        <link href="style.css" rel="stylesheet" type="text/css">
+    </head>
+    <body>
+        <header>
+            <nav class="limited-width" role="navigation">
+                <a href=""><h1>Konstrukt</h1></a>
+                {{#menu}}
+                <a href="{{url}}">{{{name}}}</a>
+                {{/menu}}
+            </nav>
+        </header>
+        <main class="limited-width">
+            <nav role="complementary">
+                <ul>
+                {{#index}}
+                    <li>
+                        <a href="#{{id}}">{{{name}}}</a>
+                        <ul>
+                        {{#children}}
+                            <li><a href="#{{id}}">{{{name}}}</a></li>
+                        {{/children}}
+                        </ul>
+                    </li>
+                {{/index}}
+                </ul>
+            </nav>
+            <article role="main">
+                {{{content}}}
+            </article>
+        </main>
+        <footer>
+            <p>(c)2016 Henry Kielmann</p>
+        </footer>
+    </body>
+</html>

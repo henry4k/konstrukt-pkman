@@ -4,6 +4,7 @@ local semver = require 'semver'
 local LocalPackage = require 'packagemanager/localpackage'
 local DownloadManager = require 'packagemanager/downloadmanager'
 local FS           = require 'packagemanager/fs'
+local NativePath   = require('packagemanager/path').native
 local Version      = require 'packagemanager/version'
 local Package      = require 'packagemanager/package'
 local Config       = require 'packagemanager/config'
@@ -13,7 +14,7 @@ local PackageDB    = require 'packagemanager/packagedb'
 local Repository = {}
 
 local function BuildRepoIndexFileName( url )
-    return FS.path(Config.repositoryCacheDir, escapeUrl(url)..'.json')
+    return NativePath.join(Config.repositoryCacheDir, escapeUrl(url)..'.json')
 end
 
 function Repository.removeUnusedIndices()
@@ -23,7 +24,7 @@ function Repository.removeUnusedIndices()
     end
 
     for entry in lfs.dir(Config.repositoryCacheDir) do
-        local entryPath = FS.path(Config.repositoryCacheDir, entry)
+        local entryPath = NativePath.join(Config.repositoryCacheDir, entry)
         if not usedIndexFileNameSet[entryPath] then
             os.remove(entryPath)
         end

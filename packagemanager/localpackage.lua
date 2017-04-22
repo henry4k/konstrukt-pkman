@@ -3,6 +3,7 @@ local cjson = require 'cjson'
 local semver = require 'semver'
 local Misc      = require 'packagemanager/misc'
 local FS        = require 'packagemanager/fs'
+local NativePath = require('packagemanager/path').native
 local Zip       = require 'packagemanager/zip'
 local Version   = require 'packagemanager/version'
 local PackageDB = require 'packagemanager/packagedb'
@@ -17,7 +18,7 @@ local function ExtractPackageMetadata( fileName )
     if not fileType then
         error('File not found.')
     elseif fileType == 'directory' then
-        return assert(FS.readJsonFile(FS.path(fileName, 'package.json')))
+        return assert(FS.readJsonFile(NativePath.join(fileName, 'package.json')))
     else
         if fileName:match('%.zip$') then
             return cjson.decode(assert(Zip.readFile(fileName, 'package.json')))
@@ -58,9 +59,38 @@ function LocalPackageMT.__index( package, key )
     end
 end
 
+function LocalPackage.parsePackageFileName( fileName )
+    local result, err = NativePath.parseFileName(fileName)
+    if not result then
+        return nil, err
+    end
+
+    local baseName = result.baseName
+    if not baseName or #baseName == 0 then
+        return nil, 'No base name.'
+    end
+
+    local package, packageEnd = baseName:match('^([^.]+)()')
+    if not package then
+        return nil, 'No package name.'
+    end
+    result.package = package
+
+    local version = baseName:match('^%.(.+)', packageEnd)
+    if version then
+        local success, resultOrErr = pcall(semver, version)
+        if not success then
+            return nil, resultOrErr
+        end
+        result.version = resultOrErr
+    end
+
+    return result
+end
+
 function LocalPackage.readLocalPackage( fileName )
     -- See 
-    local packageInfo = assert(FS.parsePackageFileName(fileName))
+    local packageInfo = assert(LocalPackage.parsePackageFileName(fileName))
     local package =
     {
         name = packageInfo.package,
@@ -74,7 +104,7 @@ end
 local function IsLocalPackage( fileName )
     local mode = lfs.attributes(fileName, 'mode')
     if mode == 'directory' then
-        local metaFileName = FS.path(fileName, 'package.json')
+        local metaFileName = NativePath.join(fileName, 'package.json')
         return lfs.attributes(metaFileName, 'mode') == 'file'
     elseif mode == 'file' then
         return fileName:match('%.zip$')
@@ -85,8 +115,8 @@ function LocalPackage.gatherInstalledPackages( db, searchPaths )
     local packages = {}
     for _, searchPath in ipairs(searchPaths) do
         for entry in lfs.dir(searchPath) do
-            local fileName = FS.path(searchPath, entry)
-            local fileInfo = FS.parsePackageFileName(fileName)
+            local fileName = NativePath.join(searchPath, entry)
+            local fileInfo = LocalPackage.parsePackageFileName(fileName)
             if fileInfo and IsLocalPackage(fileName) then
                 local baseName = Package.buildBaseName(fileInfo.package,
                                                        fileInfo.version)
@@ -129,7 +159,7 @@ function LocalPackage.getMainExecutable( package, comparators )
 end
 
 local function GetLauncherFileName( launcherBaseName, headless )
-    local basePath = FS.path(Config.baseDir, launcherBaseName)
+    local basePath = NativePath.join(Config.baseDir, launcherBaseName)
     if Misc.operatingSystem == 'windows' then
         if headless then
             return basePath..'.bat'
@@ -198,7 +228,7 @@ local function UpdateLauncher( name, package, executable, executableAttributes )
     local headless = executableAttributes.headless
     local launcherFileName = GetLauncherFileName(name, headless)
     if executable then
-        local executableFileName = FS.path(package.localFileName, executable)
+        local executableFileName = NativePath.join(package.localFileName, executable)
         CreateLauncher(launcherFileName, executableFileName, headless)
     else
         os.remove(launcherFileName)
@@ -252,7 +282,7 @@ function LocalPackage.launchEngine( engine,
     local executable = LocalPackage.getMainExecutable(engine, executableComparators)
     assert(executable, 'No suitable executable found.')
 
-    local executableFileName = FS.path(engine.localFileName, executable)
+    local executableFileName = NativePath.join(engine.localFileName, executable)
     local state = ''
     local sharedState = ''
     local searchPaths = Config.searchPaths

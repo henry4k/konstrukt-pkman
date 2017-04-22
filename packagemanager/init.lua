@@ -10,7 +10,7 @@ local PackageDB = require 'packagemanager/packagedb'
 local Package = require 'packagemanager/package'
 local Version = require 'packagemanager/version'
 local Task = require 'packagemanager/Task'
-local FS = require 'packagemanager/fs'
+local NativePath = require('packagemanager/path').native
 
 
 local PackageManager = {}
@@ -253,10 +253,10 @@ function ChangeTaskFunctions.install( task, change )
     if package.type == 'native' or
        package.type == 'engine' or
        package.type == 'package-manager' then
-        fileName = FS.path(installPath, baseName)
+        fileName = NativePath.join(installPath, baseName)
         downloadTask = DownloadManager.createDownload(package.downloadUrl, fileName, true)
     else
-        fileName = FS.path(installPath, baseName..'.zip')
+        fileName = NativePath.join(installPath, baseName..'.zip')
         downloadTask = DownloadManager.createDownload(package.downloadUrl, fileName, false)
     end
 
