@@ -1,0 +1,57 @@
+#!/usr/bin/env lua5.2
+local socket = require 'socket'
+local mimetypes = require 'mimetypes'
+local argparse = require 'argparse'
+local Handler = require 'pegasus.handler'
+
+
+local args
+do
+    local parser = argparse('webserver',
+                            'For integration running integration tests.')
+    parser:option('-r --root',
+                  'Location of static files.')
+    parser:option('-a --address',
+                  'Address can be an IP address or a host namea.  '..
+                  'If address is \'*\', the system binds to all local interfaces using the INADDR_ANY constant.',
+                  '127.0.0.1')
+    parser:option('-p --port',
+                  'Port must be an integer number in the range [1..64K).  '..
+                  'If port is 0, the system automatically chooses an ephemeral port.',
+                  '0')
+    args = parser:parse()
+end
+
+local stop = false
+
+local function requestCallback( request, response )
+    local path = request:path()
+    if path == '/stop' then
+        stop = true
+        response:statusCode(200)
+        response:write('')
+        return
+    else
+        if args.root then
+            local filePath = args.root..'/'..path:sub(2)
+            local file = io.open(filePath, 'rb')
+            if file then
+                response:writeFile(file, mimetypes.guess(filePath) or 'application/octet-stream')
+                return
+            end
+        end
+    end
+    response:statusCode(404)
+    response:write('')
+end
+
+local handler = Handler:new(requestCallback, '')
+local server = assert(socket.bind(args.address, args.port))
+local ip, port = server:getsockname()
+print('url: http://'..ip..':'..port)
+
+while not stop do
+    local client = server:accept()
+    client:settimeout(1, 'b')
+    handler:processRequest(args.port, client)
+end

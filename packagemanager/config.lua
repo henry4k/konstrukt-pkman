@@ -24,7 +24,7 @@ local function JsonToInternal( json, internal )
     local baseDir = Config.baseDir
     local fileName = Config.fileName
 
-    internal.searchPaths = json.searchPaths or {}
+    internal.searchPaths = json.searchPaths or {'packages'}
     internal.repositories = json.repositories or {}
     internal.repositoryCacheDir = json.repositoryCacheDir or 'repositories'
     internal.documentationCacheDir = json.documentationCacheDir or 'documentation'

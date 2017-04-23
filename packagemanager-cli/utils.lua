@@ -2,7 +2,7 @@ local Misc         = require 'packagemanager/misc'
 local Config       = require 'packagemanager/config'
 local LocalPackage = require 'packagemanager/localpackage'
 local Repository   = require 'packagemanager/repository'
-local PackageDB    = require 'packagemanager/packagedb'
+local PackageDB    = require 'packagemanager/PackageDB'
 local Dependency   = require 'packagemanager/dependency'
 local Version      = require 'packagemanager/version'
 
@@ -10,7 +10,7 @@ local Version      = require 'packagemanager/version'
 local utils = {}
 
 function utils.buildPackageDB( options )
-    local db = PackageDB.create()
+    local db = PackageDB()
     if options.localPackages then
         LocalPackage.gatherInstalledPackages(db, Config.searchPaths)
     end
@@ -151,7 +151,7 @@ function utils.getPackageInstallationStatus( package )
 end
 
 function utils.removeObsoletePackages( db )
-    for package in PackageDB.packages(db) do
+    for package in db:packages() do
         if not package.required and package.localFileName then
             print(string.format('Removing %s %s', package.name, package.version))
             LocalPackage.remove(db, package)

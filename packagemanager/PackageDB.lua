@@ -23,7 +23,8 @@ function PackageDB:addPackage( package )
     local alternatives = Misc.createTableHierachy(self._packages,
                                                   package.name,
                                                   tostring(package.version))
-    local providerId = package.providerId or ''
+    local providerId = package.providerId or Package.genId(package)
+    --local providerId = package.providerId or ''
     local destPackage = alternatives[providerId]
     if destPackage then
         Package.mergePackages(destPackage, package)

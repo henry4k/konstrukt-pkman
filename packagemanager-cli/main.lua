@@ -53,9 +53,9 @@ commands.query =
         end
     end
 }
-commands.sync =
+commands.update =
 {
-    description = 'Synchronize package indices.',
+    description = 'Download package indices.',
 
     execute = function()
         local tasks = PackageManager.updateRepositoryIndices()
