@@ -10,6 +10,7 @@ local function try( name, fn )
 end
 
 
+plan(3)
 do
     local db = PackageDB()
     local package = {name = 'aaa',

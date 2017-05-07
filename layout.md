@@ -74,6 +74,9 @@ An actual installable package.
         ...
     }
 
+    -- Fields which are present in indices:
+    size = ... -- in bytes
+
     -- Generated fields:
     required = ... -- if the package has been marked for installation by the user
     localFileName = ... -- if the package is currently installed

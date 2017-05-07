@@ -1,4 +1,5 @@
 local wx = require 'wx'
+local Unit = require 'packagemanager/unit'
 
 
 local utils = {}
@@ -85,25 +86,13 @@ function utils.getUiSubsystem() -- gtk, msw, cocoa
     return platformInfo:GetPortIdShortName()
 end
 
-local Kibibyte = math.pow(2, 10)
-local Mebibyte = math.pow(2, 20)
-function utils.getByteUnit( reference )
-    if reference >= Mebibyte then
-        return 'MiB', Mebibyte
-    elseif reference >= Kibibyte then
-        return 'KiB', Kibibyte
-    else
-        return 'bytes', 1
-    end
-end
-
 function utils.buildProgressString( bytesWritten, totalBytes )
     if totalBytes then
-        local unitName, unitSize = utils.getByteUnit(totalBytes)
-        return string.format('%.1f / %.1f %s', bytesWritten/unitSize, totalBytes/unitSize, unitName)
+        local unit = Unit.get('bytes', totalBytes)
+        return string.format('%.1f / %.1f %s', bytesWritten/unit.size, totalBytes/unit.size, unit.symbol)
     else
-        local unitName, unitSize = utils.getByteUnit(bytesWritten)
-        return string.format('%.1f %s', bytesWritten/unitSize, unitName)
+        local unit = Unit.get('bytes', bytesWritten)
+        return string.format('%.1f %s', bytesWritten/unit.size, unit.symbol)
     end
 end
 

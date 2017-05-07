@@ -1,7 +1,6 @@
-local lanes = require('lanes').configure{ with_timers = false,
-                                          verbose_errors = true }
-local unpack = unpack or table.unpack -- backward compatibility to 5.1
+local lanes = require 'packagemanager/lanes'
 local Task = require 'packagemanager/Task'
+local unpack = unpack or table.unpack -- backward compatibility to 5.1
 
 
 local Manager = {}

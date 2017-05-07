@@ -5,11 +5,11 @@ local semver = require 'semver'
 local Version    = require 'packagemanager/version'
 local Repository = require 'packagemanager/repository'
 local Dependency = require 'packagemanager/dependency'
-local PackageDB = require 'packagemanager/packagedb'
+local PackageDB = require 'packagemanager/PackageDB'
 
 
 local function testResolver( name, indexFileName, dependencies, expectedPackages )
-    local db = PackageDB.create()
+    local db = PackageDB()
     Repository.loadIndexFromFile(db, indexFileName)
 
     -- Refine arguments:

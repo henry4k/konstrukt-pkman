@@ -157,17 +157,5 @@ function Misc.writeFile( destFile, sourceFile )
     end
 end
 
-local Kibibyte = math.pow(2, 10)
-local Mebibyte = math.pow(2, 20)
-function Misc.getByteUnit( reference )
-    if reference >= Mebibyte then
-        return 'MiB', Mebibyte
-    elseif reference >= Kibibyte then
-        return 'KiB', Kibibyte
-    else
-        return 'bytes', 1
-    end
-end
-
 
 return Misc

@@ -1,6 +1,7 @@
 local cmark = require 'cmark'
 local Path  = require('packagemanager/path').unix
 local Misc  = require 'packagemanager/misc'
+local Unit  = require 'packagemanager/unit'
 local Utils = require 'packagemanager/documentation/utils'
 
 
@@ -75,9 +76,9 @@ local function ProcessMediaFiles( mediaFiles, sourceTree, resultTree )
         local extension = Path.extension(fileName)
         local mediaType = GetMediaType(extension)
         if size > mediaType.maxSize then
-            local unitName, unitSize = Misc.getByteUnit(mediaType.maxSize)
-            print(string.format('%s is too large: %.1f %s (Maximum is %.1f %s)',
-                fileName, size/unitSize, unitName, mediaType.maxSize/unitSize, unitName))
+            local unit = Unit.get('bytes', mediaType.maxSize)
+            print(string.format('%s is too large: %s (Maximum is %s)',
+                fileName, unit:format(size), unit:format(mediaType.maxSize)))
         end
 
         -- Copy file:

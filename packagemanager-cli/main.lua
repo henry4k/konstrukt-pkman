@@ -1,11 +1,16 @@
 local argparse = require 'argparse'
-local utils = require 'packagemanager-cli/utils'
+local lanes = require 'packagemanager/lanes'
 local PackageManager = require 'packagemanager/init'
 local Repository = require 'packagemanager/repository'
+local utils = require 'packagemanager-cli/utils'
+local ProcessChangeTasks = require('packagemanager-cli/changes').processChangeTasks
 
 
 local function Run( commands )
     local parser = argparse()
+    parser{name = 'pkman',
+           description = 'A package manager for the konstrukt engine.',
+           epilog = 'For more info, see https://github.com/henry4k/konstrukt-pkman'}
     parser:option('-c --config', 'Configuration file', 'config.json')
     parser:command_target('command')
     for commandName, command in pairs(commands) do
@@ -59,7 +64,20 @@ commands.update =
 
     execute = function()
         local tasks = PackageManager.updateRepositoryIndices()
-        error('TODO: Run tasks')
+        for _, task in pairs(tasks) do
+            task:start()
+        end
+        repeat
+            lanes.sleep(1/25)
+            PackageManager.update()
+            local complete = true
+            for _, task in pairs(tasks) do
+                if task.status == 'running' or
+                   task.status == 'unstarted' then
+                   complete = false
+               end
+            end
+        until complete
     end
 }
 commands['list-changes'] =
@@ -90,7 +108,7 @@ commands.upgrade =
     execute = function()
         local changes = PackageManager.gatherChanges()
         local tasks = PackageManager.applyChanges(changes)
-        error('TODO: Run tasks')
+        ProcessChangeTasks(tasks)
     end
 }
 commands['generate-index'] =
