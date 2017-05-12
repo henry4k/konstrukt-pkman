@@ -33,12 +33,7 @@ local function RenderStatus( t )
     local rate = t.rate
     local eta = t.eta or 0 -- TODO
 
-    local completion
-    if totalBytes > 0 then
-        completion = bytesWritten / totalBytes
-    else
-        completion = 0 -- TODO: needed till change.package.size
-    end
+    local completion = bytesWritten / totalBytes
     local bytesLeft = totalBytes - bytesWritten
     local byteUnit = Unit.get('bytes', bytesLeft)
     local rateUnit = Unit.get('bytes', rate)
@@ -69,9 +64,9 @@ local function GetDownloadStatistics( changeTasks )
     local totalBytes = 0
     local bytesWritten = 0
     for change, task in pairs(changeTasks) do
+        totalBytes = totalBytes + change.package.size
         local downloadTask = task.downloadTask
         if downloadTask then
-            totalBytes   = totalBytes   + (downloadTask.properties.totalBytes   or 0)
             bytesWritten = bytesWritten + (downloadTask.properties.bytesWritten or 0)
         end
     end

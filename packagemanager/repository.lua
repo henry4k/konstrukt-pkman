@@ -93,6 +93,7 @@ local function AddPackageToRepoData( repoData, package )
     preparedPackage.type = package.type
     preparedPackage.version = tostring(package.version)
     preparedPackage.description = package.description
+    preparedPackage.size = assert(package.size, 'Can\'t obtain package size.')
 
     if package.dependencies then
         local preparedDependencies = {}

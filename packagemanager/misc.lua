@@ -71,12 +71,16 @@ function Misc.createTableHierachy( t, ... )
             t[key] = {}
         end
         t = t[key]
+        assert(type(t) == 'table')
     end
     return t
 end
 
 function Misc.traverseTableHierachy( t, ... )
     for _, key in ipairs({...}) do
+        if type(t) ~= 'table' then
+            return nil
+        end
         if not t[key] then
             return nil
         end

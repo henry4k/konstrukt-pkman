@@ -95,6 +95,7 @@ function LocalPackage.readLocalPackage( fileName )
         name = packageInfo.package,
         version = packageInfo.version,
         localFileName = fileName,
+        size = assert(lfs.attributes(fileName, 'size')),
         _metadataLoaded = false
     }
     return setmetatable(package, LocalPackageMT)

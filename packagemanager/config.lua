@@ -1,69 +1,134 @@
+local lfs = require 'lfs'
 local FS = require 'packagemanager/fs'
 local NativePath = require('packagemanager/path').native
 local Version = require 'packagemanager/version'
 
 
-local DefaultPackageManager = { packageName = 'packagemanager',
-                                versionRange = Version.parseVersionRange('*') }
+local function ReplaceEnvironmentVariables( str )
+    for _, pattern in ipairs{'%$(%w+)',   -- $FOO_BAR
+                             '%${.-}',    -- ${FOO_BAR}
+                             '%%.-%%'} do -- %FOO_BAR%
+        str = str:gsub(pattern, os.getenv)
+    end
+    return str
+end
 
+local function ImportPath( path, config )
+    path = ReplaceEnvironmentVariables(path)
+    path = path:gsub('~', os.getenv('HOME'))
+    if NativePath.isRelative(path) then
+        path = NativePath.join(config.baseDir, path)
+    end
+    return path
+end
+
+local function ImportRequirement( requirement )
+    return {packageName = requirement.packageName,
+            versionRange = Version.parseVersionRange(requirement.versionRange)}
+end
+
+local function ExportRequirement( requirement )
+    return {packageName = requirement.packageName,
+            versionRange = tostring(requirement.versionRange)}
+end
+
+local function TestDirectoryPath( path )
+    if lfs.attributes(path, 'mode') ~= 'directory' then
+        error(path..' does not refer to a directory.')
+    end
+end
+
+local function PassThrough( value )
+    return value
+end
+
+local ConfigEntryFormat =
+{
+    searchPaths =
+    {
+        default = {},
+        import = function( paths, config )
+            local r = {}
+            for i, path in ipairs(paths) do
+                r[i] = ImportPath(path, config)
+                TestDirectoryPath(r[i])
+            end
+            return r
+        end,
+        export = PassThrough
+    },
+
+    repositories =
+    {
+        default = {'http://konstrukt.henry4k.de/packages/index.json'},
+        import = PassThrough,
+        export = PassThrough
+    },
+
+    repositoryCacheDir =
+    {
+        default = nil,
+        import = ImportPath,
+        export = PassThrough
+    },
+
+    documentationCacheDir =
+    {
+        default = nil,
+        import = ImportPath,
+        export = PassThrough
+    },
+
+    requirements =
+    {
+        default = {},
+        import = function( requirements, config )
+            local r = {}
+            for i, requirement in ipairs(requirements) do
+                r[i] = ImportRequirement(requirement)
+            end
+            return r
+        end,
+        export = function( requirements, config )
+            local r = {}
+            for i, requirement in ipairs(requirements) do
+                r[i] = ExportRequirement(requirement)
+            end
+            return r
+        end
+    },
+
+    manager =
+    {
+        default = {packageName = 'packagemanager',
+                   versionRange = Version.parseVersionRange('*')},
+        import = ImportRequirement,
+        export = ExportRequirement
+    }
+}
+
+local ConfigMT =
+{
+    __index = function( self, key )
+        local format = assert(ConfigEntryFormat[key], 'Not a valid config entry.')
+        return self.view[key] or format.default
+    end,
+
+    __newindex = function( self, key, value )
+        local format = assert(ConfigEntryFormat[key], 'Not a valid config entry.')
+        local exportedValue = format.export(value, self)
+        self.source[key] = exportedValue
+        self.view[key] = format.import(exportedValue, self)
+        self.dirty = true
+    end
+}
 
 local Config = {}
 
-local ConfigMT = {}
-
-function ConfigMT:__index( key )
-    return Config.content[key]
-end
-
-function ConfigMT:__newindex( key, value )
-    Config.content[key] = value
-    Config.dirty = true
-end
-
-local function JsonToInternal( json, internal )
-    local baseDir = Config.baseDir
-    local fileName = Config.fileName
-
-    internal.searchPaths = json.searchPaths or {'packages'}
-    internal.repositories = json.repositories or {}
-    internal.repositoryCacheDir = json.repositoryCacheDir or 'repositories'
-    internal.documentationCacheDir = json.documentationCacheDir or 'documentation'
-    internal.requirements = {}
-    for _, requirement in ipairs(json.requirements or {}) do
-        local versionRangeExpr = requirement.versionRange
-        local versionRange = Version.parseVersionRange(versionRangeExpr)
-        table.insert(internal.requirements,
-                     { packageName = requirement.packageName,
-                       versionRange = versionRange })
-    end
-    if json.manager then
-        internal.manager = { packageName = json.manager.packageName,
-                             versionRange = Version.parseVersionRange(json.manager.versionRange) }
-    else
-        internal.manager = DefaultPackageManager
-    end
-end
-
-local function InternalToJson( internal, json )
-    json.searchPaths = internal.searchPaths
-    json.repositories = internal.repositories
-    json.repositoryCacheDir = internal.repositoryCacheDir
-    json.documentationCacheDir = internal.documentationCacheDir
-    json.requirements = {}
-    for _, requirement in ipairs(internal.requirements) do
-        table.insert(json.requirements,
-                     { packageName = requirement.packageName,
-                       versionRange = tostring(requirement.versionRange) })
-    end
-    json.manager = { packageName = internal.manager.packageName,
-                     versionRange = tostring(internal.manager.versionRange) }
-end
-
 function Config.load( fileName )
-    fileName = fileName or 'config.json'
-
     setmetatable(Config, nil)
-    assert(not Config.content, 'Reloading is not supported.')
+    assert(not Config.source, 'Reloading is not supported.')
+    fileName = fileName or 'config.json'
 
     fileName = FS.makeAbsolutePath(fileName)
     local baseDir = NativePath.dirName(fileName)
@@ -71,27 +136,39 @@ function Config.load( fileName )
     Config.baseDir = baseDir
     Config.dirty = false
 
-    local json = {}
+    local source
     if FS.fileExists(fileName) then
-        json = FS.readJsonFile(fileName)
+        source = FS.readJsonFile(fileName)
+    else
+        source = {}
     end
-    Config.content = {}
-    JsonToInternal(json, Config.content)
+    Config.source = source
+
+    -- Import values from source, the json document, to the view table:
+    local view = {}
+    for key, value in pairs(source) do
+        local format = ConfigEntryFormat[key]
+        if format then
+            view[key] = format.import(value, Config)
+        end
+    end
+    Config.view = view
 
     setmetatable(Config, ConfigMT)
-    FS.changeDirectory(baseDir)
 end
 
-function Config.save( fileName )
-    fileName = fileName or Config.fileName
-    if fileName ~= Config.fileName or
-       Config.dirty then
-        local json = {}
-        InternalToJson(Config.content, json)
-        FS.writeJsonFile(fileName, json)
+function Config.save()
+    if Config.dirty then
+        FS.writeJsonFile(Config.fileName, Config.source)
+        Config.dirty = false
     end
 end
 
-setmetatable(Config, { __index = function() error('Nothing to see here! Config has not been loaded yet.') end })
+setmetatable(Config,
+{
+    __index = function()
+        error('Nothing to see here! Config has not been loaded yet.')
+    end
+})
 
 return Config

@@ -1,6 +1,3 @@
---local RingBuffer = require 'packagemanager-cli/RingBuffer'
-
-
 local MovingAverage = {}
 MovingAverage.__index = MovingAverage
 
@@ -12,7 +9,6 @@ function MovingAverage:calculate( newAmount )
 end
 
 local function CreateMovingAverage( smoothingFactor )
-    --local self = { _buffer = RingBuffer() }
     local self = { currentAverage = 0,
                    smoothingFactor = smoothingFactor or 0.9 }
     return setmetatable(self, MovingAverage)

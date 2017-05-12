@@ -74,10 +74,6 @@ function FS.makeDirectoryPath( base, path )
     return MakeDirIfNotExists(Path.join(base, path))
 end
 
-function FS.changeDirectory( path )
-    assert(lfs.chdir(path))
-end
-
 function FS.getCurrentDirectory()
     return assert(lfs.currentdir())
 end

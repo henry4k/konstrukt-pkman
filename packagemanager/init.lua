@@ -261,6 +261,13 @@ function ChangeTaskFunctions.install( task, change )
     end
 
     downloadTask.events.downloadStarted = function()
+        -- Sanity check:
+        local totalBytes = downloadTask.properties.totalBytes
+        if totalBytes then
+            assert(totalBytes == package.size,
+                   'HTTP server and package index state different package sizes - this seems dubious.')
+        end
+
         task:fireEvent('downloadStarted')
     end
     downloadTask:start()

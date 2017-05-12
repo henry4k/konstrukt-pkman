@@ -3,7 +3,7 @@ HERE="$(dirname "$0")"
 
 setup()
 {
-    STAGE="$(mktemp --directory "konstrukt-pkman.test.$NAME.XXX")"
+    STAGE="$(mktemp --tmpdir --directory "konstrukt-pkman.test.$NAME.XXX")"
     trap teardown EXIT
 }
 

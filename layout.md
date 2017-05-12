@@ -18,9 +18,9 @@
     }
     requirements =
     {
-        { -- A requirement group consists of ...
-            <package name> = <version range>, -- requirements!
-            ...
+        { -- A requirement consists of ...
+            name = <package name>
+            versionRange = <version range>
         },
         ...
     }
@@ -74,10 +74,8 @@ An actual installable package.
         ...
     }
 
-    -- Fields which are present in indices:
-    size = ... -- in bytes
-
     -- Generated fields:
+    size = ... -- in bytes
     required = ... -- if the package has been marked for installation by the user
     localFileName = ... -- if the package is currently installed
     downloadUrl = ... -- if the package can be downloaded

@@ -1,6 +1,5 @@
 local statemachine = require 'statemachine'
 local bind = require('packagemanager/misc').bind
-local DownloadManager = require 'packagemanager/downloadmanager'
 local PackageManager = require 'packagemanager/init'
 local Event = require 'packagemanager-gui/Event'
 local utils = require 'packagemanager-gui/utils'
@@ -52,33 +51,6 @@ function ChangeListPresenter:_onEmpty()
     view:clearChanges()
 end
 
-function ChangeListPresenter:_retrieveChangeTotalBytes( change, viewHandle )
-    local view = self.view
-    local url = change.package.downloadUrl
-    local size = self.urlSizeMap[url]
-    if size then
-        view:setChangeTotalBytes(viewHandle, size)
-    else
-        local task = DownloadManager.createDownload(url)
-        task.events.complete = function()
-            local size = task.properties.headers.size
-            if size then
-                self.urlSizeMap[url] = size
-                view:freeze()
-                view:setChangeTotalBytes(viewHandle, size)
-                view:thaw()
-            end
-            self.updateTimer:removeUser()
-        end
-        task.events.fail = function()
-            self.updateTimer:removeUser()
-            error(task.error, 0)
-        end
-        self.updateTimer:addUser()
-        task:start()
-    end
-end
-
 function ChangeListPresenter:_onReady( changes )
     local view = self.view
 
@@ -89,7 +61,7 @@ function ChangeListPresenter:_onReady( changes )
         local handle = view:addChange(change.type, change.package.name, tostring(change.package.version))
         handleMap[change] = handle
         if change.type == 'install' then
-            self:_retrieveChangeTotalBytes(change, handle)
+            view:setChangeTotalBytes(handle, change.package.size)
         end
     end
 
@@ -109,15 +81,6 @@ function ChangeListPresenter:_onApplying()
     local changeHandleMap = self.changeHandleMap
     for change, task in pairs(tasks) do
         local viewHandle = assert(changeHandleMap[change])
-        task.events.downloadStarted = function()
-            local totalBytes = task.downloadTask.properties.totalBytes
-            if totalBytes then
-                view:freeze()
-                view:setChangeTotalBytes(viewHandle, totalBytes)
-                view:thaw()
-            end
-        end
-
         task.events.complete = function()
             view:freeze()
             if task.downloadTask then
