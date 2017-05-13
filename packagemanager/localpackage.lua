@@ -297,7 +297,7 @@ function LocalPackage.launchEngine( engine,
     end
 
     local command = BuildSystemCommand(arguments)
-    print(command)
+    print('DEBUG: execute ', command)
     --assert(os.execute(command))
 end
 

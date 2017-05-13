@@ -2,7 +2,6 @@ local WorkerManager = require 'packagemanager/WorkerManager'
 
 
 local function DownloadProcessor()
-    os.execute('pwd')
     local Network = require 'packagemanager/network'
 
     local EventHandlerMT =

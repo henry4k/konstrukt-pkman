@@ -1,3 +1,20 @@
+---
+-- The config entries exist in two tables:
+--
+-- `Config.view` holds their in-programm representation and 
+-- `Config.source` holds their serializable representation.
+--
+-- When running `Config.load` the entries are read from a JSON file and stored
+-- directly in the `Config.source` table.  Then they're *imported* to the
+-- `Config.view` table.
+--
+-- Creating or replacing entries works by exporting the given value to the
+-- `Config.source` table - see `SetEntryValue`.
+--
+-- Their properties are defined in `ConfigEntryFormat`, look at that to learn
+-- about their properties in detail.
+--
+
 local lfs = require 'lfs'
 local FS = require 'packagemanager/fs'
 local NativePath = require('packagemanager/path').native
@@ -42,6 +59,23 @@ local function PassThrough( value )
     return value
 end
 
+---
+-- This defines all valid config entries.
+-- Each entry has the following properties:
+--
+-- - `default`: Provides an in-programm representation for entries that are not
+-- present in the `Config.source` table.  Use this only when the value is not
+-- used to create external dependencies such as files.
+-- - `setup`: (optional) Function, which creates a reasonable default value,
+-- stores it in `Config.source` and, most importantly, takes the required steps
+-- to create any external dependencies.  This function is called by
+-- `Config.setupEntry`, but only when `Config.source` does not have this entry
+-- yet.
+-- - `import`: Function, which converts serializable to the in-programm
+-- representation.  The original value must not be modified.  This function can
+-- and should raise an error when confronted with malformatted input.
+-- - `export`: Function, which does the opposite of `import`.
+--
 local ConfigEntryFormat =
 {
     searchPaths =
@@ -68,6 +102,11 @@ local ConfigEntryFormat =
     repositoryCacheDir =
     {
         default = nil,
+        setup = function( config )
+            local path = 'repositories'
+            assert(FS.makeDirectoryPath(config.baseDir, path))
+            return path
+        end,
         import = ImportPath,
         export = PassThrough
     },
@@ -75,6 +114,11 @@ local ConfigEntryFormat =
     documentationCacheDir =
     {
         default = nil,
+        setup = function( config )
+            local path = 'documentation'
+            assert(FS.makeDirectoryPath(config.baseDir, path))
+            return path
+        end,
         import = ImportPath,
         export = PassThrough
     },
@@ -107,20 +151,29 @@ local ConfigEntryFormat =
     }
 }
 
+local function SetEntryValue( config, key, value )
+    local format = assert(ConfigEntryFormat[key], 'Not a valid config entry.')
+    local exportedValue = format.export(value, config)
+    config.source[key] = exportedValue
+    config.view[key] = format.import(exportedValue, config)
+    config.dirty = true
+end
+
 local ConfigMT =
 {
     __index = function( self, key )
         local format = assert(ConfigEntryFormat[key], 'Not a valid config entry.')
-        return self.view[key] or format.default
+        local value = self.view[key]
+        if value then
+            return value
+        elseif format.setup then
+            value = format.setup(self)
+            SetEntryValue(self, key, value)
+        end
+        return value or format.default
     end,
 
-    __newindex = function( self, key, value )
-        local format = assert(ConfigEntryFormat[key], 'Not a valid config entry.')
-        local exportedValue = format.export(value, self)
-        self.source[key] = exportedValue
-        self.view[key] = format.import(exportedValue, self)
-        self.dirty = true
-    end
+    __newindex = SetEntryValue
 }
 
 local Config = {}
