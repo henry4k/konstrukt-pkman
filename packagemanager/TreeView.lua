@@ -1,8 +1,7 @@
 local lfs   = require 'lfs'
+local path  = require 'path'
 local zip   = require 'brimworks.zip'
 local FS    = require 'packagemanager/fs'
-local NativePath = require('packagemanager/path').native
-local ZipPath = require('packagemanager/path').windows
 local Misc  = require 'packagemanager/misc'
 
 
@@ -12,16 +11,16 @@ local DirectoryView = {}
 DirectoryView.__index = DirectoryView
 
 function DirectoryView:_getAbsFilePath( filePath, createDir )
-    filePath = NativePath.canonicalize(filePath)
-    assert(not filePath:match('^%.%.['..NativePath.directorySeparators..']'),
+    filePath = path.normalize(filePath)
+    assert(not filePath:match('^%.%.'..path.DIR_SEP),
            'File path may not leave the base directory.')
     if createDir then
-        local dirName = NativePath.dirName(filePath)
+        local dirName = path.dirname(filePath)
         if dirName ~= '.' then
             assert(FS.makeDirectoryPath(self._path, dirName))
         end
     end
-    return NativePath.join(self._path, filePath)
+    return path.join(self._path, filePath)
 end
 
 function DirectoryView:openFile( filePath, mode )
@@ -37,7 +36,7 @@ function DirectoryView:getFileAttributes( filePath )
 end
 
 function DirectoryView:eachFile()
-    local prefix = self._path..NativePath.defaultDirectorySeparator
+    local prefix = self._path..path.DIR_SEP
     local function yieldTree( directory )
         for entry in lfs.dir(prefix..directory) do
             if entry ~= '.' and entry ~= '..' then
@@ -45,7 +44,7 @@ function DirectoryView:eachFile()
                 if directory == '' then
                     entryPath = entry
                 else
-                    entryPath = NativePath.join(directory, entry)
+                    entryPath = path.join(directory, entry)
                 end
                 coroutine.yield(entryPath)
                 if lfs.attributes(prefix..entryPath, 'mode') == 'directory' then
@@ -109,8 +108,8 @@ local ZipView = {}
 ZipView.__index = ZipView
 
 function ZipView:_getFileId( filePath )
-    filePath = NativePath.canonicalize(filePath)
-    assert(not filePath:match('^%.%.['..ZipPath.directorySeparators..']'),
+    filePath = path.normalize(filePath)
+    assert(not filePath:match('^%.%.[/\\]'),
            'File path may not leave the base directory.')
     local fileId = assert(self._fileMapping[filePath], 'No such file.')
     return fileId
@@ -145,7 +144,7 @@ function ZipView:destroy()
 end
 
 local function IsDirectory( path )
-    return path:match('['..ZipPath.directorySeparators..']$')
+    return path:match('[/\\]$')
 end
 
 local function CreateZipView( path )
@@ -155,8 +154,7 @@ local function CreateZipView( path )
     for i = 1, zipFile:get_num_files() do
         local filePath = assert(zipFile:stat(i)).name
         if not IsDirectory(filePath) then
-            local nativeFilePath = ZipPath.convert(filePath, NativePath)
-            local normalizedFilePath = NativePath.normalizeDirSeps(nativeFilePath)
+            local normalizedFilePath = path.normalize(filePath)
             fileMapping[normalizedFilePath] = i
         end
     end

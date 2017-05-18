@@ -1,7 +1,7 @@
 local wx = require 'wx'
+local path = require 'path'
 local utils = require 'packagemanager-gui/utils'
 local fs    = require 'packagemanager/fs'
-local NativePath = require('packagemanager/path').native
 
 
 local ArtProvider = wx.wxLuaArtProvider()
@@ -189,7 +189,7 @@ function ArtProvider:CreateBitmap( id, client, size )
                 end
                 local size = wx.wxArtProvider.GetSizeHint(client, true)
                 local baseName = iconSource.file:gsub('%?', size:GetWidth())
-                local fileName = fs.here(NativePath.join('icons', baseName))
+                local fileName = fs.here(path.join('icons', baseName))
                 result = wx.wxBitmap(fileName)
             else
                 error(id..': Unknown icon source '..iconSource.type..'.')

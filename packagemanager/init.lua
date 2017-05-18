@@ -1,6 +1,7 @@
 -- vim: set foldmethod=marker:
 -- High level interface to the package manager:
 
+local path = require 'path'
 local Config = require 'packagemanager/config'
 local Repository = require 'packagemanager/repository'
 local DownloadManager = require 'packagemanager/downloadmanager'
@@ -10,7 +11,6 @@ local PackageDB = require 'packagemanager/PackageDB'
 local Package = require 'packagemanager/package'
 local Version = require 'packagemanager/version'
 local Task = require 'packagemanager/Task'
-local NativePath = require('packagemanager/path').native
 
 
 local PackageManager = {}
@@ -253,10 +253,10 @@ function ChangeTaskFunctions.install( task, change )
     if package.type == 'native' or
        package.type == 'engine' or
        package.type == 'package-manager' then
-        fileName = NativePath.join(installPath, baseName)
+        fileName = path.join(installPath, baseName)
         downloadTask = DownloadManager.createDownload(package.downloadUrl, fileName, true)
     else
-        fileName = NativePath.join(installPath, baseName..'.zip')
+        fileName = path.join(installPath, baseName..'.zip')
         downloadTask = DownloadManager.createDownload(package.downloadUrl, fileName, false)
     end
 

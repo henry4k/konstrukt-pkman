@@ -15,10 +15,9 @@
 -- about their properties in detail.
 --
 
-local lfs = require 'lfs'
+local path = require 'path'
 local FS = require 'packagemanager/fs'
 local Misc = require 'packagemanager/misc'
-local NativePath = require('packagemanager/path').native
 local Version = require 'packagemanager/version'
 
 
@@ -29,9 +28,9 @@ else
     local home = assert(os.getenv('HOME'))
     DefaultEnvironmentVariableValues =
     {
-        XDG_DATA_HOME   = NativePath.join(home, '.local/share'),
-        XDG_CONFIG_HOME = NativePath.join(home, '.config'),
-        XDG_CACHE_HOME  = NativePath.join(home, '.cache')
+        XDG_DATA_HOME   = path.join(home, '.local/share'),
+        XDG_CONFIG_HOME = path.join(home, '.config'),
+        XDG_CACHE_HOME  = path.join(home, '.cache')
     }
 end
 
@@ -48,13 +47,18 @@ local function ReplaceEnvironmentVariables( str )
     return str
 end
 
-local function ImportPath( path, config )
-    path = ReplaceEnvironmentVariables(path)
-    path = path:gsub('~', os.getenv('HOME'))
-    if NativePath.isRelative(path) then
-        path = NativePath.join(config.baseDir, path)
+local function ExpandPathExpression( fileName )
+    fileName = ReplaceEnvironmentVariables(fileName)
+    fileName = fileName:gsub('~', os.getenv('HOME'))
+    return fileName
+end
+
+local function ImportPath( fileName, config )
+    fileName = ExpandPathExpression(fileName)
+    if not path.isabs(fileName) then
+        fileName = path.join(config.baseDir, fileName)
     end
-    return path
+    return fileName
 end
 
 local function ImportRequirement( requirement )
@@ -67,59 +71,32 @@ local function ExportRequirement( requirement )
             versionRange = tostring(requirement.versionRange)}
 end
 
-local function TestDirectoryPath( path )
-    if lfs.attributes(path, 'mode') ~= 'directory' then
-        error(path..' does not refer to a directory.')
-    end
-end
-
 local function PassThrough( value )
     return value
 end
 
 local function CreateConfigDir()
-    local baseDir
-    local subDir
+    local expression
     if Misc.operatingSystem == 'windows' then
-        baseDir = '%APPDATA%'
-        subDir = 'konstrukt'
+        expression = '%APPDATA%\\konstrukt'
     else
-        subDir = NativePath.join('$XDG_CONFIG_HOME', 'konstrukt')
-        baseDir = ''
-        subDir = subDir:sub(2) -- remove root element
+        expression = '$XDG_CONFIG_HOME/konstrukt'
     end
-    return assert(FS.makeDirectoryPath(baseDir, subDir))
-end
-
-local function CreateConfigDir()
-    local baseDir
-    local subDir
-    if Misc.operatingSystem == 'windows' then
-        baseDir = GetEnvVar('APPDATA')
-        subDir = 'konstrukt'
-    else
-        subDir = NativePath.join(GetEnvVar('XDG_CONFIG_HOME'),
-                                 'konstrukt')
-        baseDir = ''
-        subDir = subDir:sub(2) -- remove root element
-    end
-    return assert(FS.makeDirectoryPath(baseDir, subDir))
+    local fileName = ExpandPathExpression(expression)
+    assert(path.mkdir(fileName))
+    return expression
 end
 
 local function CreateCacheDir( name )
-    local baseDir
-    local subDir
+    local expression
     if Misc.operatingSystem == 'windows' then
-        baseDir = GetEnvVar('LOCALAPPDATA')
-        subDir = NativePath.join('konstrukt', name)
+        expression = '%LOCALAPPDATA%\\konstrukt\\'..name
     else
-        subDir = NativePath.join(GetEnvVar('XDG_CACHE_HOME'),
-                                 'konstrukt',
-                                 name)
-        baseDir = ''
-        subDir = subDir:sub(2) -- remove root element
+        expression = '$XDG_CACHE_HOME/konstrukt/'..name
     end
-    return assert(FS.makeDirectoryPath(baseDir, subDir))
+    local fileName = ExpandPathExpression(expression)
+    assert(path.mkdir(fileName))
+    return expression
 end
 
 ---
@@ -144,14 +121,14 @@ local ConfigEntryFormat =
     searchPaths =
     {
         default = nil,
-        setup = function( config )
+        setup = function()
             return {CreateCacheDir('packages')}
         end,
         import = function( paths, config )
             local r = {}
             for i, path in ipairs(paths) do
                 r[i] = ImportPath(path, config)
-                TestDirectoryPath(r[i])
+                assert(path.isdir(r[i]))
             end
             return r
         end,
@@ -168,7 +145,7 @@ local ConfigEntryFormat =
     repositoryCacheDir =
     {
         default = nil,
-        setup = function( config )
+        setup = function()
             return CreateCacheDir('repositories')
         end,
         import = ImportPath,
@@ -178,7 +155,7 @@ local ConfigEntryFormat =
     documentationCacheDir =
     {
         default = nil,
-        setup = function( config )
+        setup = function()
             return CreateCacheDir('documentation')
         end,
         import = ImportPath,
@@ -248,18 +225,18 @@ function Config.load( fileName )
     local allowModifications = false
     if not fileName then
         allowModifications = true
-        fileName = NativePath.join(CreateConfigDir(), 'config.json')
+        fileName = path.join(CreateConfigDir(), 'config.json')
     end
 
-    fileName = FS.makeAbsolutePath(fileName)
-    local baseDir = NativePath.dirName(fileName)
+    fileName = path.abspath(fileName)
+    local baseDir = path.dirname(fileName)
     Config.fileName = fileName
     Config.baseDir = baseDir
     Config.dirty = false -- true if modifications were made and the config needs to be saved
     Config.allowModifications = allowModifications
 
     local source
-    if FS.fileExists(fileName) then
+    if path.exists(fileName) then
         source = FS.readJsonFile(fileName)
     else
         source = {}

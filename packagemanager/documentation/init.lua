@@ -1,7 +1,7 @@
+local path      = require 'path'
 local lustache  = require 'lustache'
 local FS        = require 'packagemanager/fs'
 local Config    = require 'packagemanager/config'
-local NativePath = require('packagemanager/path').native
 local PackageManager = require 'packagemanager/init'
 local Package   = require 'packagemanager/package'
 local TreeView  = require 'packagemanager/TreeView'
@@ -42,7 +42,7 @@ local function Generate( sourceTree, resultTree )
     local templateHtml = FS.readFile(FS.here('template.html'))
 
     for sourceFileName, rootNode in Document.iterSourceTree(sourceTree) do
-        local sourceDir = NativePath.dirName(sourceFileName)
+        local sourceDir = path.dirname(sourceFileName)
 
         local headingProcessor = Heading.createProcessor()
         local referenceProcessor = Reference.createProcessor(sourceDir)
@@ -58,7 +58,7 @@ local function Generate( sourceTree, resultTree )
         local html = RenderDocument(templateHtml,
                                     rootNode,
                                     headingProcessor.headingTree)
-        local resultFileName = NativePath.stripExtension(sourceFileName)..'.html'
+        local resultFileName = path.splitext(sourceFileName)..'.html'
         local resultFile = resultTree:openFile(resultFileName, 'w')
         resultFile:write(html)
         resultFile:close()
@@ -83,8 +83,7 @@ function Documentation.generate( package )
 
     local baseName = Package.buildBaseName(package.name, package.version)
     FS.makeDirectoryPath(Config.documentationCacheDir, baseName)
-    local resultPath = NativePath.join(Config.documentationCacheDir,
-                                       baseName)
+    local resultPath = path.join(Config.documentationCacheDir, baseName)
 
     local sourceTree = TreeView(package.localFileName)
     local resultTree = TreeView(resultPath)

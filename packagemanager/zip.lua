@@ -1,10 +1,7 @@
-local lfs = require 'lfs'
+local path = require 'path'
 local zip = require 'brimworks.zip'
 local bit32 = require 'bit32'
 local Misc = require 'packagemanager/misc'
-local FS = require 'packagemanager/fs'
-local NativePath = require('packagemanager/path').native
-local ZipPath = require('packagemanager/path').windows
 
 
 local Zip = {}
@@ -32,23 +29,23 @@ function Zip.readFile( zipFileName, entryName )
 end
 
 local function IsDirectory( name )
-    return name:match('['..ZipPath.directorySeparators..']$')
+    return name:match('[/\\]$')
 end
 
 local function ExtractDirectory( stat, destination )
     assert(stat.size == 0, 'Size of a directory entry should be zero.')
-    local dirName = stat.name:sub(1, -2) -- remove directory separator at the end
-    assert(FS.makeDirectoryPath(destination, dirName))
+    local dirName = path.remove_dir_end(stat.name)
+    assert(path.mkdir(path.join(destination, dirName)))
 end
 
 local function ExtractFile( stat, destination, zipFile, i )
-    local entryDirName = ZipPath.dirName(stat.name)
+    local entryDirName = path.dirname(stat.name)
     if entryDirName then
-        assert(FS.makeDirectoryPath(destination, entryDirName))
+        assert(path.mkdir(path.join(destination, entryDirName)))
     end
 
-    local nativeName = ZipPath.convert(stat.name, NativePath)
-    local destFileName = NativePath.join(destination, nativeName)
+    local nativeName = path.normalize(stat.name)
+    local destFileName = path.join(destination, nativeName)
     local sourceFile = assert(zipFile:open(i))
     local destFile = assert(io.open(destFileName, 'wb'))
     Misc.writeFile(destFile, sourceFile)
