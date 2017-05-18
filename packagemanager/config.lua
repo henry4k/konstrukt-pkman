@@ -17,15 +17,33 @@
 
 local lfs = require 'lfs'
 local FS = require 'packagemanager/fs'
+local Misc = require 'packagemanager/misc'
 local NativePath = require('packagemanager/path').native
 local Version = require 'packagemanager/version'
 
+
+local DefaultEnvironmentVariableValues
+if Misc.operatingSystem == 'windows' then
+    DefaultEnvironmentVariableValues = {}
+else
+    local home = assert(os.getenv('HOME'))
+    DefaultEnvironmentVariableValues =
+    {
+        XDG_DATA_HOME   = NativePath.join(home, '.local/share'),
+        XDG_CONFIG_HOME = NativePath.join(home, '.config'),
+        XDG_CACHE_HOME  = NativePath.join(home, '.cache')
+    }
+end
+
+local function GetEnvVar( name )
+    return os.getenv(name) or DefaultEnvironmentVariableValues[name]
+end
 
 local function ReplaceEnvironmentVariables( str )
     for _, pattern in ipairs{'%$(%w+)',   -- $FOO_BAR
                              '%${.-}',    -- ${FOO_BAR}
                              '%%.-%%'} do -- %FOO_BAR%
-        str = str:gsub(pattern, os.getenv)
+        str = str:gsub(pattern, GetEnvVar)
     end
     return str
 end
@@ -59,6 +77,51 @@ local function PassThrough( value )
     return value
 end
 
+local function CreateConfigDir()
+    local baseDir
+    local subDir
+    if Misc.operatingSystem == 'windows' then
+        baseDir = '%APPDATA%'
+        subDir = 'konstrukt'
+    else
+        subDir = NativePath.join('$XDG_CONFIG_HOME', 'konstrukt')
+        baseDir = ''
+        subDir = subDir:sub(2) -- remove root element
+    end
+    return assert(FS.makeDirectoryPath(baseDir, subDir))
+end
+
+local function CreateConfigDir()
+    local baseDir
+    local subDir
+    if Misc.operatingSystem == 'windows' then
+        baseDir = GetEnvVar('APPDATA')
+        subDir = 'konstrukt'
+    else
+        subDir = NativePath.join(GetEnvVar('XDG_CONFIG_HOME'),
+                                 'konstrukt')
+        baseDir = ''
+        subDir = subDir:sub(2) -- remove root element
+    end
+    return assert(FS.makeDirectoryPath(baseDir, subDir))
+end
+
+local function CreateCacheDir( name )
+    local baseDir
+    local subDir
+    if Misc.operatingSystem == 'windows' then
+        baseDir = GetEnvVar('LOCALAPPDATA')
+        subDir = NativePath.join('konstrukt', name)
+    else
+        subDir = NativePath.join(GetEnvVar('XDG_CACHE_HOME'),
+                                 'konstrukt',
+                                 name)
+        baseDir = ''
+        subDir = subDir:sub(2) -- remove root element
+    end
+    return assert(FS.makeDirectoryPath(baseDir, subDir))
+end
+
 ---
 -- This defines all valid config entries.
 -- Each entry has the following properties:
@@ -80,7 +143,10 @@ local ConfigEntryFormat =
 {
     searchPaths =
     {
-        default = {},
+        default = nil,
+        setup = function( config )
+            return {CreateCacheDir('packages')}
+        end,
         import = function( paths, config )
             local r = {}
             for i, path in ipairs(paths) do
@@ -103,9 +169,7 @@ local ConfigEntryFormat =
     {
         default = nil,
         setup = function( config )
-            local path = 'repositories'
-            assert(FS.makeDirectoryPath(config.baseDir, path))
-            return path
+            return CreateCacheDir('repositories')
         end,
         import = ImportPath,
         export = PassThrough
@@ -115,9 +179,7 @@ local ConfigEntryFormat =
     {
         default = nil,
         setup = function( config )
-            local path = 'documentation'
-            assert(FS.makeDirectoryPath(config.baseDir, path))
-            return path
+            return CreateCacheDir('documentation')
         end,
         import = ImportPath,
         export = PassThrough
@@ -152,6 +214,7 @@ local ConfigEntryFormat =
 }
 
 local function SetEntryValue( config, key, value )
+    assert(config.allowModifications, 'Modifications are not allowed.')
     local format = assert(ConfigEntryFormat[key], 'Not a valid config entry.')
     local exportedValue = format.export(value, config)
     config.source[key] = exportedValue
@@ -181,13 +244,19 @@ local Config = {}
 function Config.load( fileName )
     setmetatable(Config, nil)
     assert(not Config.source, 'Reloading is not supported.')
-    fileName = fileName or 'config.json'
+
+    local allowModifications = false
+    if not fileName then
+        allowModifications = true
+        fileName = NativePath.join(CreateConfigDir(), 'config.json')
+    end
 
     fileName = FS.makeAbsolutePath(fileName)
     local baseDir = NativePath.dirName(fileName)
     Config.fileName = fileName
     Config.baseDir = baseDir
-    Config.dirty = false
+    Config.dirty = false -- true if modifications were made and the config needs to be saved
+    Config.allowModifications = allowModifications
 
     local source
     if FS.fileExists(fileName) then
@@ -207,11 +276,24 @@ function Config.load( fileName )
     end
     Config.view = view
 
+    -- Run setup for missing values:
+    for key, format in pairs(ConfigEntryFormat) do
+        local sourceValue = source[key]
+        if not sourceValue and format.setup then
+            if not allowModifications then
+                error(string.format('Config entry "%s" is not defined and setup can\'t be run as modifications are not allowed.', key))
+            end
+            SetEntryValue(Config, key, format.setup(Config))
+        end
+    end
+
     setmetatable(Config, ConfigMT)
 end
 
 function Config.save()
     if Config.dirty then
+        assert(Config.allowModifications,
+               'Modifications are not allowed.  (This should have been detected earlier.)')
         FS.writeJsonFile(Config.fileName, Config.source)
         Config.dirty = false
     end

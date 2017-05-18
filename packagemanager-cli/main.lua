@@ -11,7 +11,7 @@ local function Run( commands )
     parser{name = 'pkman',
            description = 'A package manager for the konstrukt engine.',
            epilog = 'For more info, see https://github.com/henry4k/konstrukt-pkman'}
-    parser:option('-c --config', 'Configuration file', 'config.json')
+    parser:option('-c --config', 'Configuration file;  Using this disables the automatic setup and modification of the configuration.')
     parser:command_target('command')
     for commandName, command in pairs(commands) do
         local subparser = parser:command(commandName, command.description)

@@ -57,18 +57,18 @@ local function MakeDirIfNotExists( path )
     if not mode then
         return lfs.mkdir(path)
     elseif mode ~= 'directory' then
-        return false, 'File exists'
+        return nil, 'File exists'
     else
-        return true
+        return path
     end
 end
 
 function FS.makeDirectoryPath( base, path )
     for seperatorPos in path:gmatch('()['..Path.directorySeparators..']') do
         local subPath = path:sub(1, seperatorPos-1)
-        local success, errMsg = MakeDirIfNotExists(Path.join(base, subPath))
-        if not success then
-            return false, errMsg
+        local result, errMsg = MakeDirIfNotExists(Path.join(base, subPath))
+        if not result then
+            return nil, errMsg
         end
     end
     return MakeDirIfNotExists(Path.join(base, path))
