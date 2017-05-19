@@ -3,12 +3,22 @@
 source "$(dirname "$0")/common.bash"
 
 mkdir "$STAGE/packages"
+mkdir "$STAGE/repositories"
+
+cat >"$STAGE/config.json" <<EOF
+{
+   "searchPaths": ["$STAGE/packages"],
+   "repositories": [],
+   "documentationCacheDir": "$STAGE/documentation",
+   "repositoryCacheDir": "$STAGE/repositories"
+}
+EOF
 
 try-parse-package()
 {
     local package="$1"
     rm -rf "$STAGE/packages/"*
-    cp -r "$HERE/packages/$package" "$STAGE/packages/"
+    ln -s "$HERE/packages/$package" "$STAGE/packages/"
     pkman query &>/dev/null
 }
 

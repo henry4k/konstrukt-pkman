@@ -1,5 +1,5 @@
 NAME="$(basename "$0" .t)"
-HERE="$(dirname "$0")"
+HERE="$PWD/$(dirname "$0")"
 
 setup()
 {

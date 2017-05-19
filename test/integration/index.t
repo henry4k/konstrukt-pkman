@@ -3,16 +3,17 @@
 source "$(dirname "$0")/common.bash"
 
 mkdir "$STAGE/packages"
+mkdir "$STAGE/repositories"
 ln -s "$HERE/packages/simple.1.0.0.zip" "$STAGE/packages/"
 
 start-webserver --root "$STAGE"
 
 cat >"$STAGE/config.json" <<EOF
 {
-   "repositories":
-   [
-      "$WEBSERVER_URL/index.json"
-   ]
+   "searchPaths": ["$STAGE/packages"],
+   "repositories": ["$WEBSERVER_URL/index.json"],
+   "documentationCacheDir": "$STAGE/documentation",
+   "repositoryCacheDir": "$STAGE/repositories"
 }
 EOF
 

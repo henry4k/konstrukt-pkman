@@ -3,7 +3,17 @@
 source "$(dirname "$0")/common.bash"
 
 mkdir "$STAGE/packages"
-cp -r "$HERE/packages/simple.1.0.0" "$STAGE/packages/"
+mkdir "$STAGE/repositories"
+ln -s "$HERE/packages/simple.1.0.0" "$STAGE/packages/"
+
+cat >"$STAGE/config.json" <<EOF
+{
+   "searchPaths": ["$STAGE/packages"],
+   "repositories": [],
+   "documentationCacheDir": "$STAGE/documentation",
+   "repositoryCacheDir": "$STAGE/repositories"
+}
+EOF
 
 plan 3
 like "$(pkman query)" 'simple 1.0.0' 'package is found'

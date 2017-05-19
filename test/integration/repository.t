@@ -2,18 +2,20 @@
 # vim: set filetype=sh:
 source "$(dirname "$0")/common.bash"
 
-cat >"$STAGE/config.json" <<EOF
-{
-   "repositories":
-   [
-      "$WEBSERVER_URL/index.json"
-   ]
-}
-EOF
-
+mkdir "$STAGE/packages"
 mkdir "$STAGE/repositories"
 
 start-webserver --root "$HERE/example-server"
+
+cat >"$STAGE/config.json" <<EOF
+{
+   "searchPaths": ["$STAGE/packages"],
+   "repositories": ["$WEBSERVER_URL/index.json"],
+   "documentationCacheDir": "$STAGE/documentation",
+   "repositoryCacheDir": "$STAGE/repositories"
+}
+EOF
+
 
 plan 2
 command-ok 'pkman update'
