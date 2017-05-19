@@ -1,10 +1,10 @@
 local lfs = require 'lfs'
 local escapeUrl = require('socket.url').escape
 local semver = require 'semver'
+local path = require 'path'
 local LocalPackage = require 'packagemanager/localpackage'
 local DownloadManager = require 'packagemanager/downloadmanager'
 local FS           = require 'packagemanager/fs'
-local NativePath   = require('packagemanager/path').native
 local Version      = require 'packagemanager/version'
 local Package      = require 'packagemanager/package'
 local Config       = require 'packagemanager/config'
@@ -13,7 +13,7 @@ local Config       = require 'packagemanager/config'
 local Repository = {}
 
 local function BuildRepoIndexFileName( url )
-    return NativePath.join(Config.repositoryCacheDir, escapeUrl(url)..'.json')
+    return path.join(Config.repositoryCacheDir, escapeUrl(url)..'.json')
 end
 
 function Repository.removeUnusedIndices()
@@ -23,7 +23,7 @@ function Repository.removeUnusedIndices()
     end
 
     for entry in lfs.dir(Config.repositoryCacheDir) do
-        local entryPath = NativePath.join(Config.repositoryCacheDir, entry)
+        local entryPath = path.join(Config.repositoryCacheDir, entry)
         if not usedIndexFileNameSet[entryPath] then
             os.remove(entryPath)
         end
@@ -75,7 +75,7 @@ end
 
 function Repository.loadIndex( db, url )
     local fileName = BuildRepoIndexFileName(url)
-    if FS.fileExists(fileName) then
+    if path.exists(fileName) then
         return Repository.loadIndexFromFile(db, fileName)
     else
         return nil, url..' has not been downloaded yet.'

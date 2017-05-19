@@ -15,7 +15,7 @@
 -- about their properties in detail.
 --
 
-local path = require 'path'
+local Path = require 'path'
 local FS = require 'packagemanager/fs'
 local Misc = require 'packagemanager/misc'
 local Version = require 'packagemanager/version'
@@ -28,9 +28,9 @@ else
     local home = assert(os.getenv('HOME'))
     DefaultEnvironmentVariableValues =
     {
-        XDG_DATA_HOME   = path.join(home, '.local/share'),
-        XDG_CONFIG_HOME = path.join(home, '.config'),
-        XDG_CACHE_HOME  = path.join(home, '.cache')
+        XDG_DATA_HOME   = Path.join(home, '.local/share'),
+        XDG_CONFIG_HOME = Path.join(home, '.config'),
+        XDG_CACHE_HOME  = Path.join(home, '.cache')
     }
 end
 
@@ -39,9 +39,9 @@ local function GetEnvVar( name )
 end
 
 local function ReplaceEnvironmentVariables( str )
-    for _, pattern in ipairs{'%$(%w+)',   -- $FOO_BAR
-                             '%${.-}',    -- ${FOO_BAR}
-                             '%%.-%%'} do -- %FOO_BAR%
+    for _, pattern in ipairs{'%$([%a_][%a%n_]+)', -- $FOO_BAR
+                             '%${.-}',            -- ${FOO_BAR}
+                             '%%.-%%'} do         -- %FOO_BAR%
         str = str:gsub(pattern, GetEnvVar)
     end
     return str
@@ -55,8 +55,8 @@ end
 
 local function ImportPath( fileName, config )
     fileName = ExpandPathExpression(fileName)
-    if not path.isabs(fileName) then
-        fileName = path.join(config.baseDir, fileName)
+    if not Path.isabs(fileName) then
+        fileName = Path.join(config.baseDir, fileName)
     end
     return fileName
 end
@@ -83,8 +83,8 @@ local function CreateConfigDir()
         expression = '$XDG_CONFIG_HOME/konstrukt'
     end
     local fileName = ExpandPathExpression(expression)
-    assert(path.mkdir(fileName))
-    return expression
+    assert(Path.mkdir(fileName))
+    return expression, fileName
 end
 
 local function CreateCacheDir( name )
@@ -95,8 +95,8 @@ local function CreateCacheDir( name )
         expression = '$XDG_CACHE_HOME/konstrukt/'..name
     end
     local fileName = ExpandPathExpression(expression)
-    assert(path.mkdir(fileName))
-    return expression
+    assert(Path.mkdir(fileName))
+    return expression, fileName
 end
 
 ---
@@ -122,13 +122,15 @@ local ConfigEntryFormat =
     {
         default = nil,
         setup = function()
-            return {CreateCacheDir('packages')}
+            local pathExpr = CreateCacheDir('packages')
+            return {pathExpr}
         end,
-        import = function( paths, config )
+        import = function( pathExpressions, config )
             local r = {}
-            for i, path in ipairs(paths) do
-                r[i] = ImportPath(path, config)
-                assert(path.isdir(r[i]))
+            for i, pathExpression in ipairs(pathExpressions) do
+                local path = ImportPath(pathExpression, config)
+                assert(Path.isdir(path), path..' is not a directory')
+                r[i] = path
             end
             return r
         end,
@@ -225,18 +227,19 @@ function Config.load( fileName )
     local allowModifications = false
     if not fileName then
         allowModifications = true
-        fileName = path.join(CreateConfigDir(), 'config.json')
+        local _, configDir = CreateConfigDir()
+        fileName = Path.join(configDir, 'config.json')
     end
 
-    fileName = path.abspath(fileName)
-    local baseDir = path.dirname(fileName)
+    fileName = Path.abspath(fileName)
+    local baseDir = Path.dirname(fileName)
     Config.fileName = fileName
     Config.baseDir = baseDir
     Config.dirty = false -- true if modifications were made and the config needs to be saved
     Config.allowModifications = allowModifications
 
     local source
-    if path.exists(fileName) then
+    if Path.exists(fileName) then
         source = FS.readJsonFile(fileName)
     else
         source = {}

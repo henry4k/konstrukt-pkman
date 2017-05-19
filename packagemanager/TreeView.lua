@@ -47,7 +47,7 @@ function DirectoryView:eachFile()
                     entryPath = path.join(directory, entry)
                 end
                 coroutine.yield(entryPath)
-                if lfs.attributes(prefix..entryPath, 'mode') == 'directory' then
+                if path.isdir(prefix..entryPath) then
                     yieldTree(entryPath)
                 end
             end
