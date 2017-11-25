@@ -2,6 +2,16 @@ Konstrukt Package Manager
 =========================
 
 
+## Features
+
+- GUI and CLI interface
+- parallel download of packages from repositories (package servers)
+- dependency resolution
+- virtual packages
+- native packages (for engines and the package manager itself)
+- generate HTML documentation from packages on the fly
+
+
 ## Licence and copyright
 
 Copyright © Henry Kielmann
